@@ -40,6 +40,7 @@ export default function TimeOffPage() {
   const [orgId, setOrgId] = useState<string>("");
   const [requests, setRequests] = useState<(TimeOffRequest & { profile?: Profile })[]>([]);
   const [employees, setEmployees] = useState<Profile[]>([]);
+  const [vacationQuota, setVacationQuota] = useState<number>(22);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [showNew, setShowNew] = useState(false);
@@ -70,6 +71,7 @@ export default function TimeOffPage() {
     setMyRole(profile.role);
     setMyId(user.id);
     setOrgId(profile.org_id || "");
+    setVacationQuota(profile.vacation_quota ?? 22);
 
     // Fetch employees for manager view
     if (profile.role === "admin" || profile.role === "manager") {
@@ -189,6 +191,24 @@ export default function TimeOffPage() {
 
   const pendingCount = requests.filter((r) => r.status === "pending").length;
 
+  // Calculate vacation balance for current year
+  const currentYear = new Date().getFullYear();
+  const approvedFerias = requests.filter(
+    (r) =>
+      r.type === "ferias" &&
+      r.status === "approved" &&
+      new Date(r.start_date).getFullYear() === currentYear
+  );
+  const usedDays = approvedFerias.reduce((sum, r) => sum + countDays(r), 0);
+  const pendingFerias = requests.filter(
+    (r) =>
+      r.type === "ferias" &&
+      r.status === "pending" &&
+      new Date(r.start_date).getFullYear() === currentYear
+  );
+  const pendingDays = pendingFerias.reduce((sum, r) => sum + countDays(r), 0);
+  const remainingDays = vacationQuota - usedDays;
+
   if (loading) {
     return (
       <div className="space-y-6">
@@ -212,6 +232,37 @@ export default function TimeOffPage() {
         </div>
         <Button onClick={() => setShowNew(true)}>Novo pedido</Button>
       </div>
+
+      {/* Vacation balance */}
+      <Card>
+        <div className="p-4">
+          <p className="text-sm font-medium text-gray-500 mb-3">Saldo de ferias {currentYear}</p>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div>
+              <p className="text-2xl font-bold text-gray-900">{vacationQuota}</p>
+              <p className="text-xs text-gray-500">Total</p>
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-green-600">{remainingDays % 1 === 0 ? remainingDays : remainingDays.toFixed(1).replace(".", ",")}</p>
+              <p className="text-xs text-gray-500">Disponiveis</p>
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-blue-600">{usedDays % 1 === 0 ? usedDays : usedDays.toFixed(1).replace(".", ",")}</p>
+              <p className="text-xs text-gray-500">Utilizados</p>
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-yellow-600">{pendingDays % 1 === 0 ? pendingDays : pendingDays.toFixed(1).replace(".", ",")}</p>
+              <p className="text-xs text-gray-500">Pendentes</p>
+            </div>
+          </div>
+          {remainingDays <= 3 && remainingDays > 0 && (
+            <p className="text-xs text-orange-600 mt-2">Atencion: restam poucos dias de ferias.</p>
+          )}
+          {remainingDays <= 0 && (
+            <p className="text-xs text-red-600 mt-2">Sem dias de ferias disponiveis.</p>
+          )}
+        </div>
+      </Card>
 
       {/* Tabs */}
       <div className="flex gap-1 bg-gray-100 rounded-lg p-1 w-fit">

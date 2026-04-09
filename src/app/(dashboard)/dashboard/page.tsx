@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { Card, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Users, AlertTriangle, CheckCircle } from "lucide-react";
+import { Calendar, Users, AlertTriangle, Palmtree } from "lucide-react";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -12,7 +12,7 @@ export default async function DashboardPage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("org_id, role, full_name")
+    .select("org_id, role, full_name, vacation_quota")
     .eq("id", user.id)
     .single();
 
@@ -23,7 +23,7 @@ export default async function DashboardPage() {
   const currentMonth = now.getMonth() + 1;
   const currentYear = now.getFullYear();
 
-  const [employeesRes, scheduleRes, swapsRes] = await Promise.all([
+  const [employeesRes, scheduleRes, swapsRes, timeOffRes] = await Promise.all([
     supabase
       .from("profiles")
       .select("*", { count: "exact", head: true })
@@ -40,11 +40,31 @@ export default async function DashboardPage() {
       .from("swap_requests")
       .select("*", { count: "exact", head: true })
       .eq("status", "pending"),
+    supabase
+      .from("time_off_requests")
+      .select("*")
+      .eq("user_id", user.id)
+      .eq("type", "ferias")
+      .eq("status", "approved")
+      .gte("start_date", `${currentYear}-01-01`)
+      .lte("start_date", `${currentYear}-12-31`),
   ]);
 
   const employeeCount = employeesRes.count || 0;
   const currentSchedule = scheduleRes.data;
   const pendingSwaps = swapsRes.count || 0;
+
+  // Calculate vacation balance
+  const vacationQuota = (profile as Record<string, unknown>).vacation_quota as number ?? 22;
+  const approvedTimeOff = timeOffRes.data || [];
+  const usedDays = approvedTimeOff.reduce((sum: number, r: Record<string, unknown>) => {
+    const period = r.period as string;
+    if (period === "morning" || period === "afternoon") return sum + 0.5;
+    const s = new Date(r.start_date as string);
+    const e = new Date(r.end_date as string);
+    return sum + Math.ceil((e.getTime() - s.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+  }, 0);
+  const remainingDays = vacationQuota - usedDays;
 
   const monthNames = [
     "Janeiro", "Fevereiro", "Marco", "Abril", "Maio", "Junho",
@@ -109,13 +129,14 @@ export default async function DashboardPage() {
 
         <Card>
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-              <CheckCircle className="w-6 h-6 text-purple-600" />
+            <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center">
+              <Palmtree className="w-6 h-6 text-emerald-600" />
             </div>
             <div>
-              <p className="text-sm text-gray-500">Fairness Score</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {currentSchedule?.fairness_score ? `${currentSchedule.fairness_score}%` : "--"}
+              <p className="text-sm text-gray-500">Ferias disponiveis</p>
+              <p className={`text-2xl font-bold ${remainingDays <= 3 ? "text-orange-600" : "text-gray-900"}`}>
+                {remainingDays % 1 === 0 ? remainingDays : remainingDays.toFixed(1).replace(".", ",")}
+                <span className="text-sm font-normal text-gray-400 ml-1">/ {vacationQuota}</span>
               </p>
             </div>
           </div>

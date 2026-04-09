@@ -34,6 +34,7 @@ export interface Profile {
   weekly_hours: number;
   is_active: boolean;
   avatar_url: string | null;
+  vacation_quota: number;
   created_at: string;
   updated_at: string;
 }
