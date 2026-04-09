@@ -11,6 +11,8 @@ import {
   ArrowLeftRight,
   Clock,
   X,
+  CalendarOff,
+  Palmtree,
 } from "lucide-react";
 import type { UserRole } from "@/types/database";
 
@@ -26,6 +28,8 @@ const navigation = [
   { name: "Horario", href: "/schedule", icon: Calendar, roles: ["admin", "manager", "employee"] },
   { name: "Equipa", href: "/employees", icon: Users, roles: ["admin", "manager"] },
   { name: "Turnos", href: "/shifts", icon: Clock, roles: ["admin", "manager"] },
+  { name: "Disponibilidades", href: "/availability", icon: CalendarOff, roles: ["admin", "manager", "employee"] },
+  { name: "Ferias", href: "/time-off", icon: Palmtree, roles: ["admin", "manager", "employee"] },
   { name: "Trocas", href: "/swaps", icon: ArrowLeftRight, roles: ["admin", "manager", "employee"] },
   { name: "Fairness", href: "/fairness", icon: BarChart3, roles: ["admin", "manager"] },
   { name: "Definicoes", href: "/settings", icon: Settings, roles: ["admin"] },

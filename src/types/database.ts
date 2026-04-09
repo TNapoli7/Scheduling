@@ -2,6 +2,8 @@ export type UserRole = "admin" | "manager" | "employee";
 export type ContractType = "full_time" | "part_time";
 export type ScheduleStatus = "draft" | "published" | "archived";
 export type SwapStatus = "pending" | "approved" | "rejected";
+export type ApprovalStatus = "pending" | "approved" | "rejected";
+export type TimeOffType = "ferias" | "baixa" | "pessoal" | "outro";
 export type Severity = "warning" | "block";
 export type Preference = "preferred" | "neutral" | "avoid";
 export type SubscriptionTier = "trial" | "starter" | "professional" | "business";
@@ -83,9 +85,30 @@ export interface Availability {
   available: boolean;
   preference: Preference;
   reason: string | null;
+  approval_status: ApprovalStatus;
+  reviewed_by: string | null;
+  reviewed_at: string | null;
   is_recurring: boolean;
   recurring_day: number | null;
   created_at: string;
+  // Joined
+  profile?: Profile;
+}
+
+export interface TimeOffRequest {
+  id: string;
+  user_id: string;
+  org_id: string;
+  start_date: string;
+  end_date: string;
+  type: TimeOffType;
+  reason: string | null;
+  status: ApprovalStatus;
+  reviewed_by: string | null;
+  reviewed_at: string | null;
+  created_at: string;
+  // Joined
+  profile?: Profile;
 }
 
 export interface SwapRequest {
