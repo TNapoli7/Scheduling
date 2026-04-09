@@ -139,38 +139,33 @@ export default function EmployeesPage() {
         return;
       }
     } else {
-      // Invite new user via Supabase Auth
+      // Create employee via server API (no email sent)
       if (!form.email.trim()) {
         setError("Email e obrigatorio");
         setSaving(false);
         return;
       }
 
-      // For now, create profile directly (user will get magic link when they try to login)
-      // In production, we'd use supabase.auth.admin.inviteUserByEmail()
-      // But that requires the service_role key which shouldn't be on the client.
-      // Instead, we'll use signInWithOtp to send them a magic link.
-      const { data: authData, error: authErr } = await supabase.auth.signInWithOtp({
-        email: form.email,
-        options: {
-          data: {
-            full_name: form.full_name,
-            role: form.role,
-          },
-          shouldCreateUser: true,
-        },
+      const res = await fetch("/api/employees", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: form.email,
+          full_name: form.full_name,
+          role: form.role,
+          credential: form.credential || null,
+          contract_type: form.contract_type,
+          weekly_hours: form.weekly_hours,
+        }),
       });
 
-      if (authErr) {
-        setError(authErr.message);
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error || "Erro ao criar funcionario");
         setSaving(false);
         return;
       }
-
-      // The trigger handle_new_user will create the profile.
-      // We need to wait a moment then update it with the extra fields.
-      // For now, show success - the profile will be created when they click the link.
-      // We'll update the profile fields once they exist.
     }
 
     setShowModal(false);
@@ -367,7 +362,7 @@ export default function EmployeesPage() {
               Cancelar
             </Button>
             <Button onClick={handleSave} loading={saving}>
-              {editingId ? "Guardar" : "Convidar"}
+              {editingId ? "Guardar" : "Criar funcionario"}
             </Button>
           </div>
         </div>
