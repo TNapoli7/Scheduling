@@ -4,6 +4,7 @@ export type ScheduleStatus = "draft" | "published" | "archived";
 export type SwapStatus = "pending" | "approved" | "rejected";
 export type ApprovalStatus = "pending" | "approved" | "rejected";
 export type TimeOffType = "ferias" | "baixa" | "pessoal" | "outro";
+export type TimeOffPeriod = "full_day" | "morning" | "afternoon";
 export type Severity = "warning" | "block";
 export type Preference = "preferred" | "neutral" | "avoid";
 export type SubscriptionTier = "trial" | "starter" | "professional" | "business";
@@ -102,6 +103,7 @@ export interface TimeOffRequest {
   start_date: string;
   end_date: string;
   type: TimeOffType;
+  period: TimeOffPeriod;
   reason: string | null;
   status: ApprovalStatus;
   reviewed_by: string | null;

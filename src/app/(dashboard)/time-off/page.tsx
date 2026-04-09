@@ -16,6 +16,12 @@ const TYPE_LABELS: Record<string, string> = {
   outro: "Outro",
 };
 
+const PERIOD_LABELS: Record<string, string> = {
+  full_day: "Dia inteiro",
+  morning: "Manha",
+  afternoon: "Tarde",
+};
+
 const STATUS_VARIANT: Record<string, "warning" | "success" | "danger"> = {
   pending: "warning",
   approved: "success",
@@ -41,6 +47,7 @@ export default function TimeOffPage() {
 
   // New request form
   const [newType, setNewType] = useState("ferias");
+  const [newPeriod, setNewPeriod] = useState("full_day");
   const [newStart, setNewStart] = useState("");
   const [newEnd, setNewEnd] = useState("");
   const [newReason, setNewReason] = useState("");
@@ -100,8 +107,9 @@ export default function TimeOffPage() {
       user_id: myId,
       org_id: orgId,
       start_date: newStart,
-      end_date: newEnd,
+      end_date: newPeriod !== "full_day" ? newStart : newEnd,
       type: newType,
+      period: newPeriod,
       reason: newReason || null,
       status: "pending",
     });
@@ -115,14 +123,15 @@ export default function TimeOffPage() {
           user_id: mgr.id,
           type: "time_off_request",
           title: "Novo pedido de ferias",
-          body: `${me?.full_name || "Funcionario"} pediu ${TYPE_LABELS[newType]?.toLowerCase()} de ${newStart} a ${newEnd}.`,
-          metadata: { requester_id: myId, type: newType, start_date: newStart, end_date: newEnd },
+          body: `${me?.full_name || "Funcionario"} pediu ${TYPE_LABELS[newType]?.toLowerCase()}${newPeriod !== "full_day" ? ` (${PERIOD_LABELS[newPeriod]?.toLowerCase()})` : ""} de ${newStart}${newPeriod === "full_day" ? ` a ${newEnd}` : ""}.`,
+          metadata: { requester_id: myId, type: newType, period: newPeriod, start_date: newStart, end_date: newPeriod !== "full_day" ? newStart : newEnd },
         });
       }
     }
 
     setShowNew(false);
     setNewType("ferias");
+    setNewPeriod("full_day");
     setNewStart("");
     setNewEnd("");
     setNewReason("");
@@ -160,10 +169,17 @@ export default function TimeOffPage() {
   }
 
   // Count days in a request
-  function countDays(start: string, end: string): number {
-    const s = new Date(start);
-    const e = new Date(end);
-    return Math.ceil((e.getTime() - s.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+  function countDays(req: TimeOffRequest & { profile?: Profile }): number {
+    const s = new Date(req.start_date);
+    const e = new Date(req.end_date);
+    const fullDays = Math.ceil((e.getTime() - s.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+    if (req.period === "morning" || req.period === "afternoon") return 0.5;
+    return fullDays;
+  }
+
+  function formatDays(n: number): string {
+    if (n === 0.5) return "0,5 dia";
+    return `${n} dia${n !== 1 ? "s" : ""}`;
   }
 
   // Filter
@@ -233,7 +249,7 @@ export default function TimeOffPage() {
         <div className="space-y-2">
           {filtered.map((req) => {
             const emp = req.profile || employees.find((e) => e.id === req.user_id);
-            const days = countDays(req.start_date, req.end_date);
+            const dayCount = countDays(req);
             return (
               <Card key={req.id}>
                 <div className="p-4 flex items-center justify-between">
@@ -250,10 +266,17 @@ export default function TimeOffPage() {
                       <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded">
                         {TYPE_LABELS[req.type] || req.type}
                       </span>
+                      {req.period && req.period !== "full_day" && (
+                        <span className="text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded">
+                          {PERIOD_LABELS[req.period] || req.period}
+                        </span>
+                      )}
                     </div>
                     <p className="text-sm text-gray-700">
-                      {req.start_date} a {req.end_date}
-                      <span className="text-gray-400 ml-2">({days} dia{days !== 1 ? "s" : ""})</span>
+                      {req.period && req.period !== "full_day"
+                        ? req.start_date
+                        : `${req.start_date} a ${req.end_date}`}
+                      <span className="text-gray-400 ml-2">({formatDays(dayCount)})</span>
                     </p>
                     {req.reason && (
                       <p className="text-xs text-gray-500 mt-1">{req.reason}</p>
@@ -289,28 +312,46 @@ export default function TimeOffPage() {
       {/* New request modal */}
       <Modal open={showNew} onClose={() => setShowNew(false)} title="Novo pedido de ausencia" size="sm">
         <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Tipo</label>
-            <select
-              value={newType}
-              onChange={(e) => setNewType(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="ferias">Ferias</option>
-              <option value="baixa">Baixa medica</option>
-              <option value="pessoal">Pessoal</option>
-              <option value="outro">Outro</option>
-            </select>
-          </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Data inicio</label>
-              <Input type="date" value={newStart} onChange={(e) => setNewStart(e.target.value)} />
+              <label className="block text-sm font-medium text-gray-700 mb-1">Tipo</label>
+              <select
+                value={newType}
+                onChange={(e) => setNewType(e.target.value)}
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="ferias">Ferias</option>
+                <option value="baixa">Baixa medica</option>
+                <option value="pessoal">Pessoal</option>
+                <option value="outro">Outro</option>
+              </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Data fim</label>
-              <Input type="date" value={newEnd} onChange={(e) => setNewEnd(e.target.value)} />
+              <label className="block text-sm font-medium text-gray-700 mb-1">Periodo</label>
+              <select
+                value={newPeriod}
+                onChange={(e) => setNewPeriod(e.target.value)}
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="full_day">Dia inteiro</option>
+                <option value="morning">Manha (0,5 dia)</option>
+                <option value="afternoon">Tarde (0,5 dia)</option>
+              </select>
             </div>
+          </div>
+          <div className={`grid gap-3 ${newPeriod === "full_day" ? "grid-cols-2" : "grid-cols-1"}`}>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                {newPeriod === "full_day" ? "Data inicio" : "Data"}
+              </label>
+              <Input type="date" value={newStart} onChange={(e) => setNewStart(e.target.value)} />
+            </div>
+            {newPeriod === "full_day" && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Data fim</label>
+                <Input type="date" value={newEnd} onChange={(e) => setNewEnd(e.target.value)} />
+              </div>
+            )}
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Motivo (opcional)</label>
@@ -324,7 +365,7 @@ export default function TimeOffPage() {
           </div>
           <div className="flex gap-2 justify-end">
             <Button variant="ghost" onClick={() => setShowNew(false)}>Cancelar</Button>
-            <Button onClick={createRequest} loading={saving} disabled={!newStart || !newEnd}>
+            <Button onClick={createRequest} loading={saving} disabled={!newStart || (newPeriod === "full_day" && !newEnd)}>
               Submeter pedido
             </Button>
           </div>
