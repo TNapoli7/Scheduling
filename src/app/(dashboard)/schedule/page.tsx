@@ -487,11 +487,11 @@ export default function SchedulePage() {
     return (
       <div className="space-y-4">
         <div>
-          <div className="h-8 w-32 bg-stone-200 rounded animate-pulse" />
-          <div className="h-4 w-24 bg-stone-200 rounded animate-pulse mt-2" />
+          <div className="h-8 w-32 bg-[color:var(--border-light)] rounded animate-pulse" />
+          <div className="h-4 w-24 bg-[color:var(--border-light)] rounded animate-pulse mt-2" />
         </div>
         <div className="flex justify-center">
-          <div className="h-6 w-48 bg-stone-200 rounded animate-pulse" />
+          <div className="h-6 w-48 bg-[color:var(--border-light)] rounded animate-pulse" />
         </div>
         <SkeletonTable rows={6} cols={10} />
       </div>
@@ -502,20 +502,20 @@ export default function SchedulePage() {
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-stone-900">Horario</h1>
-          <p className="text-sm text-stone-500 mt-1">
+          <h1 className="text-2xl font-bold text-[color:var(--text-primary)] font-display tracking-tight">Horario</h1>
+          <p className="text-sm text-[color:var(--text-muted)] mt-1">
             {schedule?.status === "published" ? (
               <Badge variant="success">Publicado</Badge>
             ) : (
               <Badge variant="default">Rascunho</Badge>
             )}
             {blockCount > 0 && (
-              <span className="ml-2 text-red-600 font-medium">
+              <span className="ml-2 text-[color:var(--danger)] font-medium">
                 {blockCount} violacao{blockCount !== 1 ? "oes" : ""}
               </span>
             )}
             {warnCount > 0 && (
-              <span className="ml-2 text-amber-600">
+              <span className="ml-2 text-[color:var(--warning)]">
                 {warnCount} aviso{warnCount !== 1 ? "s" : ""}
               </span>
             )}
@@ -550,7 +550,7 @@ export default function SchedulePage() {
               size="sm"
               onClick={clearSchedule}
               loading={saving}
-              className="text-red-600 hover:bg-red-50"
+              className="text-[color:var(--danger)] hover:bg-[color:var(--danger-soft)]"
             >
               Limpar
             </Button>
@@ -587,7 +587,7 @@ export default function SchedulePage() {
               size="sm"
               onClick={unpublishSchedule}
               loading={saving}
-              className="text-amber-600 hover:bg-amber-50"
+              className="text-[color:var(--warning)] hover:bg-[color:var(--warning-soft)]"
             >
               Despublicar
             </Button>
@@ -621,13 +621,13 @@ export default function SchedulePage() {
         <Button variant="ghost" size="sm" onClick={prevMonth}>
           &lt;
         </Button>
-        <h2 className="text-lg font-semibold text-stone-900 min-w-[180px] text-center">
+        <h2 className="text-lg font-semibold text-[color:var(--text-primary)] min-w-[180px] text-center font-display tracking-tight">
           {MONTH_NAMES[month - 1]} {year}
         </h2>
         <Button variant="ghost" size="sm" onClick={nextMonth}>
           &gt;
         </Button>
-        <div className="flex items-center gap-1 ml-2 border-l border-stone-300 pl-3">
+        <div className="flex items-center gap-1 ml-2 border-l border-[color:var(--border)] pl-3">
           <Button
             variant={viewMode === "month" ? "primary" : "ghost"}
             size="sm"
@@ -669,7 +669,7 @@ export default function SchedulePage() {
         {shifts.map((s) => (
           <div
             key={s.id}
-            className="flex items-center gap-1.5 text-xs text-stone-600"
+            className="flex items-center gap-1.5 text-xs text-[color:var(--text-secondary)]"
           >
             <div
               className="w-3 h-3 rounded-full"
@@ -680,7 +680,7 @@ export default function SchedulePage() {
             </span>
           </div>
         ))}
-        <div className="flex items-center gap-1.5 text-xs text-stone-600">
+        <div className="flex items-center gap-1.5 text-xs text-[color:var(--text-secondary)]">
           <div className="w-3 h-3 rounded bg-stone-300" />
           <span>Indisponivel</span>
         </div>
@@ -688,18 +688,18 @@ export default function SchedulePage() {
 
       {employees.length === 0 || shifts.length === 0 ? (
         <Card>
-          <div className="text-center py-8 text-stone-500">
+          <div className="text-center py-8 text-[color:var(--text-muted)]">
             {employees.length === 0
               ? "Adiciona funcionarios na pagina Equipa primeiro."
               : "Cria turnos na pagina Turnos primeiro."}
           </div>
         </Card>
       ) : (
-        <div className="border border-stone-200 rounded-lg overflow-x-auto bg-white">
+        <div className="border border-[color:var(--border-light)] rounded-lg overflow-x-auto bg-[color:var(--surface)]">
           <table className="text-xs w-full border-collapse">
             <thead>
-              <tr className="bg-stone-50">
-                <th className="sticky left-0 z-10 bg-stone-50 px-3 py-2 text-left font-medium text-stone-600 border-b border-r border-stone-200 min-w-[140px]">
+              <tr className="bg-[color:var(--surface-sunken)]">
+                <th className="sticky left-0 z-10 bg-[color:var(--surface-sunken)] px-3 py-2 text-left font-medium text-[color:var(--text-secondary)] border-b border-r border-[color:var(--border-light)] min-w-[140px]">
                   Funcionario
                 </th>
                 {visibleDays.map((day) => {
@@ -708,12 +708,12 @@ export default function SchedulePage() {
                   const dayNum = day.slice(8);
                   const dow = dayOfWeekPt(day);
                   const thClass =
-                    "px-1 py-2 text-center font-medium border-b border-stone-200 min-w-[44px] " +
+                    "px-1 py-2 text-center font-medium border-b border-[color:var(--border-light)] min-w-[44px] " +
                     (holiday
-                      ? "bg-red-50 text-red-700"
+                      ? "bg-[color:var(--danger-soft)] text-[color:var(--danger)]"
                       : weekend
-                      ? "bg-stone-100 text-stone-500"
-                      : "text-stone-600");
+                      ? "bg-[color:var(--surface-sunken)] text-[color:var(--text-muted)]"
+                      : "text-[color:var(--text-secondary)]");
                   return (
                     <th
                       key={day}
@@ -729,12 +729,12 @@ export default function SchedulePage() {
             </thead>
             <tbody>
               {employees.map((emp) => (
-                <tr key={emp.id} className="hover:bg-stone-50/50">
-                  <td className="sticky left-0 z-10 bg-white px-3 py-1.5 font-medium text-stone-800 border-b border-r border-stone-200 truncate max-w-[140px]">
+                <tr key={emp.id} className="hover:bg-[color:var(--surface-sunken)]/50">
+                  <td className="sticky left-0 z-10 bg-[color:var(--surface)] px-3 py-1.5 font-medium text-[color:var(--text-primary)] border-b border-r border-[color:var(--border-light)] truncate max-w-[140px]">
                     <div className="truncate" title={emp.full_name}>
                       {emp.full_name}
                     </div>
-                    <div className="text-[10px] text-stone-400 font-normal">
+                    <div className="text-[10px] text-[color:var(--text-muted)] font-normal">
                       {emp.contract_type === "full_time"
                         ? emp.weekly_hours + "h"
                         : "PT " + emp.weekly_hours + "h"}
@@ -754,19 +754,19 @@ export default function SchedulePage() {
                     const unavailable = isUnavailable(emp.id, day);
 
                     const tdClass =
-                      "border-b border-stone-100 text-center cursor-pointer transition-colors p-0.5 " +
+                      "border-b border-[color:var(--border-light)] text-center cursor-pointer transition-colors p-0.5 " +
                       (unavailable && !entry
-                        ? "bg-stone-200 "
+                        ? "bg-[color:var(--border-light)] "
                         : holiday
-                        ? "bg-red-50/50 "
+                        ? "bg-[color:var(--danger-soft)]/50 "
                         : weekend
-                        ? "bg-stone-50 "
+                        ? "bg-[color:var(--surface-sunken)] "
                         : "") +
                       (hasBlock ? "ring-2 ring-inset ring-red-400 " : "") +
                       (hasWarn && !hasBlock
                         ? "ring-1 ring-inset ring-amber-300 "
                         : "") +
-                      "hover:bg-indigo-50";
+                      "hover:bg-[color:var(--accent-soft)]";
 
                     const tdTitle =
                       unavailable && !entry
@@ -800,7 +800,7 @@ export default function SchedulePage() {
                             {entry.shift_template?.name?.slice(0, 3) || "?"}
                           </div>
                         ) : unavailable ? (
-                          <div className="py-1 text-stone-400 text-[10px] font-medium">
+                          <div className="py-1 text-[color:var(--text-muted)] text-[10px] font-medium">
                             IND
                           </div>
                         ) : (
@@ -824,7 +824,7 @@ export default function SchedulePage() {
       >
         {assignModal && (
           <div className="space-y-3">
-            <p className="text-sm text-stone-600">
+            <p className="text-sm text-[color:var(--text-secondary)]">
               <span className="font-medium">{assignModal.userName}</span>
               {" — "}
               {parseInt(assignModal.date.slice(8))}{" "}
@@ -846,17 +846,17 @@ export default function SchedulePage() {
                   key={shift.id}
                   onClick={() => assignShift(shift.id)}
                   disabled={saving}
-                  className="w-full flex items-center gap-3 p-3 rounded-lg border border-stone-200 hover:border-blue-300 hover:bg-indigo-50 transition-colors text-left disabled:opacity-50"
+                  className="w-full flex items-center gap-3 p-3 rounded-lg border border-[color:var(--border-light)] hover:border-blue-300 hover:bg-[color:var(--accent-soft)] transition-colors text-left disabled:opacity-50"
                 >
                   <div
                     className="w-4 h-4 rounded-full flex-shrink-0"
                     style={{ backgroundColor: shift.color }}
                   />
                   <div>
-                    <p className="font-medium text-stone-900 text-sm">
+                    <p className="font-medium text-[color:var(--text-primary)] text-sm">
                       {shift.name}
                     </p>
-                    <p className="text-xs text-stone-500">
+                    <p className="text-xs text-[color:var(--text-muted)]">
                       {shift.start_time.slice(0, 5)} -{" "}
                       {shift.end_time.slice(0, 5)}
                     </p>
@@ -865,13 +865,13 @@ export default function SchedulePage() {
               ))}
             </div>
             {getEntry(assignModal.userId, assignModal.date) && (
-              <div className="pt-3 border-t border-stone-200">
+              <div className="pt-3 border-t border-[color:var(--border-light)]">
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={removeAssignment}
                   loading={saving}
-                  className="text-red-600 hover:text-red-700 hover:bg-red-50 w-full"
+                  className="text-[color:var(--danger)] hover:text-[color:var(--danger)] hover:bg-[color:var(--danger-soft)] w-full"
                 >
                   Remover atribuicao
                 </Button>
@@ -890,7 +890,7 @@ export default function SchedulePage() {
         {violationModal && (
           <div className="space-y-3 max-h-[60vh] overflow-y-auto">
             {violationModal.length === 0 ? (
-              <p className="text-sm text-stone-500">
+              <p className="text-sm text-[color:var(--text-muted)]">
                 Nenhum problema encontrado.
               </p>
             ) : (
@@ -898,8 +898,8 @@ export default function SchedulePage() {
                 const cardClass =
                   "p-3 rounded-lg border text-sm " +
                   (v.severity === "block"
-                    ? "bg-red-50 border-red-200 text-red-800"
-                    : "bg-amber-50 border-amber-200 text-amber-800");
+                    ? "bg-[color:var(--danger-soft)] border-[color:var(--danger-soft)] text-[color:var(--danger)]"
+                    : "bg-[color:var(--warning-soft)] border-[color:var(--warning-soft)] text-[color:var(--warning)]");
                 return (
                   <div key={i} className={cardClass}>
                     <div className="flex items-center gap-2 mb-1">
@@ -931,12 +931,12 @@ export default function SchedulePage() {
           {!previewResult && !generateDone && (
             <>
               {generateError && (
-                <div className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-2">
+                <div className="text-sm text-[color:var(--danger)] bg-[color:var(--danger-soft)] border border-[color:var(--danger-soft)] rounded-md px-3 py-2">
                   {generateError}
                 </div>
               )}
               {!canGenerate && (
-                <div className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-md px-3 py-2">
+                <div className="text-sm text-[color:var(--warning)] bg-[color:var(--warning-soft)] border border-[color:var(--warning-soft)] rounded-md px-3 py-2">
                   <p className="font-medium mb-1">Ainda não dá para gerar:</p>
                   <ul className="list-disc ml-5 space-y-0.5">
                     {generateIssues.map((issue) => (
@@ -945,12 +945,12 @@ export default function SchedulePage() {
                   </ul>
                 </div>
               )}
-              <p className="text-sm text-stone-600">
+              <p className="text-sm text-[color:var(--text-secondary)]">
                 O algoritmo distribui os turnos pelos funcionarios respeitando
                 as regras de compliance, indisponibilidades aprovadas e
                 equilibrio de fairness.
                 {entries.length > 0 && (
-                  <span className="block mt-1 text-amber-600 font-medium">
+                  <span className="block mt-1 text-[color:var(--warning)] font-medium">
                     Nota: Ja existem {entries.length} atribuicoes. O algoritmo
                     apenas preenche os turnos em falta. Para recomecar, limpe o
                     horario primeiro.
@@ -959,7 +959,7 @@ export default function SchedulePage() {
               </p>
 
               <div>
-                <h4 className="text-sm font-medium text-stone-900 mb-2">
+                <h4 className="text-sm font-medium text-[color:var(--text-primary)] mb-2">
                   Pessoas por turno (pode ajustar)
                 </h4>
                 <div className="space-y-2">
@@ -969,7 +969,7 @@ export default function SchedulePage() {
                         className="w-3 h-3 rounded-full flex-shrink-0"
                         style={{ backgroundColor: shift.color }}
                       />
-                      <span className="text-sm text-stone-700 min-w-[100px]">
+                      <span className="text-sm text-[color:var(--text-secondary)] min-w-[100px]">
                         {shift.name}
                       </span>
                       <Input
@@ -985,7 +985,7 @@ export default function SchedulePage() {
                         }
                         className="w-20"
                       />
-                      <span className="text-xs text-stone-400">
+                      <span className="text-xs text-[color:var(--text-muted)]">
                         (default: {shift.min_staff})
                       </span>
                     </div>
@@ -994,7 +994,7 @@ export default function SchedulePage() {
               </div>
 
               {Object.keys(unavailableDays).length > 0 && (
-                <p className="text-xs text-stone-500">
+                <p className="text-xs text-[color:var(--text-muted)]">
                   {Object.keys(unavailableDays).length} funcionario(s) com
                   indisponibilidades aprovadas este mes.
                 </p>
@@ -1027,10 +1027,10 @@ export default function SchedulePage() {
               </div>
 
               <div className="text-center py-2">
-                <p className="text-2xl font-bold text-stone-900">
+                <p className="text-2xl font-bold text-[color:var(--text-primary)]">
                   {previewResult.totalEntries}
                 </p>
-                <p className="text-xs text-stone-500">
+                <p className="text-xs text-[color:var(--text-muted)]">
                   turno{previewResult.totalEntries !== 1 ? "s" : ""} ser
                   {previewResult.totalEntries !== 1 ? "ao" : "a"} atribuido
                   {previewResult.totalEntries !== 1 ? "s" : ""}
@@ -1038,8 +1038,8 @@ export default function SchedulePage() {
               </div>
 
               {previewResult.unfilled.length > 0 && (
-                <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
-                  <p className="text-sm font-medium text-amber-800 mb-2">
+                <div className="bg-[color:var(--warning-soft)] border border-[color:var(--warning-soft)] rounded-lg p-3">
+                  <p className="text-sm font-medium text-[color:var(--warning)] mb-2">
                     {previewResult.unfilled.length} turno
                     {previewResult.unfilled.length !== 1 ? "s" : ""} por
                     preencher
@@ -1048,7 +1048,7 @@ export default function SchedulePage() {
                     {previewResult.unfilled.slice(0, 10).map((u, i) => (
                       <div
                         key={i}
-                        className="text-xs text-amber-700 flex justify-between"
+                        className="text-xs text-[color:var(--warning)] flex justify-between"
                       >
                         <span>
                           {u.date} — {u.shift_name}
@@ -1059,7 +1059,7 @@ export default function SchedulePage() {
                       </div>
                     ))}
                     {previewResult.unfilled.length > 10 && (
-                      <div className="text-xs text-amber-600 italic">
+                      <div className="text-xs text-[color:var(--warning)] italic">
                         + {previewResult.unfilled.length - 10} mais…
                       </div>
                     )}
@@ -1069,7 +1069,7 @@ export default function SchedulePage() {
 
               {previewResult.hours.length > 0 && (
                 <div>
-                  <h4 className="text-sm font-medium text-stone-900 mb-2">
+                  <h4 className="text-sm font-medium text-[color:var(--text-primary)] mb-2">
                     Horas por funcionario
                   </h4>
                   <div className="space-y-1 max-h-48 overflow-y-auto">
@@ -1079,13 +1079,13 @@ export default function SchedulePage() {
                       const warn = ratio < 0.7 || ratio > 1.1;
                       const hoursClass =
                         "font-mono " +
-                        (warn ? "text-amber-600" : "text-stone-500");
+                        (warn ? "text-[color:var(--warning)]" : "text-[color:var(--text-muted)]");
                       return (
                         <div
                           key={h.user_id}
                           className="flex items-center justify-between text-sm"
                         >
-                          <span className="text-stone-700">{h.full_name}</span>
+                          <span className="text-[color:var(--text-secondary)]">{h.full_name}</span>
                           <span className={hoursClass}>
                             {h.hours.toFixed(0)}h / ~{expected.toFixed(0)}h
                           </span>
@@ -1114,10 +1114,10 @@ export default function SchedulePage() {
           {generateDone && (
             <>
               <div className="text-center py-4">
-                <h3 className="text-lg font-semibold text-stone-900">
+                <h3 className="text-lg font-semibold text-[color:var(--text-primary)]">
                   Horario gerado!
                 </h3>
-                <p className="text-sm text-stone-500 mt-1">
+                <p className="text-sm text-[color:var(--text-muted)] mt-1">
                   As atribuicoes foram guardadas.
                 </p>
               </div>
