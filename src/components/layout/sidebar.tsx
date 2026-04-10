@@ -48,7 +48,7 @@ export function Sidebar({ role, orgName, open, onClose }: SidebarProps) {
 
       <aside
         className={`
-          fixed top-0 left-0 z-50 h-full w-[240px] bg-stone-900
+          fixed top-0 left-0 z-50 h-full w-[240px] bg-[color:var(--primary)]
           transform transition-transform duration-200 ease-in-out
           lg:translate-x-0 lg:static lg:z-auto
           ${open ? "translate-x-0" : "-translate-x-full"}
@@ -57,15 +57,15 @@ export function Sidebar({ role, orgName, open, onClose }: SidebarProps) {
         {/* Logo / Org name */}
         <div className="flex items-center justify-between h-16 px-5">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
+            <div className="w-8 h-8 bg-[color:var(--sidebar-active-bg)] rounded-lg flex items-center justify-center">
               <Calendar className="w-4 h-4 text-white" />
             </div>
             <div>
-              <p className="text-sm font-bold text-white tracking-tight">Mapa</p>
-              <p className="text-[10px] text-stone-500 truncate max-w-[130px]">{orgName}</p>
+              <p className="text-sm font-display font-semibold text-white tracking-tight">Mapa</p>
+              <p className="text-[10px] text-[color:var(--sidebar-fg-muted)] truncate max-w-[130px]">{orgName}</p>
             </div>
           </div>
-          <button onClick={onClose} className="lg:hidden text-stone-500 hover:text-stone-300 p-1 rounded-lg hover:bg-stone-800">
+          <button onClick={onClose} className="lg:hidden text-[color:var(--sidebar-fg-muted)] hover:text-[color:var(--sidebar-fg)] p-1 rounded-lg hover:bg-[color:var(--primary-hover)]">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -83,12 +83,12 @@ export function Sidebar({ role, orgName, open, onClose }: SidebarProps) {
                   flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium
                   transition-all duration-150
                   ${isActive
-                    ? "bg-indigo-600/20 text-indigo-400"
-                    : "text-stone-400 hover:bg-stone-800 hover:text-stone-200"
+                    ? "bg-[color:var(--sidebar-active-bg)]/20 text-[color:var(--sidebar-active-fg)]"
+                    : "text-[color:var(--sidebar-fg-muted)] hover:bg-[color:var(--primary-hover)] hover:text-[color:var(--sidebar-fg)]"
                   }
                 `}
               >
-                <item.icon className={`w-[18px] h-[18px] ${isActive ? "text-indigo-400" : "text-stone-500"}`} />
+                <item.icon className={`w-[18px] h-[18px] ${isActive ? "text-[color:var(--sidebar-active-fg)]" : "text-[color:var(--sidebar-fg-muted)]"}`} />
                 {item.name}
               </Link>
             );
@@ -96,7 +96,7 @@ export function Sidebar({ role, orgName, open, onClose }: SidebarProps) {
         </nav>
 
         {/* Bottom branding */}
-        <div className="absolute bottom-0 left-0 right-0 px-5 py-4 border-t border-stone-800">
+        <div className="absolute bottom-0 left-0 right-0 px-5 py-4 border-t border-[color:var(--sidebar-border)]">
           <p className="text-[10px] text-stone-600">Mapa de Horario</p>
           <p className="text-[10px] text-stone-700">v1.0</p>
         </div>
