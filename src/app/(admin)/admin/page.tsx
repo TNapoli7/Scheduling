@@ -237,6 +237,20 @@ export default function AdminDashboard() {
                             <span>{org.sector}</span>
                             <span>&middot;</span>
                             <span>{org.active_users} utilizador{org.active_users !== 1 ? "es" : ""}</span>
+                            <span>&middot;</span>
+                            <span>{org.total_users} total</span>
+                            {org.trial_ends_at && (
+                              <>
+                                <span>&middot;</span>
+                                <span>Trial: {new Date(org.trial_ends_at).toLocaleDateString("pt-PT")}</span>
+                              </>
+                            )}
+                            {org.last_login_at && (
+                              <>
+                                <span>&middot;</span>
+                                <span>Ultimo login: {new Date(org.last_login_at).toLocaleDateString("pt-PT")}</span>
+                              </>
+                            )}
                             {org.plan_name !== "trial" && (
                               <>
                                 <span>&middot;</span>
