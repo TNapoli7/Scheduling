@@ -175,11 +175,11 @@ export default function AvailabilityPage() {
     return (
       <div className="space-y-4">
         <div>
-          <div className="h-8 w-48 bg-gray-200 rounded animate-pulse" />
-          <div className="h-4 w-64 bg-gray-200 rounded animate-pulse mt-2" />
+          <div className="h-8 w-48 bg-stone-200 rounded animate-pulse" />
+          <div className="h-4 w-64 bg-stone-200 rounded animate-pulse mt-2" />
         </div>
         <div className="flex justify-center">
-          <div className="h-6 w-48 bg-gray-200 rounded animate-pulse" />
+          <div className="h-6 w-48 bg-stone-200 rounded animate-pulse" />
         </div>
         <SkeletonTable rows={5} cols={10} />
       </div>
@@ -191,8 +191,8 @@ export default function AvailabilityPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Disponibilidades</h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <h1 className="text-2xl font-bold text-stone-900">Disponibilidades</h1>
+          <p className="text-sm text-stone-500 mt-1">
             {isManager
               ? "Visualize e aprove indisponibilidades da equipa."
               : "Marque os dias em que nao esta disponivel."}
@@ -212,7 +212,7 @@ export default function AvailabilityPage() {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
         </Button>
-        <h2 className="text-lg font-semibold text-gray-900 min-w-[180px] text-center">
+        <h2 className="text-lg font-semibold text-stone-900 min-w-[180px] text-center">
           {MONTH_NAMES[month - 1]} {year}
         </h2>
         <Button variant="ghost" size="sm" onClick={nextMonth}>
@@ -223,13 +223,13 @@ export default function AvailabilityPage() {
       </div>
 
       {/* Legend */}
-      <div className="flex flex-wrap gap-4 px-1 text-xs text-gray-600">
+      <div className="flex flex-wrap gap-4 px-1 text-xs text-stone-600">
         <div className="flex items-center gap-1.5">
           <div className="w-3 h-3 rounded bg-green-100 border border-green-300" />
           <span>Disponivel</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <div className="w-3 h-3 rounded bg-yellow-100 border border-yellow-300" />
+          <div className="w-3 h-3 rounded bg-amber-100 border border-yellow-300" />
           <span>Indisponivel (pendente)</span>
         </div>
         <div className="flex items-center gap-1.5">
@@ -237,17 +237,17 @@ export default function AvailabilityPage() {
           <span>Indisponivel (aprovado)</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <div className="w-3 h-3 rounded bg-gray-100 border border-gray-300 line-through" />
+          <div className="w-3 h-3 rounded bg-stone-100 border border-stone-300 line-through" />
           <span>Rejeitado</span>
         </div>
       </div>
 
       {/* Grid */}
-      <div className="border border-gray-200 rounded-lg overflow-x-auto bg-white">
+      <div className="border border-stone-200 rounded-lg overflow-x-auto bg-white">
         <table className="text-xs w-full border-collapse">
           <thead>
-            <tr className="bg-gray-50">
-              <th className="sticky left-0 z-10 bg-gray-50 px-3 py-2 text-left font-medium text-gray-600 border-b border-r border-gray-200 min-w-[140px]">
+            <tr className="bg-stone-50">
+              <th className="sticky left-0 z-10 bg-stone-50 px-3 py-2 text-left font-medium text-stone-600 border-b border-r border-stone-200 min-w-[140px]">
                 Funcionario
               </th>
               {days.map((day) => {
@@ -257,8 +257,8 @@ export default function AvailabilityPage() {
                 return (
                   <th
                     key={day}
-                    className={`px-1 py-2 text-center font-medium border-b border-gray-200 min-w-[44px] ${
-                      weekend ? "bg-gray-100 text-gray-500" : "text-gray-600"
+                    className={`px-1 py-2 text-center font-medium border-b border-stone-200 min-w-[44px] ${
+                      weekend ? "bg-stone-100 text-stone-500" : "text-stone-600"
                     }`}
                   >
                     <div>{dow}</div>
@@ -270,8 +270,8 @@ export default function AvailabilityPage() {
           </thead>
           <tbody>
             {employees.map((emp) => (
-              <tr key={emp.id} className="hover:bg-gray-50/50">
-                <td className="sticky left-0 z-10 bg-white px-3 py-1.5 font-medium text-gray-800 border-b border-r border-gray-200 truncate max-w-[140px]">
+              <tr key={emp.id} className="hover:bg-stone-50/50">
+                <td className="sticky left-0 z-10 bg-white px-3 py-1.5 font-medium text-stone-800 border-b border-r border-stone-200 truncate max-w-[140px]">
                   <div className="truncate" title={emp.full_name}>{emp.full_name}</div>
                 </td>
                 {days.map((day) => {
@@ -280,7 +280,7 @@ export default function AvailabilityPage() {
                   const isPast = new Date(day + "T23:59:59") < new Date();
                   const canClick = !isPast && (emp.id === myId || (!isManager));
 
-                  let bgClass = weekend ? "bg-gray-50" : "";
+                  let bgClass = weekend ? "bg-stone-50" : "";
                   let content = "";
                   let title = "Disponivel";
 
@@ -290,11 +290,11 @@ export default function AvailabilityPage() {
                       content = "X";
                       title = "Indisponivel (aprovado)";
                     } else if (avail.approval_status === "pending") {
-                      bgClass = "bg-yellow-100";
+                      bgClass = "bg-amber-100";
                       content = "?";
                       title = "Indisponivel (pendente)";
                     } else if (avail.approval_status === "rejected") {
-                      bgClass = "bg-gray-100";
+                      bgClass = "bg-stone-100";
                       content = "—";
                       title = "Rejeitado";
                     }
@@ -303,8 +303,8 @@ export default function AvailabilityPage() {
                   return (
                     <td
                       key={day}
-                      className={`border-b border-gray-100 text-center p-0.5 transition-colors ${bgClass} ${
-                        canClick ? "cursor-pointer hover:bg-blue-50" : ""
+                      className={`border-b border-stone-100 text-center p-0.5 transition-colors ${bgClass} ${
+                        canClick ? "cursor-pointer hover:bg-indigo-50" : ""
                       } ${isPast ? "opacity-50" : ""}`}
                       title={title}
                       onClick={() => {
@@ -313,8 +313,8 @@ export default function AvailabilityPage() {
                     >
                       <div className={`py-1 text-[10px] font-bold ${
                         avail?.approval_status === "approved" ? "text-red-600" :
-                        avail?.approval_status === "pending" ? "text-yellow-600" :
-                        avail?.approval_status === "rejected" ? "text-gray-400 line-through" :
+                        avail?.approval_status === "pending" ? "text-amber-600" :
+                        avail?.approval_status === "rejected" ? "text-stone-400 line-through" :
                         "text-transparent"
                       }`}>
                         {content || "·"}
@@ -332,7 +332,7 @@ export default function AvailabilityPage() {
       {isManager && pendingCount > 0 && (
         <Card>
           <div className="p-4">
-            <h3 className="font-semibold text-gray-900 mb-3">
+            <h3 className="font-semibold text-stone-900 mb-3">
               Pedidos pendentes ({pendingCount})
             </h3>
             <div className="space-y-2">
@@ -344,13 +344,13 @@ export default function AvailabilityPage() {
                   return (
                     <div
                       key={avail.id}
-                      className="flex items-center justify-between p-3 rounded-lg border border-gray-200 bg-yellow-50/50"
+                      className="flex items-center justify-between p-3 rounded-lg border border-stone-200 bg-amber-50/50"
                     >
                       <div>
-                        <p className="text-sm font-medium text-gray-900">
+                        <p className="text-sm font-medium text-stone-900">
                           {emp?.full_name || "—"}
                         </p>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-stone-500">
                           {parseInt(avail.date.slice(8))} {MONTH_NAMES[parseInt(avail.date.slice(5, 7)) - 1]}
                           {avail.reason && ` — ${avail.reason}`}
                         </p>

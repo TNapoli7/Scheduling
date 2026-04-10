@@ -34,12 +34,12 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-stone-50 flex items-center justify-center px-4">
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-blue-600">Mapa de Horario</h1>
-          <p className="text-gray-500 mt-2">Horarios simples, justos e legais</p>
+          <h1 className="text-3xl font-bold text-indigo-600">Mapa de Horario</h1>
+          <p className="text-stone-500 mt-2">Horarios simples, justos e legais</p>
         </div>
 
         <Card>
@@ -50,24 +50,24 @@ export default function LoginPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                 </svg>
               </div>
-              <h2 className="text-xl font-semibold text-gray-900 mb-2">Verifica o teu email</h2>
-              <p className="text-gray-600 mb-4">
+              <h2 className="text-xl font-semibold text-stone-900 mb-2">Verifica o teu email</h2>
+              <p className="text-stone-600 mb-4">
                 Enviamos um link magico para <strong>{email}</strong>
               </p>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-stone-500">
                 Clica no link no email para entrar. Verifica o spam se nao aparecer.
               </p>
               <button
                 onClick={() => { setSent(false); setEmail(""); }}
-                className="mt-4 text-sm text-blue-600 hover:text-blue-700"
+                className="mt-4 text-sm text-indigo-600 hover:text-indigo-700"
               >
                 Usar outro email
               </button>
             </div>
           ) : (
             <form onSubmit={handleLogin} className="space-y-4">
-              <h2 className="text-xl font-semibold text-gray-900">Entrar</h2>
-              <p className="text-sm text-gray-600">
+              <h2 className="text-xl font-semibold text-stone-900">Entrar</h2>
+              <p className="text-sm text-stone-600">
                 Insere o teu email para receberes um link de acesso.
               </p>
 
@@ -85,7 +85,7 @@ export default function LoginPage() {
                 Enviar link magico
               </Button>
 
-              <p className="text-xs text-center text-gray-500">
+              <p className="text-xs text-center text-stone-500">
                 Sem password. Sem complicacoes.
               </p>
             </form>

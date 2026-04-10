@@ -101,11 +101,11 @@ export default function OnboardingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-stone-50 flex items-center justify-center px-4">
       <div className="w-full max-w-lg">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-blue-600">Mapa de Horario</h1>
-          <p className="text-gray-500 mt-2">Configura a tua empresa em 3 passos</p>
+          <h1 className="text-3xl font-bold text-indigo-600">Mapa de Horario</h1>
+          <p className="text-stone-500 mt-2">Configura a tua empresa em 3 passos</p>
         </div>
 
         {/* Progress */}
@@ -114,12 +114,12 @@ export default function OnboardingPage() {
             <div key={s} className="flex-1 flex items-center gap-2">
               <div
                 className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                  s <= step ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-500"
+                  s <= step ? "bg-indigo-600 text-white" : "bg-stone-200 text-stone-500"
                 }`}
               >
                 {s}
               </div>
-              {s < 3 && <div className={`flex-1 h-0.5 ${s < step ? "bg-blue-600" : "bg-gray-200"}`} />}
+              {s < 3 && <div className={`flex-1 h-0.5 ${s < step ? "bg-indigo-600" : "bg-stone-200"}`} />}
             </div>
           ))}
         </div>
@@ -134,7 +134,7 @@ export default function OnboardingPage() {
           {/* Step 1: Org info */}
           {step === 1 && (
             <div className="space-y-4">
-              <h2 className="text-xl font-semibold text-gray-900">A tua empresa</h2>
+              <h2 className="text-xl font-semibold text-stone-900">A tua empresa</h2>
 
               <Input
                 label="Nome da empresa"
@@ -145,11 +145,11 @@ export default function OnboardingPage() {
               />
 
               <div className="space-y-1">
-                <label className="block text-sm font-medium text-gray-700">Setor</label>
+                <label className="block text-sm font-medium text-stone-700">Setor</label>
                 <select
                   value={sector}
                   onChange={(e) => setSector(e.target.value)}
-                  className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="block w-full rounded-lg border border-stone-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 >
                   {sectors.map((s) => (
                     <option key={s.value} value={s.value}>{s.label}</option>
@@ -173,8 +173,8 @@ export default function OnboardingPage() {
           {/* Step 2: Operating hours */}
           {step === 2 && (
             <div className="space-y-4">
-              <h2 className="text-xl font-semibold text-gray-900">Horario de funcionamento</h2>
-              <p className="text-sm text-gray-600">Quando e que a empresa esta aberta?</p>
+              <h2 className="text-xl font-semibold text-stone-900">Horario de funcionamento</h2>
+              <p className="text-sm text-stone-600">Quando e que a empresa esta aberta?</p>
 
               <div className="space-y-3">
                 {Object.entries(dayLabels).map(([day, label]) => {
@@ -186,9 +186,9 @@ export default function OnboardingPage() {
                           type="checkbox"
                           checked={!d.closed}
                           onChange={(e) => updateDay(day, "closed", !e.target.checked)}
-                          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                          className="rounded border-stone-300 text-indigo-600 focus:ring-indigo-500"
                         />
-                        <span className={`text-sm ${d.closed ? "text-gray-400" : "text-gray-700"}`}>
+                        <span className={`text-sm ${d.closed ? "text-stone-400" : "text-stone-700"}`}>
                           {label}
                         </span>
                       </label>
@@ -198,19 +198,19 @@ export default function OnboardingPage() {
                             type="time"
                             value={d.open}
                             onChange={(e) => updateDay(day, "open", e.target.value)}
-                            className="rounded border-gray-300 px-2 py-1 text-sm focus:ring-blue-500 focus:border-blue-500"
+                            className="rounded border-stone-300 px-2 py-1 text-sm focus:ring-indigo-500 focus:border-indigo-500"
                           />
-                          <span className="text-gray-400">ate</span>
+                          <span className="text-stone-400">ate</span>
                           <input
                             type="time"
                             value={d.close}
                             onChange={(e) => updateDay(day, "close", e.target.value)}
-                            className="rounded border-gray-300 px-2 py-1 text-sm focus:ring-blue-500 focus:border-blue-500"
+                            className="rounded border-stone-300 px-2 py-1 text-sm focus:ring-indigo-500 focus:border-indigo-500"
                           />
                         </div>
                       )}
                       {d.closed && (
-                        <span className="text-sm text-gray-400">Fechado</span>
+                        <span className="text-sm text-stone-400">Fechado</span>
                       )}
                     </div>
                   );
@@ -231,7 +231,7 @@ export default function OnboardingPage() {
           {/* Step 3: Your name */}
           {step === 3 && (
             <div className="space-y-4">
-              <h2 className="text-xl font-semibold text-gray-900">O teu perfil</h2>
+              <h2 className="text-xl font-semibold text-stone-900">O teu perfil</h2>
 
               <Input
                 label="Nome completo"
@@ -241,7 +241,7 @@ export default function OnboardingPage() {
                 required
               />
 
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-stone-500">
                 Vais ser o administrador desta conta. Podes adicionar a equipa depois.
               </p>
 

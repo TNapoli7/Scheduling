@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Menu, Bell, LogOut, User, Check } from "lucide-react";
+import { Menu, Bell, LogOut, User, ChevronDown } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import type { Notification } from "@/types/database";
@@ -61,9 +61,7 @@ export function Header({ userName, unreadCount: initialUnread, onMenuClick }: He
   }, []);
 
   function toggleNotifications() {
-    if (!showNotifications) {
-      fetchNotifications();
-    }
+    if (!showNotifications) fetchNotifications();
     setShowNotifications(!showNotifications);
     setShowDropdown(false);
   }
@@ -93,12 +91,12 @@ export function Header({ userName, unreadCount: initialUnread, onMenuClick }: He
   }
 
   return (
-    <header className="sticky top-0 z-30 h-16 bg-white border-b border-gray-200 px-4 lg:px-6">
+    <header className="sticky top-0 z-30 h-14 bg-white/80 backdrop-blur-md border-b border-stone-200/60 px-4 lg:px-6">
       <div className="flex items-center justify-between h-full">
         {/* Left: mobile menu */}
         <button
           onClick={onMenuClick}
-          className="lg:hidden p-2 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100"
+          className="lg:hidden p-2 text-stone-500 hover:text-stone-700 rounded-lg hover:bg-stone-100"
         >
           <Menu className="w-5 h-5" />
         </button>
@@ -106,61 +104,62 @@ export function Header({ userName, unreadCount: initialUnread, onMenuClick }: He
         <div className="lg:hidden" />
 
         {/* Right: notifications + profile */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1">
           {/* Notifications */}
           <div className="relative" ref={notifRef}>
             <button
               onClick={toggleNotifications}
-              className="relative p-2 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100"
+              className="relative p-2 text-stone-400 hover:text-stone-600 rounded-lg hover:bg-stone-100 transition-colors"
             >
-              <Bell className="w-5 h-5" />
+              <Bell className="w-[18px] h-[18px]" />
               {unreadCount > 0 && (
-                <span className="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                <span className="absolute top-1.5 right-1.5 w-4 h-4 bg-indigo-600 text-white text-[9px] font-bold rounded-full flex items-center justify-center ring-2 ring-white">
                   {unreadCount > 9 ? "9+" : unreadCount}
                 </span>
               )}
             </button>
 
             {showNotifications && (
-              <div className="absolute right-0 mt-2 w-80 max-w-[calc(100vw-2rem)] bg-white rounded-lg shadow-lg border border-gray-200 z-50 max-h-[400px] overflow-hidden flex flex-col">
-                <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
-                  <h3 className="text-sm font-semibold text-gray-900">Notificacoes</h3>
+              <div className="absolute right-0 mt-2 w-80 max-w-[calc(100vw-2rem)] bg-white rounded-2xl shadow-xl border border-stone-200/60 z-50 max-h-[400px] overflow-hidden flex flex-col">
+                <div className="flex items-center justify-between px-4 py-3 border-b border-stone-100">
+                  <h3 className="text-sm font-semibold text-stone-900">Notificacoes</h3>
                   {unreadCount > 0 && (
                     <button
                       onClick={markAllRead}
-                      className="text-xs text-blue-600 hover:text-blue-700 font-medium"
+                      className="text-xs text-indigo-600 hover:text-indigo-700 font-medium"
                     >
-                      Marcar todas como lidas
+                      Marcar como lidas
                     </button>
                   )}
                 </div>
                 <div className="overflow-y-auto flex-1">
                   {loadingNotifs ? (
-                    <div className="text-center py-6 text-gray-400 text-sm">A carregar...</div>
+                    <div className="text-center py-8 text-stone-400 text-sm">A carregar...</div>
                   ) : notifications.length === 0 ? (
-                    <div className="text-center py-6 text-gray-400 text-sm">Sem notificacoes</div>
+                    <div className="text-center py-8">
+                      <Bell className="w-8 h-8 text-stone-200 mx-auto mb-2" />
+                      <p className="text-sm text-stone-400">Sem notificacoes</p>
+                    </div>
                   ) : (
                     notifications.map((notif) => (
                       <div
                         key={notif.id}
-                        className={`px-4 py-3 border-b border-gray-50 hover:bg-gray-50 cursor-pointer flex items-start gap-3 ${
-                          !notif.is_read ? "bg-blue-50/50" : ""
+                        className={`px-4 py-3 border-b border-stone-50 hover:bg-stone-50 cursor-pointer flex items-start gap-3 transition-colors ${
+                          !notif.is_read ? "bg-indigo-50/40" : ""
                         }`}
-                        onClick={() => {
-                          if (!notif.is_read) markAsRead(notif.id);
-                        }}
+                        onClick={() => { if (!notif.is_read) markAsRead(notif.id); }}
                       >
                         <div className="flex-1 min-w-0">
-                          <p className={`text-sm ${!notif.is_read ? "font-semibold text-gray-900" : "text-gray-700"}`}>
+                          <p className={`text-sm leading-snug ${!notif.is_read ? "font-semibold text-stone-900" : "text-stone-600"}`}>
                             {notif.title}
                           </p>
                           {notif.body && (
-                            <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{notif.body}</p>
+                            <p className="text-xs text-stone-400 mt-0.5 line-clamp-2">{notif.body}</p>
                           )}
-                          <p className="text-xs text-gray-400 mt-1">{timeAgo(notif.created_at)}</p>
+                          <p className="text-[10px] text-stone-300 mt-1">{timeAgo(notif.created_at)}</p>
                         </div>
                         {!notif.is_read && (
-                          <div className="w-2 h-2 bg-blue-500 rounded-full mt-1.5 flex-shrink-0" />
+                          <div className="w-2 h-2 bg-indigo-500 rounded-full mt-1.5 flex-shrink-0" />
                         )}
                       </div>
                     ))
@@ -174,29 +173,28 @@ export function Header({ userName, unreadCount: initialUnread, onMenuClick }: He
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => { setShowDropdown(!showDropdown); setShowNotifications(false); }}
-              className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-100 transition-colors"
+              className="flex items-center gap-2 py-1.5 px-2 rounded-lg hover:bg-stone-100 transition-colors"
             >
-              <div className="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm font-semibold">
+              <div className="w-7 h-7 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center text-xs font-bold">
                 {userName.charAt(0).toUpperCase()}
               </div>
-              <span className="hidden sm:block text-sm font-medium text-gray-700">{userName}</span>
+              <span className="hidden sm:block text-sm font-medium text-stone-700">{userName}</span>
+              <ChevronDown className="hidden sm:block w-3.5 h-3.5 text-stone-400" />
             </button>
 
             {showDropdown && (
-              <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
+              <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-stone-200/60 py-1 z-50">
                 <button
-                  onClick={() => {
-                    setShowDropdown(false);
-                    router.push("/settings");
-                  }}
-                  className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                  onClick={() => { setShowDropdown(false); router.push("/settings"); }}
+                  className="flex items-center gap-2.5 w-full px-4 py-2.5 text-sm text-stone-600 hover:bg-stone-50 transition-colors"
                 >
-                  <User className="w-4 h-4" />
+                  <User className="w-4 h-4 text-stone-400" />
                   Perfil
                 </button>
+                <div className="border-t border-stone-100 my-1" />
                 <button
                   onClick={handleSignOut}
-                  className="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                  className="flex items-center gap-2.5 w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
                 >
                   <LogOut className="w-4 h-4" />
                   Sair

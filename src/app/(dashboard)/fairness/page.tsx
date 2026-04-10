@@ -219,21 +219,21 @@ export default function FairnessPage() {
   }
 
   function scoreColor(score: number): string {
-    if (score >= 80) return "text-green-600";
-    if (score >= 60) return "text-yellow-600";
+    if (score >= 80) return "text-teal-600";
+    if (score >= 60) return "text-amber-600";
     return "text-red-600";
   }
 
   function scoreBg(score: number): string {
-    if (score >= 80) return "bg-green-50";
-    if (score >= 60) return "bg-yellow-50";
+    if (score >= 80) return "bg-teal-50";
+    if (score >= 60) return "bg-amber-50";
     return "bg-red-50";
   }
 
   if (loading) {
     return (
       <div className="space-y-4">
-        <div className="h-8 w-32 bg-gray-200 rounded animate-pulse" />
+        <div className="h-8 w-32 bg-stone-200 rounded animate-pulse" />
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <SkeletonCard />
           <SkeletonCard />
@@ -249,8 +249,8 @@ export default function FairnessPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Fairness</h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <h1 className="text-2xl font-bold text-stone-900">Fairness</h1>
+          <p className="text-sm text-stone-500 mt-1">
             Distribuicao justa de turnos e horas
           </p>
         </div>
@@ -275,7 +275,7 @@ export default function FairnessPage() {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
         </Button>
-        <h2 className="text-lg font-semibold text-gray-900 min-w-[180px] text-center">
+        <h2 className="text-lg font-semibold text-stone-900 min-w-[180px] text-center">
           {MONTH_NAMES[month - 1]} {year}
         </h2>
         <Button variant="ghost" size="sm" onClick={nextMonth}>
@@ -288,24 +288,24 @@ export default function FairnessPage() {
       {/* Summary cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card>
-          <p className="text-sm text-gray-500">Score medio</p>
+          <p className="text-sm text-stone-500">Score medio</p>
           <p className={`text-3xl font-bold mt-1 ${scoreColor(avgScore)}`}>
             {avgScore}
-            <span className="text-lg text-gray-400 font-normal">/100</span>
+            <span className="text-lg text-stone-400 font-normal">/100</span>
           </p>
         </Card>
         <Card>
-          <p className="text-sm text-gray-500">Media de horas</p>
-          <p className="text-3xl font-bold mt-1 text-gray-900">
+          <p className="text-sm text-stone-500">Media de horas</p>
+          <p className="text-3xl font-bold mt-1 text-stone-900">
             {avgHours}
-            <span className="text-lg text-gray-400 font-normal">h</span>
+            <span className="text-lg text-stone-400 font-normal">h</span>
           </p>
         </Card>
         <Card>
-          <p className="text-sm text-gray-500">Funcionarios escalados</p>
-          <p className="text-3xl font-bold mt-1 text-gray-900">
+          <p className="text-sm text-stone-500">Funcionarios escalados</p>
+          <p className="text-3xl font-bold mt-1 text-stone-900">
             {activeMetrics.length}
-            <span className="text-lg text-gray-400 font-normal">
+            <span className="text-lg text-stone-400 font-normal">
               /{metrics.length}
             </span>
           </p>
@@ -315,67 +315,67 @@ export default function FairnessPage() {
       {/* Per-employee table */}
       {metrics.length === 0 ? (
         <Card>
-          <div className="text-center py-8 text-gray-500">
+          <div className="text-center py-8 text-stone-500">
             Nenhum dado para este mes.
           </div>
         </Card>
       ) : (
-        <div className="border border-gray-200 rounded-lg overflow-hidden bg-white">
+        <div className="border border-stone-200 rounded-lg overflow-hidden bg-white">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-gray-50 text-left">
-                <th className="px-4 py-3 font-medium text-gray-600">
+              <tr className="bg-stone-50 text-left">
+                <th className="px-4 py-3 font-medium text-stone-600">
                   Funcionario
                 </th>
-                <th className="px-4 py-3 font-medium text-gray-600 text-center">
+                <th className="px-4 py-3 font-medium text-stone-600 text-center">
                   Turnos
                 </th>
-                <th className="px-4 py-3 font-medium text-gray-600 text-center">
+                <th className="px-4 py-3 font-medium text-stone-600 text-center">
                   Horas
                 </th>
-                <th className="px-4 py-3 font-medium text-gray-600 text-center">
+                <th className="px-4 py-3 font-medium text-stone-600 text-center">
                   Noites
                 </th>
-                <th className="px-4 py-3 font-medium text-gray-600 text-center">
+                <th className="px-4 py-3 font-medium text-stone-600 text-center">
                   Fins-de-semana
                 </th>
-                <th className="px-4 py-3 font-medium text-gray-600 text-center">
+                <th className="px-4 py-3 font-medium text-stone-600 text-center">
                   Feriados
                 </th>
-                <th className="px-4 py-3 font-medium text-gray-600 text-center">
+                <th className="px-4 py-3 font-medium text-stone-600 text-center">
                   Score
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-stone-100">
               {metrics.map((m) => (
                 <tr
                   key={m.employee.id}
                   className={`${m.totalShifts === 0 ? "opacity-40" : ""}`}
                 >
                   <td className="px-4 py-3">
-                    <div className="font-medium text-gray-900">
+                    <div className="font-medium text-stone-900">
                       {m.employee.full_name}
                     </div>
-                    <div className="text-xs text-gray-500">
+                    <div className="text-xs text-stone-500">
                       {m.employee.contract_type === "full_time"
                         ? `${m.employee.weekly_hours}h/semana`
                         : `Part-time ${m.employee.weekly_hours}h`}
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-center text-gray-700">
+                  <td className="px-4 py-3 text-center text-stone-700">
                     {m.totalShifts}
                   </td>
-                  <td className="px-4 py-3 text-center text-gray-700">
+                  <td className="px-4 py-3 text-center text-stone-700">
                     {m.totalHours}h
                   </td>
-                  <td className="px-4 py-3 text-center text-gray-700">
+                  <td className="px-4 py-3 text-center text-stone-700">
                     {m.nightShifts}
                   </td>
-                  <td className="px-4 py-3 text-center text-gray-700">
+                  <td className="px-4 py-3 text-center text-stone-700">
                     {m.weekendShifts}
                   </td>
-                  <td className="px-4 py-3 text-center text-gray-700">
+                  <td className="px-4 py-3 text-center text-stone-700">
                     {m.holidayShifts}
                   </td>
                   <td className="px-4 py-3 text-center">
@@ -388,7 +388,7 @@ export default function FairnessPage() {
                         {m.fairnessScore}
                       </span>
                     ) : (
-                      <span className="text-gray-400">—</span>
+                      <span className="text-stone-400">—</span>
                     )}
                   </td>
                 </tr>
@@ -399,13 +399,13 @@ export default function FairnessPage() {
       )}
 
       {/* Legend */}
-      <div className="flex flex-wrap gap-4 text-xs text-gray-500 px-1">
+      <div className="flex flex-wrap gap-4 text-xs text-stone-500 px-1">
         <div className="flex items-center gap-1.5">
-          <div className="w-3 h-3 rounded-full bg-green-100 border border-green-300" />
+          <div className="w-3 h-3 rounded-full bg-teal-100 border border-teal-300" />
           80-100: Distribuicao justa
         </div>
         <div className="flex items-center gap-1.5">
-          <div className="w-3 h-3 rounded-full bg-yellow-100 border border-yellow-300" />
+          <div className="w-3 h-3 rounded-full bg-amber-100 border border-amber-300" />
           60-79: Atenção necessaria
         </div>
         <div className="flex items-center gap-1.5">

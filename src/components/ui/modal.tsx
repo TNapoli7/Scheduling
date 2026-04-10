@@ -41,13 +41,22 @@ export function Modal({ open, onClose, title, children, size = "md" }: ModalProp
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
       onClick={(e) => { if (e.target === overlayRef.current) onClose(); }}
     >
-      <div className="fixed inset-0 bg-black/50" />
-      <div className={`relative bg-white rounded-xl shadow-xl w-full ${sizeStyles[size]} max-h-[90vh] overflow-y-auto`}>
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
+      <div className="fixed inset-0 bg-stone-900/40 backdrop-blur-sm" />
+      <div
+        className={`relative bg-white rounded-2xl shadow-2xl w-full ${sizeStyles[size]} max-h-[90vh] overflow-y-auto border border-stone-200/50`}
+        style={{ animation: "modalIn 0.15s ease-out" }}
+      >
+        <style>{`
+          @keyframes modalIn {
+            from { opacity: 0; transform: scale(0.97) translateY(4px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+          }
+        `}</style>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-stone-100">
+          <h2 className="text-base font-semibold text-stone-900">{title}</h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            className="text-stone-400 hover:text-stone-600 transition-colors rounded-lg hover:bg-stone-100 p-1"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

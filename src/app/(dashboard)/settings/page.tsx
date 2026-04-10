@@ -128,8 +128,8 @@ export default function SettingsPage() {
   if (loading) {
     return (
       <div className="space-y-6">
-        <h1 className="text-2xl font-bold text-gray-900">Definicoes</h1>
-        <div className="text-center py-12 text-gray-500">A carregar...</div>
+        <h1 className="text-2xl font-bold text-stone-900">Definicoes</h1>
+        <div className="text-center py-12 text-stone-500">A carregar...</div>
       </div>
     );
   }
@@ -137,7 +137,7 @@ export default function SettingsPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Definicoes</h1>
+        <h1 className="text-2xl font-bold text-stone-900">Definicoes</h1>
         {success && (
           <Badge variant="success">Guardado com sucesso</Badge>
         )}
@@ -189,17 +189,17 @@ export default function SettingsPage() {
                 key={day.key}
                 className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4"
               >
-                <div className="w-24 text-sm font-medium text-gray-700">
+                <div className="w-24 text-sm font-medium text-stone-700">
                   {day.label}
                 </div>
-                <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+                <label className="flex items-center gap-2 text-sm text-stone-600 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={h.closed}
                     onChange={(e) =>
                       updateHours(day.key, "closed", e.target.checked)
                     }
-                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    className="rounded border-stone-300 text-indigo-600 focus:ring-indigo-500"
                   />
                   Encerrado
                 </label>
@@ -211,16 +211,16 @@ export default function SettingsPage() {
                       onChange={(e) =>
                         updateHours(day.key, "open", e.target.value)
                       }
-                      className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="rounded-lg border border-stone-300 px-3 py-1.5 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                     />
-                    <span className="text-gray-400">—</span>
+                    <span className="text-stone-400">—</span>
                     <input
                       type="time"
                       value={h.close}
                       onChange={(e) =>
                         updateHours(day.key, "close", e.target.value)
                       }
-                      className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="rounded-lg border border-stone-300 px-3 py-1.5 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                     />
                   </div>
                 )}
@@ -242,7 +242,7 @@ export default function SettingsPage() {
                   org.subscription_tier.slice(1)}
             </Badge>
             {org.trial_ends_at && (
-              <span className="text-sm text-gray-500">
+              <span className="text-sm text-stone-500">
                 Trial termina a{" "}
                 {new Date(org.trial_ends_at).toLocaleDateString("pt-PT")}
               </span>

@@ -190,8 +190,8 @@ export default function ShiftsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Turnos</h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <h1 className="text-2xl font-bold text-stone-900">Turnos</h1>
+          <p className="text-sm text-stone-500 mt-1">
             {activeShifts.length} turno{activeShifts.length !== 1 ? "s" : ""} ativo{activeShifts.length !== 1 ? "s" : ""}
           </p>
         </div>
@@ -212,16 +212,16 @@ export default function ShiftsPage() {
 
       {/* Shift cards */}
       {loading ? (
-        <div className="text-center py-12 text-gray-500">A carregar...</div>
+        <div className="text-center py-12 text-stone-500">A carregar...</div>
       ) : shifts.length === 0 ? (
         <Card>
           <div className="text-center py-8">
-            <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-6 h-6 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <p className="text-gray-500 mb-4">Ainda nao tens turnos definidos.</p>
+            <p className="text-stone-500 mb-4">Ainda nao tens turnos definidos.</p>
             <div className="flex justify-center gap-3">
               <Button variant="secondary" onClick={loadPresets}>
                 Carregar exemplos
@@ -243,10 +243,10 @@ export default function ShiftsPage() {
                     style={{ backgroundColor: shift.color }}
                   />
                   <div>
-                    <h3 className="font-semibold text-gray-900">{shift.name}</h3>
-                    <p className="text-sm text-gray-500">
+                    <h3 className="font-semibold text-stone-900">{shift.name}</h3>
+                    <p className="text-sm text-stone-500">
                       {shift.start_time.slice(0, 5)} - {shift.end_time.slice(0, 5)}
-                      <span className="ml-2 text-gray-400">
+                      <span className="ml-2 text-stone-400">
                         ({computeDuration(shift.start_time, shift.end_time)})
                       </span>
                     </p>
@@ -256,7 +256,7 @@ export default function ShiftsPage() {
               </div>
 
               <div className="mt-3 flex items-center justify-between">
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-stone-500">
                   Min. {shift.min_staff} pessoa{shift.min_staff !== 1 ? "s" : ""}
                 </p>
                 <div className="flex gap-1">
@@ -310,7 +310,7 @@ export default function ShiftsPage() {
           </div>
 
           {form.start_time && form.end_time && (
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-stone-500">
               Duracao: {computeDuration(form.start_time, form.end_time)}
             </p>
           )}
@@ -327,7 +327,7 @@ export default function ShiftsPage() {
 
           {/* Color picker */}
           <div className="space-y-1">
-            <label className="block text-sm font-medium text-gray-700">Cor</label>
+            <label className="block text-sm font-medium text-stone-700">Cor</label>
             <div className="flex gap-2 flex-wrap">
               {defaultColors.map((c) => (
                 <button
@@ -335,7 +335,7 @@ export default function ShiftsPage() {
                   type="button"
                   onClick={() => setForm({ ...form, color: c.value })}
                   className={`w-8 h-8 rounded-full border-2 transition-all ${
-                    form.color === c.value ? "border-gray-900 scale-110" : "border-transparent"
+                    form.color === c.value ? "border-stone-900 scale-110" : "border-transparent"
                   }`}
                   style={{ backgroundColor: c.value }}
                   title={c.label}
@@ -344,7 +344,7 @@ export default function ShiftsPage() {
             </div>
           </div>
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+          <div className="flex justify-end gap-3 pt-4 border-t border-stone-200">
             <Button variant="secondary" onClick={() => setShowModal(false)}>
               Cancelar
             </Button>

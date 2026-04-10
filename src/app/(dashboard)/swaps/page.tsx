@@ -225,8 +225,8 @@ export default function SwapsPage() {
   if (loading) {
     return (
       <div className="space-y-6">
-        <h1 className="text-2xl font-bold text-gray-900">Trocas</h1>
-        <div className="text-center py-12 text-gray-500">A carregar...</div>
+        <h1 className="text-2xl font-bold text-stone-900">Trocas</h1>
+        <div className="text-center py-12 text-stone-500">A carregar...</div>
       </div>
     );
   }
@@ -235,20 +235,20 @@ export default function SwapsPage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Trocas</h1>
+        <h1 className="text-2xl font-bold text-stone-900">Trocas</h1>
         <Button onClick={openNewSwap}>Pedir troca</Button>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 border-b border-gray-200">
+      <div className="flex gap-1 border-b border-stone-200">
         {tabs.map((t) => (
           <button
             key={t.key}
             onClick={() => setTab(t.key)}
             className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
               tab === t.key
-                ? "border-blue-600 text-blue-600"
-                : "border-transparent text-gray-500 hover:text-gray-700"
+                ? "border-indigo-600 text-indigo-600"
+                : "border-transparent text-stone-500 hover:text-stone-700"
             }`}
           >
             {t.label}
@@ -256,8 +256,8 @@ export default function SwapsPage() {
               <span
                 className={`ml-1.5 px-1.5 py-0.5 rounded-full text-xs ${
                   tab === t.key
-                    ? "bg-blue-100 text-blue-700"
-                    : "bg-gray-100 text-gray-600"
+                    ? "bg-indigo-100 text-indigo-700"
+                    : "bg-stone-100 text-stone-600"
                 }`}
               >
                 {t.count}
@@ -270,7 +270,7 @@ export default function SwapsPage() {
       {/* Swap list */}
       {filtered.length === 0 ? (
         <Card>
-          <div className="text-center py-8 text-gray-500">
+          <div className="text-center py-8 text-stone-500">
             {tab === "pending"
               ? "Nenhum pedido de troca pendente."
               : "Nenhum pedido de troca encontrado."}
@@ -299,12 +299,12 @@ export default function SwapsPage() {
                         ? "Aprovado"
                         : "Rejeitado"}
                     </Badge>
-                    <span className="text-xs text-gray-400">
+                    <span className="text-xs text-stone-400">
                       {new Date(swap.created_at).toLocaleDateString("pt-PT")}
                     </span>
                   </div>
 
-                  <p className="text-sm text-gray-900">
+                  <p className="text-sm text-stone-900">
                     <span className="font-medium">
                       {swap.requester?.full_name}
                     </span>{" "}
@@ -314,7 +314,7 @@ export default function SwapsPage() {
                     </span>
                   </p>
 
-                  <div className="flex flex-wrap gap-3 mt-2 text-xs text-gray-600">
+                  <div className="flex flex-wrap gap-3 mt-2 text-xs text-stone-600">
                     {swap.entry?.shift_template && (
                       <div className="flex items-center gap-1.5">
                         <div
@@ -332,7 +332,7 @@ export default function SwapsPage() {
                     )}
                     {swap.target_entry?.shift_template && (
                       <>
-                        <span className="text-gray-400">↔</span>
+                        <span className="text-stone-400">↔</span>
                         <div className="flex items-center gap-1.5">
                           <div
                             className="w-2.5 h-2.5 rounded-full"
@@ -352,7 +352,7 @@ export default function SwapsPage() {
                   </div>
 
                   {swap.reason && (
-                    <p className="text-xs text-gray-500 mt-1 italic">
+                    <p className="text-xs text-stone-500 mt-1 italic">
                       &ldquo;{swap.reason}&rdquo;
                     </p>
                   )}
@@ -395,11 +395,11 @@ export default function SwapsPage() {
         <div className="space-y-4">
           {/* Select my shift */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-stone-700 mb-1">
               O meu turno
             </label>
             {myEntries.length === 0 ? (
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-stone-500">
                 Nao tens turnos futuros atribuidos.
               </p>
             ) : (
@@ -410,8 +410,8 @@ export default function SwapsPage() {
                     onClick={() => setSelectedEntry(entry.id)}
                     className={`w-full flex items-center gap-3 p-3 rounded-lg border text-left text-sm transition-colors ${
                       selectedEntry === entry.id
-                        ? "border-blue-400 bg-blue-50"
-                        : "border-gray-200 hover:border-gray-300"
+                        ? "border-indigo-400 bg-indigo-50"
+                        : "border-stone-200 hover:border-stone-300"
                     }`}
                   >
                     <div
@@ -422,10 +422,10 @@ export default function SwapsPage() {
                       }}
                     />
                     <div>
-                      <p className="font-medium text-gray-900">
+                      <p className="font-medium text-stone-900">
                         {entry.date} — {entry.shift_template?.name}
                       </p>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-stone-500">
                         {entry.shift_template?.start_time?.slice(0, 5)} -{" "}
                         {entry.shift_template?.end_time?.slice(0, 5)}
                       </p>
@@ -438,13 +438,13 @@ export default function SwapsPage() {
 
           {/* Select colleague */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-stone-700 mb-1">
               Trocar com
             </label>
             <select
               value={selectedTarget}
               onChange={(e) => setSelectedTarget(e.target.value)}
-              className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="block w-full rounded-lg border border-stone-300 px-3 py-2 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
             >
               <option value="">Selecionar colega...</option>
               {colleagues.map((c) => (
@@ -457,7 +457,7 @@ export default function SwapsPage() {
 
           {/* Reason */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-stone-700 mb-1">
               Motivo (opcional)
             </label>
             <textarea
@@ -465,7 +465,7 @@ export default function SwapsPage() {
               onChange={(e) => setSwapReason(e.target.value)}
               placeholder="Explica brevemente o motivo da troca..."
               rows={2}
-              className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="block w-full rounded-lg border border-stone-300 px-3 py-2 text-sm text-stone-900 placeholder:text-stone-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
           </div>
 

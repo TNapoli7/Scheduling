@@ -215,8 +215,8 @@ export default function TimeOffPage() {
     return (
       <div className="space-y-4">
         <div>
-          <div className="h-8 w-48 bg-gray-200 rounded animate-pulse" />
-          <div className="h-4 w-64 bg-gray-200 rounded animate-pulse mt-2" />
+          <div className="h-8 w-48 bg-stone-200 rounded animate-pulse" />
+          <div className="h-4 w-64 bg-stone-200 rounded animate-pulse mt-2" />
         </div>
         <SkeletonCard />
         <SkeletonList count={3} />
@@ -229,8 +229,8 @@ export default function TimeOffPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Ferias e Ausencias</h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <h1 className="text-2xl font-bold text-stone-900">Ferias e Ausencias</h1>
+          <p className="text-sm text-stone-500 mt-1">
             {isManager
               ? "Gerir pedidos de ferias e ausencias da equipa."
               : "Pedir ferias e ver o estado dos seus pedidos."}
@@ -242,23 +242,23 @@ export default function TimeOffPage() {
       {/* Vacation balance */}
       <Card>
         <div className="p-4">
-          <p className="text-sm font-medium text-gray-500 mb-3">Saldo de ferias {currentYear}</p>
+          <p className="text-sm font-medium text-stone-500 mb-3">Saldo de ferias {currentYear}</p>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <div>
-              <p className="text-2xl font-bold text-gray-900">{vacationQuota}</p>
-              <p className="text-xs text-gray-500">Total</p>
+              <p className="text-2xl font-bold text-stone-900">{vacationQuota}</p>
+              <p className="text-xs text-stone-500">Total</p>
             </div>
             <div>
-              <p className="text-2xl font-bold text-green-600">{remainingDays % 1 === 0 ? remainingDays : remainingDays.toFixed(1).replace(".", ",")}</p>
-              <p className="text-xs text-gray-500">Disponiveis</p>
+              <p className="text-2xl font-bold text-teal-600">{remainingDays % 1 === 0 ? remainingDays : remainingDays.toFixed(1).replace(".", ",")}</p>
+              <p className="text-xs text-stone-500">Disponiveis</p>
             </div>
             <div>
-              <p className="text-2xl font-bold text-blue-600">{usedDays % 1 === 0 ? usedDays : usedDays.toFixed(1).replace(".", ",")}</p>
-              <p className="text-xs text-gray-500">Utilizados</p>
+              <p className="text-2xl font-bold text-indigo-600">{usedDays % 1 === 0 ? usedDays : usedDays.toFixed(1).replace(".", ",")}</p>
+              <p className="text-xs text-stone-500">Utilizados</p>
             </div>
             <div>
-              <p className="text-2xl font-bold text-yellow-600">{pendingDays % 1 === 0 ? pendingDays : pendingDays.toFixed(1).replace(".", ",")}</p>
-              <p className="text-xs text-gray-500">Pendentes</p>
+              <p className="text-2xl font-bold text-amber-600">{pendingDays % 1 === 0 ? pendingDays : pendingDays.toFixed(1).replace(".", ",")}</p>
+              <p className="text-xs text-stone-500">Pendentes</p>
             </div>
           </div>
           {remainingDays <= 3 && remainingDays > 0 && (
@@ -271,7 +271,7 @@ export default function TimeOffPage() {
       </Card>
 
       {/* Tabs */}
-      <div className="flex gap-1 bg-gray-100 rounded-lg p-1 w-fit">
+      <div className="flex gap-1 bg-stone-100 rounded-lg p-1 w-fit">
         {([
           { key: "pending", label: "Pendentes", count: pendingCount },
           { key: "approved", label: "Aprovados" },
@@ -283,13 +283,13 @@ export default function TimeOffPage() {
             onClick={() => setTab(t.key)}
             className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
               tab === t.key
-                ? "bg-white text-gray-900 shadow-sm"
-                : "text-gray-600 hover:text-gray-900"
+                ? "bg-white text-stone-900 shadow-sm"
+                : "text-stone-600 hover:text-stone-900"
             }`}
           >
             {t.label}
             {"count" in t && t.count ? (
-              <span className="ml-1.5 bg-yellow-100 text-yellow-700 text-xs px-1.5 py-0.5 rounded-full">
+              <span className="ml-1.5 bg-amber-100 text-amber-700 text-xs px-1.5 py-0.5 rounded-full">
                 {t.count}
               </span>
             ) : null}
@@ -301,8 +301,8 @@ export default function TimeOffPage() {
       {filtered.length === 0 ? (
         <Card>
           <div className="text-center py-10">
-            <Palmtree className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-            <p className="text-sm text-gray-500 mb-3">
+            <Palmtree className="w-10 h-10 text-stone-300 mx-auto mb-3" />
+            <p className="text-sm text-stone-500 mb-3">
               {tab === "pending" ? "Sem pedidos pendentes." : tab === "approved" ? "Nenhum pedido aprovado." : tab === "rejected" ? "Nenhum pedido rejeitado." : "Nenhum pedido encontrado."}
             </p>
             {!isManager && (
@@ -321,30 +321,30 @@ export default function TimeOffPage() {
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
                       {isManager && (
-                        <span className="font-medium text-gray-900 text-sm">
+                        <span className="font-medium text-stone-900 text-sm">
                           {emp?.full_name || "—"}
                         </span>
                       )}
                       <Badge variant={STATUS_VARIANT[req.status] || "default"}>
                         {STATUS_LABELS[req.status]}
                       </Badge>
-                      <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded">
+                      <span className="text-xs text-stone-500 bg-stone-100 px-2 py-0.5 rounded">
                         {TYPE_LABELS[req.type] || req.type}
                       </span>
                       {req.period && req.period !== "full_day" && (
-                        <span className="text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded">
+                        <span className="text-xs text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">
                           {PERIOD_LABELS[req.period] || req.period}
                         </span>
                       )}
                     </div>
-                    <p className="text-sm text-gray-700">
+                    <p className="text-sm text-stone-700">
                       {req.period && req.period !== "full_day"
                         ? req.start_date
                         : `${req.start_date} a ${req.end_date}`}
-                      <span className="text-gray-400 ml-2">({formatDays(dayCount)})</span>
+                      <span className="text-stone-400 ml-2">({formatDays(dayCount)})</span>
                     </p>
                     {req.reason && (
-                      <p className="text-xs text-gray-500 mt-1">{req.reason}</p>
+                      <p className="text-xs text-stone-500 mt-1">{req.reason}</p>
                     )}
                   </div>
                   {isManager && req.status === "pending" && (
@@ -379,11 +379,11 @@ export default function TimeOffPage() {
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Tipo</label>
+              <label className="block text-sm font-medium text-stone-700 mb-1">Tipo</label>
               <select
                 value={newType}
                 onChange={(e) => setNewType(e.target.value)}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm text-stone-900 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
               >
                 <option value="ferias">Ferias</option>
                 <option value="baixa">Baixa medica</option>
@@ -392,11 +392,11 @@ export default function TimeOffPage() {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Periodo</label>
+              <label className="block text-sm font-medium text-stone-700 mb-1">Periodo</label>
               <select
                 value={newPeriod}
                 onChange={(e) => setNewPeriod(e.target.value)}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm text-stone-900 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
               >
                 <option value="full_day">Dia inteiro</option>
                 <option value="morning">Manha (0,5 dia)</option>
@@ -406,25 +406,25 @@ export default function TimeOffPage() {
           </div>
           <div className={`grid gap-3 ${newPeriod === "full_day" ? "grid-cols-2" : "grid-cols-1"}`}>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-stone-700 mb-1">
                 {newPeriod === "full_day" ? "Data inicio" : "Data"}
               </label>
               <Input type="date" value={newStart} onChange={(e) => setNewStart(e.target.value)} />
             </div>
             {newPeriod === "full_day" && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Data fim</label>
+                <label className="block text-sm font-medium text-stone-700 mb-1">Data fim</label>
                 <Input type="date" value={newEnd} onChange={(e) => setNewEnd(e.target.value)} />
               </div>
             )}
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Motivo (opcional)</label>
+            <label className="block text-sm font-medium text-stone-700 mb-1">Motivo (opcional)</label>
             <textarea
               value={newReason}
               onChange={(e) => setNewReason(e.target.value)}
               rows={2}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm text-stone-900 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
               placeholder="Ex: Ferias de verao..."
             />
           </div>

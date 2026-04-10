@@ -422,11 +422,11 @@ export default function SchedulePage() {
     return (
       <div className="space-y-4">
         <div>
-          <div className="h-8 w-32 bg-gray-200 rounded animate-pulse" />
-          <div className="h-4 w-24 bg-gray-200 rounded animate-pulse mt-2" />
+          <div className="h-8 w-32 bg-stone-200 rounded animate-pulse" />
+          <div className="h-4 w-24 bg-stone-200 rounded animate-pulse mt-2" />
         </div>
         <div className="flex justify-center">
-          <div className="h-6 w-48 bg-gray-200 rounded animate-pulse" />
+          <div className="h-6 w-48 bg-stone-200 rounded animate-pulse" />
         </div>
         <SkeletonTable rows={6} cols={10} />
       </div>
@@ -438,8 +438,8 @@ export default function SchedulePage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Horario</h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <h1 className="text-2xl font-bold text-stone-900">Horario</h1>
+          <p className="text-sm text-stone-500 mt-1">
             {schedule?.status === "published" ? (
               <Badge variant="success">Publicado</Badge>
             ) : (
@@ -525,7 +525,7 @@ export default function SchedulePage() {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
         </Button>
-        <h2 className="text-lg font-semibold text-gray-900 min-w-[180px] text-center">
+        <h2 className="text-lg font-semibold text-stone-900 min-w-[180px] text-center">
           {MONTH_NAMES[month - 1]} {year}
         </h2>
         <Button variant="ghost" size="sm" onClick={nextMonth}>
@@ -538,15 +538,15 @@ export default function SchedulePage() {
       {/* Shift Legend */}
       <div className="flex flex-wrap gap-3 px-1">
         {shifts.map((s) => (
-          <div key={s.id} className="flex items-center gap-1.5 text-xs text-gray-600">
+          <div key={s.id} className="flex items-center gap-1.5 text-xs text-stone-600">
             <div className="w-3 h-3 rounded-full" style={{ backgroundColor: s.color }} />
             <span>
               {s.name} ({s.start_time.slice(0, 5)}-{s.end_time.slice(0, 5)})
             </span>
           </div>
         ))}
-        <div className="flex items-center gap-1.5 text-xs text-gray-600">
-          <div className="w-3 h-3 rounded bg-gray-300" />
+        <div className="flex items-center gap-1.5 text-xs text-stone-600">
+          <div className="w-3 h-3 rounded bg-stone-300" />
           <span>Indisponivel</span>
         </div>
       </div>
@@ -554,18 +554,18 @@ export default function SchedulePage() {
       {/* Schedule Grid */}
       {employees.length === 0 || shifts.length === 0 ? (
         <Card>
-          <div className="text-center py-8 text-gray-500">
+          <div className="text-center py-8 text-stone-500">
             {employees.length === 0
               ? "Adiciona funcionarios na pagina Equipa primeiro."
               : "Cria turnos na pagina Turnos primeiro."}
           </div>
         </Card>
       ) : (
-        <div className="border border-gray-200 rounded-lg overflow-x-auto bg-white">
+        <div className="border border-stone-200 rounded-lg overflow-x-auto bg-white">
           <table className="text-xs w-full border-collapse">
             <thead>
-              <tr className="bg-gray-50">
-                <th className="sticky left-0 z-10 bg-gray-50 px-3 py-2 text-left font-medium text-gray-600 border-b border-r border-gray-200 min-w-[140px]">
+              <tr className="bg-stone-50">
+                <th className="sticky left-0 z-10 bg-stone-50 px-3 py-2 text-left font-medium text-stone-600 border-b border-r border-stone-200 min-w-[140px]">
                   Funcionario
                 </th>
                 {days.map((day) => {
@@ -576,8 +576,8 @@ export default function SchedulePage() {
                   return (
                     <th
                       key={day}
-                      className={`px-1 py-2 text-center font-medium border-b border-gray-200 min-w-[44px] ${
-                        holiday ? "bg-red-50 text-red-700" : weekend ? "bg-gray-100 text-gray-500" : "text-gray-600"
+                      className={`px-1 py-2 text-center font-medium border-b border-stone-200 min-w-[44px] ${
+                        holiday ? "bg-red-50 text-red-700" : weekend ? "bg-stone-100 text-stone-500" : "text-stone-600"
                       }`}
                       title={holiday || undefined}
                     >
@@ -590,12 +590,12 @@ export default function SchedulePage() {
             </thead>
             <tbody>
               {employees.map((emp) => (
-                <tr key={emp.id} className="hover:bg-gray-50/50">
-                  <td className="sticky left-0 z-10 bg-white px-3 py-1.5 font-medium text-gray-800 border-b border-r border-gray-200 truncate max-w-[140px]">
+                <tr key={emp.id} className="hover:bg-stone-50/50">
+                  <td className="sticky left-0 z-10 bg-white px-3 py-1.5 font-medium text-stone-800 border-b border-r border-stone-200 truncate max-w-[140px]">
                     <div className="truncate" title={emp.full_name}>
                       {emp.full_name}
                     </div>
-                    <div className="text-[10px] text-gray-400 font-normal">
+                    <div className="text-[10px] text-stone-400 font-normal">
                       {emp.contract_type === "full_time"
                         ? `${emp.weekly_hours}h`
                         : `PT ${emp.weekly_hours}h`}
@@ -613,17 +613,17 @@ export default function SchedulePage() {
                     return (
                       <td
                         key={day}
-                        className={`border-b border-gray-100 text-center cursor-pointer transition-colors p-0.5 ${
+                        className={`border-b border-stone-100 text-center cursor-pointer transition-colors p-0.5 ${
                           unavailable && !entry
-                            ? "bg-gray-200"
+                            ? "bg-stone-200"
                             : holiday
                             ? "bg-red-50/50"
                             : weekend
-                            ? "bg-gray-50"
+                            ? "bg-stone-50"
                             : ""
                         } ${hasBlock ? "ring-2 ring-inset ring-red-400" : ""} ${
                           hasWarn && !hasBlock ? "ring-1 ring-inset ring-amber-300" : ""
-                        } hover:bg-blue-50`}
+                        } hover:bg-indigo-50`}
                         onClick={() =>
                           schedule?.status === "draft" &&
                           setAssignModal({
@@ -650,9 +650,9 @@ export default function SchedulePage() {
                             {entry.shift_template?.name?.slice(0, 3) || "?"}
                           </div>
                         ) : unavailable ? (
-                          <div className="py-1 text-gray-400 text-[10px] font-medium">IND</div>
+                          <div className="py-1 text-stone-400 text-[10px] font-medium">IND</div>
                         ) : (
-                          <div className="py-1 text-gray-300">—</div>
+                          <div className="py-1 text-stone-300">—</div>
                         )}
                       </td>
                     );
@@ -673,7 +673,7 @@ export default function SchedulePage() {
       >
         {assignModal && (
           <div className="space-y-3">
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-stone-600">
               <span className="font-medium">{assignModal.userName}</span>
               {" — "}
               {parseInt(assignModal.date.slice(8))}{" "}
@@ -696,15 +696,15 @@ export default function SchedulePage() {
                   key={shift.id}
                   onClick={() => assignShift(shift.id)}
                   disabled={saving}
-                  className="w-full flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-colors text-left disabled:opacity-50"
+                  className="w-full flex items-center gap-3 p-3 rounded-lg border border-stone-200 hover:border-blue-300 hover:bg-indigo-50 transition-colors text-left disabled:opacity-50"
                 >
                   <div
                     className="w-4 h-4 rounded-full flex-shrink-0"
                     style={{ backgroundColor: shift.color }}
                   />
                   <div>
-                    <p className="font-medium text-gray-900 text-sm">{shift.name}</p>
-                    <p className="text-xs text-gray-500">
+                    <p className="font-medium text-stone-900 text-sm">{shift.name}</p>
+                    <p className="text-xs text-stone-500">
                       {shift.start_time.slice(0, 5)} - {shift.end_time.slice(0, 5)}
                     </p>
                   </div>
@@ -713,7 +713,7 @@ export default function SchedulePage() {
             </div>
 
             {getEntry(assignModal.userId, assignModal.date) && (
-              <div className="pt-3 border-t border-gray-200">
+              <div className="pt-3 border-t border-stone-200">
                 <Button
                   variant="ghost"
                   size="sm"
@@ -739,7 +739,7 @@ export default function SchedulePage() {
         {violationModal && (
           <div className="space-y-3 max-h-[60vh] overflow-y-auto">
             {violationModal.length === 0 ? (
-              <p className="text-sm text-gray-500">Nenhum problema encontrado.</p>
+              <p className="text-sm text-stone-500">Nenhum problema encontrado.</p>
             ) : (
               violationModal.map((v, i) => (
                 <div
@@ -776,7 +776,7 @@ export default function SchedulePage() {
         <div className="space-y-4">
           {!generateResult ? (
             <>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-stone-600">
                 O algoritmo distribui os turnos pelos funcionarios respeitando as regras de compliance,
                 indisponibilidades aprovadas e equilibrio de fairness.
                 {entries.length > 0 && (
@@ -788,7 +788,7 @@ export default function SchedulePage() {
               </p>
 
               <div>
-                <h4 className="text-sm font-medium text-gray-900 mb-2">
+                <h4 className="text-sm font-medium text-stone-900 mb-2">
                   Pessoas por turno (pode ajustar)
                 </h4>
                 <div className="space-y-2">
@@ -798,7 +798,7 @@ export default function SchedulePage() {
                         className="w-3 h-3 rounded-full flex-shrink-0"
                         style={{ backgroundColor: shift.color }}
                       />
-                      <span className="text-sm text-gray-700 min-w-[100px]">{shift.name}</span>
+                      <span className="text-sm text-stone-700 min-w-[100px]">{shift.name}</span>
                       <Input
                         type="number"
                         min={0}
@@ -812,7 +812,7 @@ export default function SchedulePage() {
                         }
                         className="w-20"
                       />
-                      <span className="text-xs text-gray-400">
+                      <span className="text-xs text-stone-400">
                         (default: {shift.min_staff})
                       </span>
                     </div>
@@ -821,7 +821,7 @@ export default function SchedulePage() {
               </div>
 
               {Object.keys(unavailableDays).length > 0 && (
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-stone-500">
                   {Object.keys(unavailableDays).length} funcionario(s) com indisponibilidades aprovadas este mes.
                 </p>
               )}
@@ -841,15 +841,15 @@ export default function SchedulePage() {
           ) : (
             <>
               <div className="text-center py-4">
-                <div className="w-12 h-12 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                <div className="w-12 h-12 bg-teal-100 text-teal-600 rounded-full flex items-center justify-center mx-auto mb-3">
                   <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900">
+                <h3 className="text-lg font-semibold text-stone-900">
                   Horario gerado!
                 </h3>
-                <p className="text-sm text-gray-500 mt-1">
+                <p className="text-sm text-stone-500 mt-1">
                   {generateResult.total} turno{generateResult.total !== 1 ? "s" : ""} atribuido{generateResult.total !== 1 ? "s" : ""}.
                 </p>
               </div>
@@ -867,15 +867,15 @@ export default function SchedulePage() {
 
               {Object.keys(generateResult.hours).length > 0 && (
                 <div>
-                  <h4 className="text-sm font-medium text-gray-900 mb-2">Horas atribuidas</h4>
+                  <h4 className="text-sm font-medium text-stone-900 mb-2">Horas atribuidas</h4>
                   <div className="space-y-1">
                     {employees
                       .filter((e) => generateResult.hours[e.id])
                       .sort((a, b) => (generateResult.hours[b.id] || 0) - (generateResult.hours[a.id] || 0))
                       .map((emp) => (
                         <div key={emp.id} className="flex items-center justify-between text-sm">
-                          <span className="text-gray-700">{emp.full_name}</span>
-                          <span className="text-gray-500 font-mono">
+                          <span className="text-stone-700">{emp.full_name}</span>
+                          <span className="text-stone-500 font-mono">
                             {generateResult.hours[emp.id]?.toFixed(0)}h
                           </span>
                         </div>

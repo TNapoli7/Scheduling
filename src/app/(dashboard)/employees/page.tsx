@@ -194,8 +194,8 @@ export default function EmployeesPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Equipa</h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <h1 className="text-2xl font-bold text-stone-900">Equipa</h1>
+          <p className="text-sm text-stone-500 mt-1">
             {activeCount} ativo{activeCount !== 1 ? "s" : ""} de {employees.length} total
           </p>
         </div>
@@ -217,10 +217,10 @@ export default function EmployeesPage() {
       {/* Table */}
       <Card padding="sm">
         {loading ? (
-          <div className="text-center py-12 text-gray-500">A carregar...</div>
+          <div className="text-center py-12 text-stone-500">A carregar...</div>
         ) : filtered.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-gray-500">
+            <p className="text-stone-500">
               {search ? "Nenhum resultado encontrado." : "Ainda nao tens membros na equipa."}
             </p>
             {!search && (
@@ -233,28 +233,28 @@ export default function EmployeesPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-gray-200">
-                  <th className="text-left py-3 px-4 font-medium text-gray-500">Nome</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-500 hidden sm:table-cell">Credencial</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-500 hidden md:table-cell">Contrato</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-500">Role</th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-500">Estado</th>
-                  <th className="text-right py-3 px-4 font-medium text-gray-500">Acoes</th>
+                <tr className="border-b border-stone-200">
+                  <th className="text-left py-3 px-4 font-medium text-stone-500">Nome</th>
+                  <th className="text-left py-3 px-4 font-medium text-stone-500 hidden sm:table-cell">Credencial</th>
+                  <th className="text-left py-3 px-4 font-medium text-stone-500 hidden md:table-cell">Contrato</th>
+                  <th className="text-left py-3 px-4 font-medium text-stone-500">Role</th>
+                  <th className="text-left py-3 px-4 font-medium text-stone-500">Estado</th>
+                  <th className="text-right py-3 px-4 font-medium text-stone-500">Acoes</th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.map((emp) => (
-                  <tr key={emp.id} className="border-b border-gray-100 last:border-0 hover:bg-gray-50">
+                  <tr key={emp.id} className="border-b border-stone-100 last:border-0 hover:bg-stone-50">
                     <td className="py-3 px-4">
                       <div>
-                        <p className="font-medium text-gray-900">{emp.full_name}</p>
-                        <p className="text-gray-500 text-xs">{emp.email}</p>
+                        <p className="font-medium text-stone-900">{emp.full_name}</p>
+                        <p className="text-stone-500 text-xs">{emp.email}</p>
                       </div>
                     </td>
-                    <td className="py-3 px-4 text-gray-600 hidden sm:table-cell capitalize">
+                    <td className="py-3 px-4 text-stone-600 hidden sm:table-cell capitalize">
                       {emp.credential || "—"}
                     </td>
-                    <td className="py-3 px-4 text-gray-600 hidden md:table-cell">
+                    <td className="py-3 px-4 text-stone-600 hidden md:table-cell">
                       {emp.contract_type === "full_time" ? `Tempo inteiro (${emp.weekly_hours}h)` : `Part-time (${emp.weekly_hours}h)`}
                     </td>
                     <td className="py-3 px-4">
@@ -357,7 +357,7 @@ export default function EmployeesPage() {
             />
           </div>
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+          <div className="flex justify-end gap-3 pt-4 border-t border-stone-200">
             <Button variant="secondary" onClick={() => setShowModal(false)}>
               Cancelar
             </Button>
