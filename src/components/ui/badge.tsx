@@ -1,23 +1,50 @@
-type BadgeVariant = "default" | "success" | "warning" | "danger" | "info";
+import { type HTMLAttributes } from "react";
 
-interface BadgeProps {
-  variant?: BadgeVariant;
-  children: React.ReactNode;
-  className?: string;
+interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
+  variant?:
+    | "default"
+    | "navy"
+    | "accent"
+    | "success"
+    | "warning"
+    | "danger"
+    | "neutral";
+  size?: "sm" | "md";
 }
 
-const variantStyles: Record<BadgeVariant, string> = {
-  default: "bg-stone-100 text-stone-600 ring-stone-200/50",
-  success: "bg-teal-50 text-teal-700 ring-teal-200/50",
-  warning: "bg-amber-50 text-amber-700 ring-amber-200/50",
-  danger: "bg-red-50 text-red-700 ring-red-200/50",
-  info: "bg-indigo-50 text-indigo-700 ring-indigo-200/50",
-};
+export function Badge({
+  variant = "default",
+  size = "sm",
+  className = "",
+  children,
+  ...props
+}: BadgeProps) {
+  const variantStyles = {
+    default:
+      "bg-[color:var(--surface-sunken)] text-[color:var(--text-secondary)] border border-[color:var(--border-light)]",
+    navy:
+      "bg-[color:var(--primary-soft)] text-[color:var(--primary)] border border-[color:var(--primary-soft)]",
+    accent:
+      "bg-[color:var(--accent-soft)] text-[color:var(--accent-active)] border border-[color:var(--accent-soft)]",
+    success:
+      "bg-[color:var(--success-soft)] text-[color:var(--success)] border border-[color:var(--success-soft)]",
+    warning:
+      "bg-[color:var(--warning-soft)] text-[color:var(--warning)] border border-[color:var(--warning-soft)]",
+    danger:
+      "bg-[color:var(--danger-soft)] text-[color:var(--danger)] border border-[color:var(--danger-soft)]",
+    neutral:
+      "bg-[color:var(--surface-sunken)] text-[color:var(--text-secondary)] border border-[color:var(--border)]",
+  };
 
-export function Badge({ variant = "default", className = "", children }: BadgeProps) {
+  const sizeStyles = {
+    sm: "px-2 py-0.5 text-[11px] font-medium",
+    md: "px-2.5 py-1 text-xs font-medium",
+  };
+
   return (
     <span
-      className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium ring-1 ring-inset ${variantStyles[variant]} ${className}`}
+      className={`inline-flex items-center gap-1 rounded-full ${variantStyles[variant]} ${sizeStyles[size]} ${className}`}
+      {...props}
     >
       {children}
     </span>
