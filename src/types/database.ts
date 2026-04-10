@@ -8,6 +8,7 @@ export type TimeOffPeriod = "full_day" | "morning" | "afternoon";
 export type Severity = "warning" | "block";
 export type Preference = "preferred" | "neutral" | "avoid";
 export type SubscriptionTier = "trial" | "starter" | "professional" | "business";
+export type BillingCycle = "monthly" | "annual";
 
 export interface Organization {
   id: string;
@@ -19,8 +20,20 @@ export interface Organization {
   subscription_tier: SubscriptionTier;
   subscription_status: string;
   trial_ends_at: string | null;
+  plan_name: string;
+  base_price: number;
+  per_user_price: number;
+  billing_cycle: BillingCycle;
+  billing_notes: string | null;
+  max_users: number | null;
+  is_active: boolean;
   created_at: string;
   updated_at: string;
+}
+
+export interface OrgSummary extends Organization {
+  active_users: number;
+  total_users: number;
 }
 
 export interface Profile {
@@ -35,6 +48,7 @@ export interface Profile {
   is_active: boolean;
   avatar_url: string | null;
   vacation_quota: number;
+  is_super_admin: boolean;
   created_at: string;
   updated_at: string;
 }
