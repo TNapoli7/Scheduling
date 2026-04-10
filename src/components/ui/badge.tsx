@@ -8,6 +8,7 @@ interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
     | "success"
     | "warning"
     | "danger"
+    | "info"
     | "neutral";
   size?: "sm" | "md";
 }
@@ -23,6 +24,8 @@ export function Badge({
     default:
       "bg-[color:var(--surface-sunken)] text-[color:var(--text-secondary)] border border-[color:var(--border-light)]",
     navy:
+      "bg-[color:var(--primary-soft)] text-[color:var(--primary)] border border-[color:var(--primary-soft)]",
+    info:
       "bg-[color:var(--primary-soft)] text-[color:var(--primary)] border border-[color:var(--primary-soft)]",
     accent:
       "bg-[color:var(--accent-soft)] text-[color:var(--accent-active)] border border-[color:var(--accent-soft)]",
