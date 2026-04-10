@@ -292,7 +292,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Stats grid */}
-      <div className={`grid grid-cols-1 sm:grid-cols-2 ${isManager ? "lg:grid-cols-4" : "lg:grid-cols-3"} gap-4`}>
+      <div className={`grid grid-cols-1 sm:grid-cols-2 ${isManager ? "lg:grid-cols-4" : "lg:grid-cols-4"} gap-4`}>
         {isManager && (
           <>
             <Card>
@@ -361,6 +361,30 @@ export default function DashboardPage() {
                 <div>
                   <p className="text-sm text-stone-500">Pedidos pendentes</p>
                   <p className="text-2xl font-bold text-stone-900">{pendingTimeOff.length + pendingAvailability}</p>
+                </div>
+              </div>
+            </Card>
+
+            <Card>
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center">
+                  <Clock className="w-6 h-6 text-emerald-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-stone-500">Horas este mes</p>
+                  <p className="text-2xl font-bold text-stone-900">
+                    {(() => {
+                      const totalMin = myEntries.reduce((sum, e) => {
+                        if (!e.shift_template) return sum;
+                        const [sh, sm] = e.shift_template.start_time.split(":").map(Number);
+                        const [eh, em] = e.shift_template.end_time.split(":").map(Number);
+                        let mins = eh * 60 + em - (sh * 60 + sm);
+                        if (mins < 0) mins += 24 * 60;
+                        return sum + mins;
+                      }, 0);
+                      return Math.round(totalMin / 60);
+                    })()}h
+                  </p>
                 </div>
               </div>
             </Card>
