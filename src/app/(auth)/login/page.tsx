@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -66,7 +67,12 @@ export default function LoginPage() {
               error={error}
             />
 
-            <Button type="submit" loading={loading} className="w-full">
+            <div className="flex justify-end">
+                <Link href="/forgot-password" className="text-sm text-indigo-600 hover:text-indigo-700">
+                  Esqueci a password?
+                </Link>
+              </div>
+              <Button type="submit" loading={loading} className="w-full">
               Entrar
             </Button>
           </form>
