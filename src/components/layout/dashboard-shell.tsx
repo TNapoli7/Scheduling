@@ -23,7 +23,7 @@ export function DashboardShell({
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-[#FAFAF9] flex">
+    <div className="min-h-screen bg-cream-textured flex">
       <Sidebar
         role={role}
         orgName={orgName}
