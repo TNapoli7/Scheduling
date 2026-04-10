@@ -14,10 +14,10 @@ export interface SchedulerInput {
   employees: Profile[];
   shifts: ShiftTemplate[];
   days: string[]; // All dates in the month as YYYY-MM-DD
-  staffOverrides: Record<string, number>; // shift_template_id -> min_staff for this generation
-  unavailableDays: Record<string, Set<string>>; // user_id -> Set of unavailable dates
-  existingEntries: (ScheduleEntry & { shift_template: ShiftTemplate })[]; // Already assigned
-  holidays: Set<string>; // National holiday dates
+  staffOverrides: Record<string, number>;
+  unavailableDays: Record<string, Set<string>>;
+  existingEntries: (ScheduleEntry & { shift_template: ShiftTemplate })[];
+  holidays: Set<string>;
 }
 
 export interface SchedulerOutput {
@@ -33,6 +33,12 @@ export interface SchedulerOutput {
     unfilled: { date: string; shift_id: string; needed: number; assigned: number }[];
   };
 }
+
+// Fairness score weights
+const W_HOUR = 0.5;
+const W_NIGHT = 3;
+const W_WEEKEND = 2;
+const W_HOLIDAY = 1;
 
 function timeToMinutes(t: string): number {
   const [h, m] = t.split(":").map(Number);
@@ -58,53 +64,50 @@ function isNightShift(shift: ShiftTemplate): boolean {
 }
 
 /**
- * Build a fairness-weighted score for each employee.
- * Lower score = should get priority for better shifts.
- * Higher score = has been getting favorable treatment, can take harder shifts.
+ * Fairness score delta for assigning a single shift on a given date.
+ * Positive = adds "load" to the employee.
  */
-function buildEmployeeScores(
+function scoreDelta(
+  shift: ShiftTemplate,
+  date: string,
+  holidays: Set<string>
+): number {
+  let d = shiftDurationHours(shift) * W_HOUR;
+  if (isNightShift(shift)) d += W_NIGHT;
+  if (isWeekend(date)) d += W_WEEKEND;
+  if (holidays.has(date)) d += W_HOLIDAY;
+  return d;
+}
+
+/**
+ * Build initial fairness score per employee based on entries they already have.
+ * Called ONCE at the start of scheduling — updated incrementally afterwards.
+ */
+function buildInitialScores(
   employees: Profile[],
   existingEntries: (ScheduleEntry & { shift_template: ShiftTemplate })[],
-  newAssignments: Map<string, { shiftId: string; date: string }[]>
+  holidays: Set<string>
 ): Map<string, number> {
   const scores = new Map<string, number>();
-
-  for (const emp of employees) {
-    let totalHours = 0;
-    let nightCount = 0;
-    let weekendCount = 0;
-
-    // Count from existing entries
-    const empEntries = existingEntries.filter((e) => e.user_id === emp.id);
-    for (const entry of empEntries) {
-      totalHours += shiftDurationHours(entry.shift_template);
-      if (isNightShift(entry.shift_template)) nightCount++;
-      if (isWeekend(entry.date)) weekendCount++;
-    }
-
-    // Count from new assignments in this generation
-    const newAssigns = newAssignments.get(emp.id) || [];
-    // We don't have shift details for new assigns yet in scoring, but we can count
-    totalHours += newAssigns.length * 8; // Approximate
-    for (const a of newAssigns) {
-      if (isWeekend(a.date)) weekendCount++;
-    }
-
-    // Composite score: higher = more loaded
-    scores.set(emp.id, totalHours * 0.5 + nightCount * 3 + weekendCount * 2);
+  for (const emp of employees) scores.set(emp.id, 0);
+  for (const entry of existingEntries) {
+    const current = scores.get(entry.user_id) ?? 0;
+    scores.set(
+      entry.user_id,
+      current + scoreDelta(entry.shift_template, entry.date, holidays)
+    );
   }
-
   return scores;
 }
 
 /**
- * Check if assigning a shift to an employee on a date would violate compliance.
- * Returns true if the assignment would cause a BLOCK violation.
+ * Check if assigning a shift to an employee would cause a BLOCK compliance violation.
+ * Only validates for the affected employee — much cheaper than running the full org check.
  */
-function wouldCauseBlock(
-  allEntries: (ScheduleEntry & { shift_template: ShiftTemplate })[],
+function wouldCauseBlockForUser(
+  userEntries: (ScheduleEntry & { shift_template: ShiftTemplate })[],
   newEntry: { user_id: string; date: string; shift_template: ShiftTemplate },
-  profiles: Profile[]
+  profile: Profile
 ): boolean {
   const fakeEntry = {
     id: "temp",
@@ -118,9 +121,8 @@ function wouldCauseBlock(
     created_at: "",
     shift_template: newEntry.shift_template,
   };
-
-  const allWithNew = [...allEntries, fakeEntry];
-  const violations = validateCompliance(allWithNew, profiles);
+  const allWithNew = [...userEntries, fakeEntry];
+  const violations = validateCompliance(allWithNew, [profile]);
   return violations.some(
     (v) => v.severity === "block" && v.userId === newEntry.user_id
   );
@@ -129,11 +131,12 @@ function wouldCauseBlock(
 /**
  * Main scheduling algorithm.
  *
- * For each day, for each shift that needs staffing:
- * 1. Filter to available employees (not unavailable, not already assigned that day)
- * 2. Filter out those who would cause compliance violations
- * 3. Sort by fairness score (lowest first = needs more shifts)
- * 4. Assign top N employees (where N = min_staff)
+ * Improvements over the naive version:
+ *   1. Fairness score uses real shift duration (not a flat 8h).
+ *   2. Scores are cached and updated incrementally (not rebuilt per slot).
+ *   3. Compliance checks are user-scoped (only that employee's own entries).
+ *   4. Deterministic tiebreaker on full_name + id so repeat runs match.
+ *   5. Holidays carry an explicit fairness weight.
  */
 export function generateSchedule(input: SchedulerInput): SchedulerOutput {
   const {
@@ -147,20 +150,31 @@ export function generateSchedule(input: SchedulerInput): SchedulerOutput {
   } = input;
 
   const activeEmployees = employees.filter((e) => e.is_active);
-  const newAssignments = new Map<string, { shiftId: string; date: string }[]>();
-  const allEntries = [...existingEntries];
+  const profileById = new Map<string, Profile>(
+    activeEmployees.map((e) => [e.id, e])
+  );
+
+  // Initial scores (from pre-existing entries)
+  const scores = buildInitialScores(activeEmployees, existingEntries, holidays);
+
+  // Track assigned dates per employee (avoid double-booking)
+  const assignedDays = new Map<string, Set<string>>();
+  // Track ALL entries per user (for incremental compliance checks)
+  const entriesByUser = new Map<
+    string,
+    (ScheduleEntry & { shift_template: ShiftTemplate })[]
+  >();
+  for (const emp of activeEmployees) {
+    assignedDays.set(emp.id, new Set());
+    entriesByUser.set(emp.id, []);
+  }
+  for (const e of existingEntries) {
+    assignedDays.get(e.user_id)?.add(e.date);
+    entriesByUser.get(e.user_id)?.push(e);
+  }
+
   const result: SchedulerOutput["entries"] = [];
   const unfilled: SchedulerOutput["stats"]["unfilled"] = [];
-
-  // Track assigned days per employee to avoid double-booking
-  const assignedDays = new Map<string, Set<string>>();
-  for (const emp of activeEmployees) {
-    const empDates = new Set(
-      existingEntries.filter((e) => e.user_id === emp.id).map((e) => e.date)
-    );
-    assignedDays.set(emp.id, empDates);
-    newAssignments.set(emp.id, []);
-  }
 
   // Sort shifts: night shifts first (harder to fill), then by start time
   const sortedShifts = [...shifts].sort((a, b) => {
@@ -172,59 +186,69 @@ export function generateSchedule(input: SchedulerInput): SchedulerOutput {
 
   // Process each day
   for (const day of days) {
-    // Process each shift for this day
     for (const shift of sortedShifts) {
       const neededStaff = staffOverrides[shift.id] ?? shift.min_staff;
       if (neededStaff <= 0) continue;
 
-      // Count already assigned for this shift+day
-      const alreadyAssigned = allEntries.filter(
-        (e) => e.date === day && e.shift_template_id === shift.id
-      ).length;
-
+      // Count already assigned for this shift+day (across all users)
+      let alreadyAssigned = 0;
+      for (const emp of activeEmployees) {
+        const arr = entriesByUser.get(emp.id) || [];
+        for (const e of arr) {
+          if (e.date === day && e.shift_template_id === shift.id) {
+            alreadyAssigned++;
+          }
+        }
+      }
       const toFill = neededStaff - alreadyAssigned;
       if (toFill <= 0) continue;
 
-      // Get available candidates
-      const candidates = activeEmployees.filter((emp) => {
+      // Filter candidates
+      const candidates: Profile[] = [];
+      for (const emp of activeEmployees) {
         // Not unavailable
         const unavail = unavailableDays[emp.id];
-        if (unavail && unavail.has(day)) return false;
-
+        if (unavail && unavail.has(day)) continue;
         // Not already assigned this day
         const empDays = assignedDays.get(emp.id);
-        if (empDays && empDays.has(day)) return false;
-
-        // Compliance check — would this cause a block?
-        if (wouldCauseBlock(allEntries, { user_id: emp.id, date: day, shift_template: shift }, activeEmployees)) {
-          return false;
+        if (empDays && empDays.has(day)) continue;
+        // Compliance check — user-scoped only
+        const userEntries = entriesByUser.get(emp.id) || [];
+        const profile = profileById.get(emp.id);
+        if (!profile) continue;
+        if (
+          wouldCauseBlockForUser(
+            userEntries,
+            { user_id: emp.id, date: day, shift_template: shift },
+            profile
+          )
+        ) {
+          continue;
         }
+        candidates.push(emp);
+      }
 
-        return true;
-      });
-
-      // Sort candidates by fairness score (lowest = should get more shifts)
-      const scores = buildEmployeeScores(activeEmployees, allEntries, newAssignments);
+      // Sort by cached score (lowest = needs more shifts).
+      // Deterministic tiebreaker: full_name then id.
       candidates.sort((a, b) => {
-        const scoreA = scores.get(a.id) || 0;
-        const scoreB = scores.get(b.id) || 0;
-        return scoreA - scoreB; // Lowest score first
+        const sa = scores.get(a.id) ?? 0;
+        const sb = scores.get(b.id) ?? 0;
+        if (sa !== sb) return sa - sb;
+        const na = (a.full_name || "").localeCompare(b.full_name || "");
+        if (na !== 0) return na;
+        return a.id.localeCompare(b.id);
       });
 
-      // Assign top N candidates
       const toAssign = candidates.slice(0, toFill);
-
       for (const emp of toAssign) {
-        const entry = {
+        result.push({
           user_id: emp.id,
           date: day,
           shift_template_id: shift.id,
-        };
-        result.push(entry);
-
-        // Track in all entries for compliance checks
+        });
+        // Update caches incrementally
         const fakeEntry = {
-          id: `gen-${day}-${shift.id}-${emp.id}`,
+          id: "gen-" + day + "-" + shift.id + "-" + emp.id,
           schedule_id: "gen",
           user_id: emp.id,
           date: day,
@@ -235,14 +259,14 @@ export function generateSchedule(input: SchedulerInput): SchedulerOutput {
           created_at: "",
           shift_template: shift,
         };
-        allEntries.push(fakeEntry);
-
-        // Track assignments
+        entriesByUser.get(emp.id)?.push(fakeEntry);
         assignedDays.get(emp.id)?.add(day);
-        newAssignments.get(emp.id)?.push({ shiftId: shift.id, date: day });
+        scores.set(
+          emp.id,
+          (scores.get(emp.id) ?? 0) + scoreDelta(shift, day, holidays)
+        );
       }
 
-      // Track unfilled
       if (toAssign.length < toFill) {
         unfilled.push({
           date: day,
@@ -254,15 +278,18 @@ export function generateSchedule(input: SchedulerInput): SchedulerOutput {
     }
   }
 
-  // Calculate final compliance violations
-  const finalViolations = validateCompliance(allEntries, activeEmployees);
+  // Final compliance validation across all entries (for reporting only)
+  const allFinal: (ScheduleEntry & { shift_template: ShiftTemplate })[] = [];
+  for (const arr of entriesByUser.values()) allFinal.push(...arr);
+  const finalViolations = validateCompliance(allFinal, activeEmployees);
 
-  // Calculate hours per employee
+  // Calculate hours per employee from NEW entries only
   const employeeHours: Record<string, number> = {};
   for (const entry of result) {
     const shift = shifts.find((s) => s.id === entry.shift_template_id);
     if (shift) {
-      employeeHours[entry.user_id] = (employeeHours[entry.user_id] || 0) + shiftDurationHours(shift);
+      employeeHours[entry.user_id] =
+        (employeeHours[entry.user_id] || 0) + shiftDurationHours(shift);
     }
   }
 
