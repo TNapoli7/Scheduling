@@ -127,6 +127,20 @@ export default function OrgDetailPage() {
     fetchData();
   }
 
+  
+  async function extendTrial(days: number) {
+    if (!org) return;
+    const current = org.trial_ends_at ? new Date(org.trial_ends_at).getTime() : Date.now();
+    const base = Math.max(current, Date.now());
+    const newDate = new Date(base + days * 86400000).toISOString();
+    const { error } = await supabase
+      .from("organizations")
+      .update({ trial_ends_at: newDate })
+      .eq("id", orgId);
+    if (error) { alert("Erro ao prolongar trial: " + error.message); return; }
+    fetchData();
+  }
+
   async function impersonateUser(userId: string) {
     setImpersonating(userId);
     try {
@@ -196,6 +210,12 @@ export default function OrgDetailPage() {
           <Button onClick={openEdit}>
             <Settings className="w-4 h-4 mr-2" />
             Editar plano
+          </Button>
+          <Button variant="secondary" onClick={() => extendTrial(14)}>
+            +14d trial
+          </Button>
+          <Button variant="secondary" onClick={() => extendTrial(30)}>
+            +30d trial
           </Button>
         </div>
       </div>
