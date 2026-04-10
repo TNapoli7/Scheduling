@@ -134,6 +134,18 @@ export default function SchedulePage() {
     return days.slice(start, start + 7);
   }, [viewMode, weekStart, days]);
 
+  const generateIssues = useMemo(() => {
+    const issues: string[] = [];
+    if (employees.length === 0) {
+      issues.push("Não tens funcionários ativos. Vai a Funcionários e adiciona pelo menos um.");
+    }
+    if (shifts.length === 0) {
+      issues.push("Não tens turnos configurados. Vai a Turnos e cria pelo menos um turno ativo.");
+    }
+    return issues;
+  }, [employees, shifts]);
+  const canGenerate = generateIssues.length === 0;
+
   const fetchData = useCallback(async () => {
     setLoading(true);
     const { data: emps } = await supabase
@@ -923,6 +935,16 @@ export default function SchedulePage() {
                   {generateError}
                 </div>
               )}
+              {!canGenerate && (
+                <div className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-md px-3 py-2">
+                  <p className="font-medium mb-1">Ainda não dá para gerar:</p>
+                  <ul className="list-disc ml-5 space-y-0.5">
+                    {generateIssues.map((issue) => (
+                      <li key={issue}>{issue}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
               <p className="text-sm text-stone-600">
                 O algoritmo distribui os turnos pelos funcionarios respeitando
                 as regras de compliance, indisponibilidades aprovadas e
@@ -982,7 +1004,11 @@ export default function SchedulePage() {
                 <Button variant="ghost" onClick={closeGenerateModal}>
                   Cancelar
                 </Button>
-                <Button onClick={handleGenerate} loading={generating}>
+                <Button
+                  onClick={handleGenerate}
+                  loading={generating}
+                  disabled={!canGenerate}
+                >
                   Pre-visualizar
                 </Button>
               </div>
