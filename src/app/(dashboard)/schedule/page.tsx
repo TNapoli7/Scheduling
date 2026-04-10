@@ -12,7 +12,7 @@ import {
   getViolationsForCell,
   type ComplianceViolation,
 } from "@/lib/compliance";
-import { generateSchedule, type SchedulerInput } from "@/lib/scheduler";
+import { getPortugueseHolidaysRange } from "@/lib/holidays";
 import { exportSchedulePDF, exportScheduleExcel } from "@/lib/export";
 import { SkeletonTable } from "@/components/ui/skeleton";
 import type {
@@ -25,36 +25,6 @@ import type {
 } from "@/types/database";
 
 type EntryWithShift = ScheduleEntry & { shift_template: ShiftTemplate };
-
-// Portuguese public holidays 2025/2026
-const NATIONAL_HOLIDAYS: Record<string, string> = {
-  "2025-01-01": "Ano Novo",
-  "2025-04-18": "Sexta-feira Santa",
-  "2025-04-20": "Pascoa",
-  "2025-04-25": "Dia da Liberdade",
-  "2025-05-01": "Dia do Trabalhador",
-  "2025-06-10": "Dia de Portugal",
-  "2025-06-19": "Corpo de Deus",
-  "2025-08-15": "Assuncao de Nossa Senhora",
-  "2025-10-05": "Implantacao da Republica",
-  "2025-11-01": "Todos os Santos",
-  "2025-12-01": "Restauracao da Independencia",
-  "2025-12-08": "Imaculada Conceicao",
-  "2025-12-25": "Natal",
-  "2026-01-01": "Ano Novo",
-  "2026-04-03": "Sexta-feira Santa",
-  "2026-04-05": "Pascoa",
-  "2026-04-25": "Dia da Liberdade",
-  "2026-05-01": "Dia do Trabalhador",
-  "2026-06-04": "Corpo de Deus",
-  "2026-06-10": "Dia de Portugal",
-  "2026-08-15": "Assuncao de Nossa Senhora",
-  "2026-10-05": "Implantacao da Republica",
-  "2026-11-01": "Todos os Santos",
-  "2026-12-01": "Restauracao da Independencia",
-  "2026-12-08": "Imaculada Conceicao",
-  "2026-12-25": "Natal",
-};
 
 function getDaysInMonth(year: number, month: number): string[] {
   const days: string[] = [];
@@ -80,9 +50,36 @@ function isWeekend(dateStr: string): boolean {
 }
 
 const MONTH_NAMES = [
-  "Janeiro", "Fevereiro", "Marco", "Abril", "Maio", "Junho",
-  "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro",
+  "Janeiro",
+  "Fevereiro",
+  "Marco",
+  "Abril",
+  "Maio",
+  "Junho",
+  "Julho",
+  "Agosto",
+  "Setembro",
+  "Outubro",
+  "Novembro",
+  "Dezembro",
 ];
+
+interface PreviewResult {
+  totalEntries: number;
+  unfilled: {
+    date: string;
+    shift_id: string;
+    shift_name: string;
+    needed: number;
+    assigned: number;
+  }[];
+  hours: {
+    user_id: string;
+    full_name: string;
+    hours: number;
+    weekly_hours: number;
+  }[];
+}
 
 export default function SchedulePage() {
   const now = new Date();
@@ -96,52 +93,53 @@ export default function SchedulePage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  // Cell assignment modal
   const [assignModal, setAssignModal] = useState<{
     userId: string;
     date: string;
     userName: string;
   } | null>(null);
 
-  // Violations detail modal
-  const [violationModal, setViolationModal] = useState<ComplianceViolation[] | null>(null);
+  const [violationModal, setViolationModal] =
+    useState<ComplianceViolation[] | null>(null);
 
-  // Generate schedule modal
   const [showGenerateModal, setShowGenerateModal] = useState(false);
-  const [staffOverrides, setStaffOverrides] = useState<Record<string, number>>({});
+  const [staffOverrides, setStaffOverrides] = useState<Record<string, number>>(
+    {}
+  );
   const [generating, setGenerating] = useState(false);
-  const [generateResult, setGenerateResult] = useState<{
-    total: number;
-    unfilled: { date: string; shift_id: string; needed: number; assigned: number }[];
-    hours: Record<string, number>;
-  } | null>(null);
+  const [previewResult, setPreviewResult] = useState<PreviewResult | null>(
+    null
+  );
+  const [confirming, setConfirming] = useState(false);
+  const [generateDone, setGenerateDone] = useState(false);
 
-  // Org name for exports
   const [orgName, setOrgName] = useState("");
-  // Unavailability data
-  const [unavailableDays, setUnavailableDays] = useState<Record<string, Set<string>>>({});
+
+  const [unavailableDays, setUnavailableDays] = useState<
+    Record<string, Set<string>>
+  >({});
 
   const supabase = createClient();
   const days = useMemo(() => getDaysInMonth(year, month), [year, month]);
+  const nationalHolidays = useMemo(
+    () => getPortugueseHolidaysRange(year - 1, year + 1),
+    [year]
+  );
 
   const fetchData = useCallback(async () => {
     setLoading(true);
-
-    // Fetch active employees
     const { data: emps } = await supabase
       .from("profiles")
       .select("*")
       .eq("is_active", true)
       .order("full_name");
 
-    // Fetch active shift templates
     const { data: shiftData } = await supabase
       .from("shift_templates")
       .select("*")
       .eq("is_active", true)
       .order("start_time");
 
-    // Find or create schedule for this month
     let { data: sched } = await supabase
       .from("schedules")
       .select("*")
@@ -161,7 +159,6 @@ export default function SchedulePage() {
           .single();
 
         if (profile?.org_id) {
-          // Fetch org name for exports
           const { data: org } = await supabase
             .from("organizations")
             .select("name")
@@ -183,9 +180,27 @@ export default function SchedulePage() {
           sched = newSched;
         }
       }
+    } else {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("org_id")
+          .eq("id", user.id)
+          .single();
+        if (profile?.org_id) {
+          const { data: org } = await supabase
+            .from("organizations")
+            .select("name")
+            .eq("id", profile.org_id)
+            .single();
+          if (org) setOrgName(org.name);
+        }
+      }
     }
 
-    // Fetch entries for this schedule
     let entryData: EntryWithShift[] = [];
     if (sched) {
       const { data: rawEntries } = await supabase
@@ -195,7 +210,6 @@ export default function SchedulePage() {
       entryData = (rawEntries || []) as EntryWithShift[];
     }
 
-    // Fetch unavailabilities (approved only) for this month
     const startDate = `${year}-${String(month).padStart(2, "0")}-01`;
     const endDay = new Date(year, month, 0).getDate();
     const endDate = `${year}-${String(month).padStart(2, "0")}-${String(endDay).padStart(2, "0")}`;
@@ -208,7 +222,6 @@ export default function SchedulePage() {
       .eq("available", false)
       .eq("approval_status", "approved");
 
-    // Fetch approved time-off for this month
     const { data: timeOffData } = await supabase
       .from("time_off_requests")
       .select("*")
@@ -216,7 +229,6 @@ export default function SchedulePage() {
       .lte("start_date", endDate)
       .gte("end_date", startDate);
 
-    // Build unavailable days map
     const unavail: Record<string, Set<string>> = {};
     for (const a of (availData || []) as Availability[]) {
       if (!unavail[a.user_id]) unavail[a.user_id] = new Set();
@@ -224,7 +236,6 @@ export default function SchedulePage() {
     }
     for (const t of (timeOffData || []) as TimeOffRequest[]) {
       if (!unavail[t.user_id]) unavail[t.user_id] = new Set();
-      // Add all dates in the range
       const start = new Date(t.start_date);
       const end = new Date(t.end_date);
       for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
@@ -244,14 +255,12 @@ export default function SchedulePage() {
     setEntries(entryData);
     setUnavailableDays(unavail);
 
-    // Initialize staff overrides from shift defaults
     const overrides: Record<string, number> = {};
     for (const s of shiftList) {
       overrides[s.id] = s.min_staff;
     }
     setStaffOverrides(overrides);
 
-    // Run compliance
     const v = validateCompliance(entryData, empList);
     setViolations(v);
 
@@ -262,37 +271,38 @@ export default function SchedulePage() {
     fetchData();
   }, [fetchData]);
 
-  // Navigation
   function prevMonth() {
-    if (month === 1) { setMonth(12); setYear(year - 1); }
-    else setMonth(month - 1);
-  }
-  function nextMonth() {
-    if (month === 12) { setMonth(1); setYear(year + 1); }
-    else setMonth(month + 1);
+    if (month === 1) {
+      setMonth(12);
+      setYear(year - 1);
+    } else setMonth(month - 1);
   }
 
-  // Get entry for a cell
+  function nextMonth() {
+    if (month === 12) {
+      setMonth(1);
+      setYear(year + 1);
+    } else setMonth(month + 1);
+  }
+
   function getEntry(userId: string, date: string): EntryWithShift | undefined {
     return entries.find((e) => e.user_id === userId && e.date === date);
   }
 
-  // Get violations for a cell
   function getCellViolations(userId: string, date: string) {
     return getViolationsForCell(violations, userId, date);
   }
 
-  // Is employee unavailable on date?
   function isUnavailable(userId: string, date: string): boolean {
     return unavailableDays[userId]?.has(date) || false;
   }
 
-  // Assign shift
   async function assignShift(shiftId: string) {
     if (!assignModal || !schedule) return;
     setSaving(true);
 
     const existing = getEntry(assignModal.userId, assignModal.date);
+
     if (existing) {
       await supabase
         .from("schedule_entries")
@@ -304,7 +314,7 @@ export default function SchedulePage() {
         user_id: assignModal.userId,
         date: assignModal.date,
         shift_template_id: shiftId,
-        is_holiday: !!NATIONAL_HOLIDAYS[assignModal.date],
+        is_holiday: !!nationalHolidays[assignModal.date],
       });
     }
 
@@ -313,7 +323,6 @@ export default function SchedulePage() {
     fetchData();
   }
 
-  // Remove assignment
   async function removeAssignment() {
     if (!assignModal) return;
     const existing = getEntry(assignModal.userId, assignModal.date);
@@ -326,97 +335,131 @@ export default function SchedulePage() {
     }
   }
 
-  // Generate schedule
   async function handleGenerate() {
     if (!schedule) return;
     setGenerating(true);
-    setGenerateResult(null);
+    setPreviewResult(null);
 
-    const holidaySet = new Set(
-      Object.keys(NATIONAL_HOLIDAYS).filter((d) => d >= days[0] && d <= days[days.length - 1])
-    );
-
-    const input: SchedulerInput = {
-      employees,
-      shifts,
-      days,
-      staffOverrides,
-      unavailableDays,
-      existingEntries: entries,
-      holidays: holidaySet,
-    };
-
-    const result = generateSchedule(input);
-
-    // Insert all generated entries
-    if (result.entries.length > 0) {
-      const toInsert = result.entries.map((e) => ({
-        schedule_id: schedule.id,
-        user_id: e.user_id,
-        date: e.date,
-        shift_template_id: e.shift_template_id,
-        is_holiday: holidaySet.has(e.date),
-      }));
-
-      // Batch insert in chunks of 50
-      for (let i = 0; i < toInsert.length; i += 50) {
-        const chunk = toInsert.slice(i, i + 50);
-        await supabase.from("schedule_entries").insert(chunk);
-      }
-    }
-
-    setGenerateResult({
-      total: result.entries.length,
-      unfilled: result.stats.unfilled,
-      hours: result.stats.employeeHours,
+    const res = await fetch("/api/schedule/generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        scheduleId: schedule.id,
+        staffOverrides,
+        dryRun: true,
+      }),
     });
 
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: "Erro desconhecido" }));
+      alert("Erro ao gerar: " + (err.error || res.statusText));
+      setGenerating(false);
+      return;
+    }
+
+    const data = (await res.json()) as PreviewResult;
+    setPreviewResult(data);
     setGenerating(false);
+  }
+
+  async function confirmGenerate() {
+    if (!schedule) return;
+    setConfirming(true);
+
+    const res = await fetch("/api/schedule/generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        scheduleId: schedule.id,
+        staffOverrides,
+        dryRun: false,
+      }),
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: "Erro desconhecido" }));
+      alert("Erro ao confirmar: " + (err.error || res.statusText));
+      setConfirming(false);
+      return;
+    }
+
+    setConfirming(false);
+    setGenerateDone(true);
     fetchData();
   }
 
-  // Clear all entries (before regenerating)
   async function clearSchedule() {
     if (!schedule) return;
     setSaving(true);
-    await supabase.from("schedule_entries").delete().eq("schedule_id", schedule.id);
+    await supabase
+      .from("schedule_entries")
+      .delete()
+      .eq("schedule_id", schedule.id);
     setSaving(false);
     fetchData();
   }
 
-  // Publish schedule
   async function publishSchedule() {
     if (!schedule) return;
+
     const blocks = violations.filter((v) => v.severity === "block");
     if (blocks.length > 0) {
       setViolationModal(blocks);
       return;
     }
-    setSaving(true);
 
+    setSaving(true);
     await supabase
       .from("schedules")
-      .update({ status: "published", published_at: new Date().toISOString() })
+      .update({
+        status: "published",
+        published_at: new Date().toISOString(),
+      })
       .eq("id", schedule.id);
 
-    // Notify all employees
-    for (const emp of employees) {
-      await supabase.from("notifications").insert({
-        user_id: emp.id,
-        type: "schedule_published",
-        title: "Horario publicado",
-        body: `O horario de ${MONTH_NAMES[month - 1]} ${year} foi publicado.`,
-        metadata: { month, year, schedule_id: schedule.id },
-      });
+    const notifications = employees.map((emp) => ({
+      user_id: emp.id,
+      type: "schedule_published",
+      title: "Horario publicado",
+      body: `O horario de ${MONTH_NAMES[month - 1]} ${year} foi publicado.`,
+      metadata: { month, year, schedule_id: schedule.id },
+    }));
+    if (notifications.length > 0) {
+      await supabase.from("notifications").insert(notifications);
     }
 
     setSaving(false);
     fetchData();
   }
 
-  // Stats
+  async function unpublishSchedule() {
+    if (!schedule) return;
+    if (
+      !confirm(
+        "Tem a certeza que quer despublicar? O horario volta a rascunho e pode ser editado."
+      )
+    ) {
+      return;
+    }
+    setSaving(true);
+    await supabase
+      .from("schedules")
+      .update({ status: "draft", published_at: null })
+      .eq("id", schedule.id);
+    setSaving(false);
+    fetchData();
+  }
+
+  function closeGenerateModal() {
+    setShowGenerateModal(false);
+    setPreviewResult(null);
+    setGenerateDone(false);
+  }
+
   const blockCount = violations.filter((v) => v.severity === "block").length;
-  const warnCount = violations.filter((v) => v.severity === "warning").length;
+  const warnCount = violations.filter(
+    (v) => v.severity === "warning"
+  ).length;
 
   if (loading) {
     return (
@@ -435,7 +478,6 @@ export default function SchedulePage() {
 
   return (
     <div className="space-y-4">
-      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-stone-900">Horario</h1>
@@ -464,14 +506,30 @@ export default function SchedulePage() {
               size="sm"
               onClick={() => setViolationModal(violations)}
             >
-              <svg className="w-4 h-4 mr-1 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              <svg
+                className="w-4 h-4 mr-1 text-red-500"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"
+                />
               </svg>
               Ver problemas
             </Button>
           )}
           {schedule?.status === "draft" && entries.length > 0 && (
-            <Button variant="ghost" size="sm" onClick={clearSchedule} loading={saving} className="text-red-600 hover:bg-red-50">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={clearSchedule}
+              loading={saving}
+              className="text-red-600 hover:bg-red-50"
+            >
               Limpar
             </Button>
           )}
@@ -480,8 +538,18 @@ export default function SchedulePage() {
               variant="secondary"
               onClick={() => setShowGenerateModal(true)}
             >
-              <svg className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              <svg
+                className="w-4 h-4 mr-1"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M13 10V3L4 14h7v7l9-11h-7z"
+                />
               </svg>
               Gerar Horario
             </Button>
@@ -491,26 +559,35 @@ export default function SchedulePage() {
               Publicar
             </Button>
           )}
+          {schedule?.status === "published" && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={unpublishSchedule}
+              loading={saving}
+              className="text-amber-600 hover:bg-amber-50"
+            >
+              Despublicar
+            </Button>
+          )}
           {entries.length > 0 && (
             <>
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => exportSchedulePDF(employees, entries, shifts, month, year, orgName)}
+                onClick={() =>
+                  exportSchedulePDF(employees, entries, shifts, month, year, orgName)
+                }
               >
-                <svg className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
                 PDF
               </Button>
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => exportScheduleExcel(employees, entries, shifts, month, year, orgName)}
+                onClick={() =>
+                  exportScheduleExcel(employees, entries, shifts, month, year, orgName)
+                }
               >
-                <svg className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
                 Excel
               </Button>
             </>
@@ -518,28 +595,28 @@ export default function SchedulePage() {
         </div>
       </div>
 
-      {/* Month navigation */}
       <div className="flex items-center justify-center gap-4">
         <Button variant="ghost" size="sm" onClick={prevMonth}>
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
+          &lt;
         </Button>
         <h2 className="text-lg font-semibold text-stone-900 min-w-[180px] text-center">
           {MONTH_NAMES[month - 1]} {year}
         </h2>
         <Button variant="ghost" size="sm" onClick={nextMonth}>
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
+          &gt;
         </Button>
       </div>
 
-      {/* Shift Legend */}
       <div className="flex flex-wrap gap-3 px-1">
         {shifts.map((s) => (
-          <div key={s.id} className="flex items-center gap-1.5 text-xs text-stone-600">
-            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: s.color }} />
+          <div
+            key={s.id}
+            className="flex items-center gap-1.5 text-xs text-stone-600"
+          >
+            <div
+              className="w-3 h-3 rounded-full"
+              style={{ backgroundColor: s.color }}
+            />
             <span>
               {s.name} ({s.start_time.slice(0, 5)}-{s.end_time.slice(0, 5)})
             </span>
@@ -551,7 +628,6 @@ export default function SchedulePage() {
         </div>
       </div>
 
-      {/* Schedule Grid */}
       {employees.length === 0 || shifts.length === 0 ? (
         <Card>
           <div className="text-center py-8 text-stone-500">
@@ -570,15 +646,20 @@ export default function SchedulePage() {
                 </th>
                 {days.map((day) => {
                   const weekend = isWeekend(day);
-                  const holiday = NATIONAL_HOLIDAYS[day];
+                  const holiday = nationalHolidays[day];
                   const dayNum = day.slice(8);
                   const dow = dayOfWeekPt(day);
+                  const thClass =
+                    "px-1 py-2 text-center font-medium border-b border-stone-200 min-w-[44px] " +
+                    (holiday
+                      ? "bg-red-50 text-red-700"
+                      : weekend
+                      ? "bg-stone-100 text-stone-500"
+                      : "text-stone-600");
                   return (
                     <th
                       key={day}
-                      className={`px-1 py-2 text-center font-medium border-b border-stone-200 min-w-[44px] ${
-                        holiday ? "bg-red-50 text-red-700" : weekend ? "bg-stone-100 text-stone-500" : "text-stone-600"
-                      }`}
+                      className={thClass}
                       title={holiday || undefined}
                     >
                       <div>{dow}</div>
@@ -597,33 +678,49 @@ export default function SchedulePage() {
                     </div>
                     <div className="text-[10px] text-stone-400 font-normal">
                       {emp.contract_type === "full_time"
-                        ? `${emp.weekly_hours}h`
-                        : `PT ${emp.weekly_hours}h`}
+                        ? emp.weekly_hours + "h"
+                        : "PT " + emp.weekly_hours + "h"}
                     </div>
                   </td>
                   {days.map((day) => {
                     const entry = getEntry(emp.id, day);
                     const cellViolations = getCellViolations(emp.id, day);
-                    const hasBlock = cellViolations.some((v) => v.severity === "block");
-                    const hasWarn = cellViolations.some((v) => v.severity === "warning");
+                    const hasBlock = cellViolations.some(
+                      (v) => v.severity === "block"
+                    );
+                    const hasWarn = cellViolations.some(
+                      (v) => v.severity === "warning"
+                    );
                     const weekend = isWeekend(day);
-                    const holiday = !!NATIONAL_HOLIDAYS[day];
+                    const holiday = !!nationalHolidays[day];
                     const unavailable = isUnavailable(emp.id, day);
+
+                    const tdClass =
+                      "border-b border-stone-100 text-center cursor-pointer transition-colors p-0.5 " +
+                      (unavailable && !entry
+                        ? "bg-stone-200 "
+                        : holiday
+                        ? "bg-red-50/50 "
+                        : weekend
+                        ? "bg-stone-50 "
+                        : "") +
+                      (hasBlock ? "ring-2 ring-inset ring-red-400 " : "") +
+                      (hasWarn && !hasBlock
+                        ? "ring-1 ring-inset ring-amber-300 "
+                        : "") +
+                      "hover:bg-indigo-50";
+
+                    const tdTitle =
+                      unavailable && !entry
+                        ? "Indisponivel"
+                        : cellViolations.length > 0
+                        ? cellViolations.map((v) => v.rule).join("\n")
+                        : undefined;
 
                     return (
                       <td
                         key={day}
-                        className={`border-b border-stone-100 text-center cursor-pointer transition-colors p-0.5 ${
-                          unavailable && !entry
-                            ? "bg-stone-200"
-                            : holiday
-                            ? "bg-red-50/50"
-                            : weekend
-                            ? "bg-stone-50"
-                            : ""
-                        } ${hasBlock ? "ring-2 ring-inset ring-red-400" : ""} ${
-                          hasWarn && !hasBlock ? "ring-1 ring-inset ring-amber-300" : ""
-                        } hover:bg-indigo-50`}
+                        className={tdClass}
                         onClick={() =>
                           schedule?.status === "draft" &&
                           setAssignModal({
@@ -632,25 +729,22 @@ export default function SchedulePage() {
                             userName: emp.full_name,
                           })
                         }
-                        title={
-                          unavailable && !entry
-                            ? "Indisponivel"
-                            : cellViolations.length > 0
-                            ? cellViolations.map((v) => v.rule).join("\n")
-                            : undefined
-                        }
+                        title={tdTitle}
                       >
                         {entry ? (
                           <div
                             className="rounded px-0.5 py-1 text-white font-medium text-[10px] leading-tight"
                             style={{
-                              backgroundColor: entry.shift_template?.color || "#6B7280",
+                              backgroundColor:
+                                entry.shift_template?.color || "#6B7280",
                             }}
                           >
                             {entry.shift_template?.name?.slice(0, 3) || "?"}
                           </div>
                         ) : unavailable ? (
-                          <div className="py-1 text-stone-400 text-[10px] font-medium">IND</div>
+                          <div className="py-1 text-stone-400 text-[10px] font-medium">
+                            IND
+                          </div>
                         ) : (
                           <div className="py-1 text-stone-300">—</div>
                         )}
@@ -664,7 +758,6 @@ export default function SchedulePage() {
         </div>
       )}
 
-      {/* Assign Shift Modal */}
       <Modal
         open={!!assignModal}
         onClose={() => setAssignModal(null)}
@@ -678,9 +771,9 @@ export default function SchedulePage() {
               {" — "}
               {parseInt(assignModal.date.slice(8))}{" "}
               {MONTH_NAMES[parseInt(assignModal.date.slice(5, 7)) - 1]}
-              {NATIONAL_HOLIDAYS[assignModal.date] && (
+              {nationalHolidays[assignModal.date] && (
                 <Badge variant="danger" className="ml-2">
-                  {NATIONAL_HOLIDAYS[assignModal.date]}
+                  {nationalHolidays[assignModal.date]}
                 </Badge>
               )}
               {isUnavailable(assignModal.userId, assignModal.date) && (
@@ -689,7 +782,6 @@ export default function SchedulePage() {
                 </Badge>
               )}
             </p>
-
             <div className="space-y-2">
               {shifts.map((shift) => (
                 <button
@@ -703,15 +795,17 @@ export default function SchedulePage() {
                     style={{ backgroundColor: shift.color }}
                   />
                   <div>
-                    <p className="font-medium text-stone-900 text-sm">{shift.name}</p>
+                    <p className="font-medium text-stone-900 text-sm">
+                      {shift.name}
+                    </p>
                     <p className="text-xs text-stone-500">
-                      {shift.start_time.slice(0, 5)} - {shift.end_time.slice(0, 5)}
+                      {shift.start_time.slice(0, 5)} -{" "}
+                      {shift.end_time.slice(0, 5)}
                     </p>
                   </div>
                 </button>
               ))}
             </div>
-
             {getEntry(assignModal.userId, assignModal.date) && (
               <div className="pt-3 border-t border-stone-200">
                 <Button
@@ -729,7 +823,6 @@ export default function SchedulePage() {
         )}
       </Modal>
 
-      {/* Violations Modal */}
       <Modal
         open={!!violationModal}
         onClose={() => setViolationModal(null)}
@@ -739,50 +832,55 @@ export default function SchedulePage() {
         {violationModal && (
           <div className="space-y-3 max-h-[60vh] overflow-y-auto">
             {violationModal.length === 0 ? (
-              <p className="text-sm text-stone-500">Nenhum problema encontrado.</p>
+              <p className="text-sm text-stone-500">
+                Nenhum problema encontrado.
+              </p>
             ) : (
-              violationModal.map((v, i) => (
-                <div
-                  key={i}
-                  className={`p-3 rounded-lg border text-sm ${
-                    v.severity === "block"
-                      ? "bg-red-50 border-red-200 text-red-800"
-                      : "bg-amber-50 border-amber-200 text-amber-800"
-                  }`}
-                >
-                  <div className="flex items-center gap-2 mb-1">
-                    <Badge variant={v.severity === "block" ? "danger" : "warning"}>
-                      {v.code}
-                    </Badge>
-                    <span className="font-medium">{v.message}</span>
+              violationModal.map((v, i) => {
+                const cardClass =
+                  "p-3 rounded-lg border text-sm " +
+                  (v.severity === "block"
+                    ? "bg-red-50 border-red-200 text-red-800"
+                    : "bg-amber-50 border-amber-200 text-amber-800");
+                return (
+                  <div key={i} className={cardClass}>
+                    <div className="flex items-center gap-2 mb-1">
+                      <Badge
+                        variant={v.severity === "block" ? "danger" : "warning"}
+                      >
+                        {v.code}
+                      </Badge>
+                      <span className="font-medium">{v.message}</span>
+                    </div>
+                    <p className="text-xs opacity-80">
+                      {v.date} — {v.rule}
+                    </p>
                   </div>
-                  <p className="text-xs opacity-80">
-                    {v.date} — {v.rule}
-                  </p>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
         )}
       </Modal>
 
-      {/* Generate Schedule Modal */}
       <Modal
         open={showGenerateModal}
-        onClose={() => { setShowGenerateModal(false); setGenerateResult(null); }}
+        onClose={closeGenerateModal}
         title="Gerar Horario Automaticamente"
         size="md"
       >
         <div className="space-y-4">
-          {!generateResult ? (
+          {!previewResult && !generateDone && (
             <>
               <p className="text-sm text-stone-600">
-                O algoritmo distribui os turnos pelos funcionarios respeitando as regras de compliance,
-                indisponibilidades aprovadas e equilibrio de fairness.
+                O algoritmo distribui os turnos pelos funcionarios respeitando
+                as regras de compliance, indisponibilidades aprovadas e
+                equilibrio de fairness.
                 {entries.length > 0 && (
                   <span className="block mt-1 text-amber-600 font-medium">
-                    Nota: Ja existem {entries.length} atribuicoes. O algoritmo apenas preenche os turnos em falta.
-                    Para recomecar, limpe o horario primeiro.
+                    Nota: Ja existem {entries.length} atribuicoes. O algoritmo
+                    apenas preenche os turnos em falta. Para recomecar, limpe o
+                    horario primeiro.
                   </span>
                 )}
               </p>
@@ -798,7 +896,9 @@ export default function SchedulePage() {
                         className="w-3 h-3 rounded-full flex-shrink-0"
                         style={{ backgroundColor: shift.color }}
                       />
-                      <span className="text-sm text-stone-700 min-w-[100px]">{shift.name}</span>
+                      <span className="text-sm text-stone-700 min-w-[100px]">
+                        {shift.name}
+                      </span>
                       <Input
                         type="number"
                         min={0}
@@ -822,72 +922,131 @@ export default function SchedulePage() {
 
               {Object.keys(unavailableDays).length > 0 && (
                 <p className="text-xs text-stone-500">
-                  {Object.keys(unavailableDays).length} funcionario(s) com indisponibilidades aprovadas este mes.
+                  {Object.keys(unavailableDays).length} funcionario(s) com
+                  indisponibilidades aprovadas este mes.
                 </p>
               )}
 
               <div className="flex gap-2 justify-end pt-2">
-                <Button variant="ghost" onClick={() => setShowGenerateModal(false)}>
+                <Button variant="ghost" onClick={closeGenerateModal}>
                   Cancelar
                 </Button>
                 <Button onClick={handleGenerate} loading={generating}>
-                  <svg className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                  </svg>
-                  Gerar
+                  Pre-visualizar
                 </Button>
               </div>
             </>
-          ) : (
+          )}
+
+          {previewResult && !generateDone && (
             <>
-              <div className="text-center py-4">
-                <div className="w-12 h-12 bg-teal-100 text-teal-600 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-                <h3 className="text-lg font-semibold text-stone-900">
-                  Horario gerado!
-                </h3>
-                <p className="text-sm text-stone-500 mt-1">
-                  {generateResult.total} turno{generateResult.total !== 1 ? "s" : ""} atribuido{generateResult.total !== 1 ? "s" : ""}.
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                <p className="text-sm font-medium text-blue-900">
+                  Pre-visualizacao
+                </p>
+                <p className="text-xs text-blue-700 mt-1">
+                  Ainda nada foi guardado. Revise antes de confirmar.
                 </p>
               </div>
 
-              {generateResult.unfilled.length > 0 && (
+              <div className="text-center py-2">
+                <p className="text-2xl font-bold text-stone-900">
+                  {previewResult.totalEntries}
+                </p>
+                <p className="text-xs text-stone-500">
+                  turno{previewResult.totalEntries !== 1 ? "s" : ""} ser
+                  {previewResult.totalEntries !== 1 ? "ao" : "a"} atribuido
+                  {previewResult.totalEntries !== 1 ? "s" : ""}
+                </p>
+              </div>
+
+              {previewResult.unfilled.length > 0 && (
                 <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
-                  <p className="text-sm font-medium text-amber-800 mb-1">
-                    Turnos por preencher ({generateResult.unfilled.length})
+                  <p className="text-sm font-medium text-amber-800 mb-2">
+                    {previewResult.unfilled.length} turno
+                    {previewResult.unfilled.length !== 1 ? "s" : ""} por
+                    preencher
                   </p>
-                  <p className="text-xs text-amber-600">
-                    Nao foi possivel preencher todos os turnos. Pode atribuir manualmente os que faltam.
-                  </p>
+                  <div className="space-y-1 max-h-32 overflow-y-auto">
+                    {previewResult.unfilled.slice(0, 10).map((u, i) => (
+                      <div
+                        key={i}
+                        className="text-xs text-amber-700 flex justify-between"
+                      >
+                        <span>
+                          {u.date} — {u.shift_name}
+                        </span>
+                        <span className="font-mono">
+                          {u.assigned}/{u.needed}
+                        </span>
+                      </div>
+                    ))}
+                    {previewResult.unfilled.length > 10 && (
+                      <div className="text-xs text-amber-600 italic">
+                        + {previewResult.unfilled.length - 10} mais…
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
 
-              {Object.keys(generateResult.hours).length > 0 && (
+              {previewResult.hours.length > 0 && (
                 <div>
-                  <h4 className="text-sm font-medium text-stone-900 mb-2">Horas atribuidas</h4>
-                  <div className="space-y-1">
-                    {employees
-                      .filter((e) => generateResult.hours[e.id])
-                      .sort((a, b) => (generateResult.hours[b.id] || 0) - (generateResult.hours[a.id] || 0))
-                      .map((emp) => (
-                        <div key={emp.id} className="flex items-center justify-between text-sm">
-                          <span className="text-stone-700">{emp.full_name}</span>
-                          <span className="text-stone-500 font-mono">
-                            {generateResult.hours[emp.id]?.toFixed(0)}h
+                  <h4 className="text-sm font-medium text-stone-900 mb-2">
+                    Horas por funcionario
+                  </h4>
+                  <div className="space-y-1 max-h-48 overflow-y-auto">
+                    {previewResult.hours.map((h) => {
+                      const expected = (h.weekly_hours || 0) * 4.3;
+                      const ratio = expected > 0 ? h.hours / expected : 0;
+                      const warn = ratio < 0.7 || ratio > 1.1;
+                      const hoursClass =
+                        "font-mono " +
+                        (warn ? "text-amber-600" : "text-stone-500");
+                      return (
+                        <div
+                          key={h.user_id}
+                          className="flex items-center justify-between text-sm"
+                        >
+                          <span className="text-stone-700">{h.full_name}</span>
+                          <span className={hoursClass}>
+                            {h.hours.toFixed(0)}h / ~{expected.toFixed(0)}h
                           </span>
                         </div>
-                      ))}
+                      );
+                    })}
                   </div>
                 </div>
               )}
 
               <div className="flex gap-2 justify-end pt-2">
-                <Button onClick={() => { setShowGenerateModal(false); setGenerateResult(null); }}>
-                  Rever horario
+                <Button
+                  variant="ghost"
+                  onClick={() => setPreviewResult(null)}
+                  disabled={confirming}
+                >
+                  Voltar
                 </Button>
+                <Button onClick={confirmGenerate} loading={confirming}>
+                  Confirmar e gravar
+                </Button>
+              </div>
+            </>
+          )}
+
+          {generateDone && (
+            <>
+              <div className="text-center py-4">
+                <h3 className="text-lg font-semibold text-stone-900">
+                  Horario gerado!
+                </h3>
+                <p className="text-sm text-stone-500 mt-1">
+                  As atribuicoes foram guardadas.
+                </p>
+              </div>
+
+              <div className="flex gap-2 justify-end pt-2">
+                <Button onClick={closeGenerateModal}>Rever horario</Button>
               </div>
             </>
           )}
