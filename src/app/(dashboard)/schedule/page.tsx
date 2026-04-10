@@ -85,6 +85,8 @@ export default function SchedulePage() {
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth() + 1);
+  const [viewMode, setViewMode] = useState<"week" | "month">("month");
+  const [weekStart, setWeekStart] = useState(0);
   const [employees, setEmployees] = useState<Profile[]>([]);
   const [shifts, setShifts] = useState<ShiftTemplate[]>([]);
   const [schedule, setSchedule] = useState<Schedule | null>(null);
@@ -112,6 +114,7 @@ export default function SchedulePage() {
   );
   const [confirming, setConfirming] = useState(false);
   const [generateDone, setGenerateDone] = useState(false);
+  const [generateError, setGenerateError] = useState<string | null>(null);
 
   const [orgName, setOrgName] = useState("");
 
@@ -125,6 +128,11 @@ export default function SchedulePage() {
     () => getPortugueseHolidaysRange(year - 1, year + 1),
     [year]
   );
+  const visibleDays = useMemo(() => {
+    if (viewMode === "month") return days;
+    const start = Math.max(0, Math.min(weekStart, days.length - 1));
+    return days.slice(start, start + 7);
+  }, [viewMode, weekStart, days]);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -339,6 +347,7 @@ export default function SchedulePage() {
     if (!schedule) return;
     setGenerating(true);
     setPreviewResult(null);
+    setGenerateError(null);
 
     const res = await fetch("/api/schedule/generate", {
       method: "POST",
@@ -352,7 +361,7 @@ export default function SchedulePage() {
 
     if (!res.ok) {
       const err = await res.json().catch(() => ({ error: "Erro desconhecido" }));
-      alert("Erro ao gerar: " + (err.error || res.statusText));
+      setGenerateError("Erro ao gerar: " + (err.error || res.statusText));
       setGenerating(false);
       return;
     }
@@ -378,7 +387,7 @@ export default function SchedulePage() {
 
     if (!res.ok) {
       const err = await res.json().catch(() => ({ error: "Erro desconhecido" }));
-      alert("Erro ao confirmar: " + (err.error || res.statusText));
+      setGenerateError("Erro ao confirmar: " + (err.error || res.statusText));
       setConfirming(false);
       return;
     }
@@ -454,6 +463,7 @@ export default function SchedulePage() {
     setShowGenerateModal(false);
     setPreviewResult(null);
     setGenerateDone(false);
+    setGenerateError(null);
   }
 
   const blockCount = violations.filter((v) => v.severity === "block").length;
@@ -595,7 +605,7 @@ export default function SchedulePage() {
         </div>
       </div>
 
-      <div className="flex items-center justify-center gap-4">
+      <div className="flex items-center justify-center gap-4 flex-wrap">
         <Button variant="ghost" size="sm" onClick={prevMonth}>
           &lt;
         </Button>
@@ -605,6 +615,42 @@ export default function SchedulePage() {
         <Button variant="ghost" size="sm" onClick={nextMonth}>
           &gt;
         </Button>
+        <div className="flex items-center gap-1 ml-2 border-l border-stone-300 pl-3">
+          <Button
+            variant={viewMode === "month" ? "primary" : "ghost"}
+            size="sm"
+            onClick={() => { setViewMode("month"); setWeekStart(0); }}
+          >
+            Mês
+          </Button>
+          <Button
+            variant={viewMode === "week" ? "primary" : "ghost"}
+            size="sm"
+            onClick={() => setViewMode("week")}
+          >
+            Semana
+          </Button>
+        </div>
+        {viewMode === "week" && (
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setWeekStart(Math.max(0, weekStart - 7))}
+              disabled={weekStart === 0}
+            >
+              ◀ Sem
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setWeekStart(Math.min(days.length - 7, weekStart + 7))}
+              disabled={weekStart + 7 >= days.length}
+            >
+              Sem ▶
+            </Button>
+          </div>
+        )}
       </div>
 
       <div className="flex flex-wrap gap-3 px-1">
@@ -644,7 +690,7 @@ export default function SchedulePage() {
                 <th className="sticky left-0 z-10 bg-stone-50 px-3 py-2 text-left font-medium text-stone-600 border-b border-r border-stone-200 min-w-[140px]">
                   Funcionario
                 </th>
-                {days.map((day) => {
+                {visibleDays.map((day) => {
                   const weekend = isWeekend(day);
                   const holiday = nationalHolidays[day];
                   const dayNum = day.slice(8);
@@ -682,7 +728,7 @@ export default function SchedulePage() {
                         : "PT " + emp.weekly_hours + "h"}
                     </div>
                   </td>
-                  {days.map((day) => {
+                  {visibleDays.map((day) => {
                     const entry = getEntry(emp.id, day);
                     const cellViolations = getCellViolations(emp.id, day);
                     const hasBlock = cellViolations.some(
@@ -872,6 +918,11 @@ export default function SchedulePage() {
         <div className="space-y-4">
           {!previewResult && !generateDone && (
             <>
+              {generateError && (
+                <div className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-2">
+                  {generateError}
+                </div>
+              )}
               <p className="text-sm text-stone-600">
                 O algoritmo distribui os turnos pelos funcionarios respeitando
                 as regras de compliance, indisponibilidades aprovadas e
