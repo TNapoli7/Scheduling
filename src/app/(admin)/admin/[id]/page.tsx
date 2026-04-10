@@ -418,7 +418,7 @@ export default function OrgDetailPage() {
 
           <div className="flex gap-2 justify-end pt-2">
             <Button variant="ghost" onClick={() => setShowEdit(false)}>Cancelar</Button>
-            <Button onClick={saveOrg} loading={saving}>Guardar</Button>
+            <Button onClick={saveOrg} disabled={saving}>Guardar</Button>
           </div>
         </div>
       </Modal>
