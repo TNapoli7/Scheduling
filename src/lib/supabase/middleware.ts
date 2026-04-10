@@ -25,24 +25,29 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
+  // Refresh session — important for keeping cookies alive
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Redirect unauthenticated users to login
-  if (
-    !user &&
-    !request.nextUrl.pathname.startsWith("/login") &&
-    !request.nextUrl.pathname.startsWith("/callback") &&
-    request.nextUrl.pathname !== "/"
-  ) {
+  const pathname = request.nextUrl.pathname;
+
+  // Public paths that don't need auth
+  const isPublicPath =
+    pathname === "/" ||
+    pathname.startsWith("/login") ||
+    pathname.startsWith("/callback") ||
+    pathname.startsWith("/auth/confirm");
+
+  // Redirect unauthenticated users to login (but not from public paths)
+  if (!user && !isPublicPath) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);
   }
 
-  // Redirect authenticated users away from login
-  if (user && request.nextUrl.pathname.startsWith("/login")) {
+  // Redirect authenticated users away from login to dashboard
+  if (user && pathname === "/login") {
     const url = request.nextUrl.clone();
     url.pathname = "/dashboard";
     return NextResponse.redirect(url);
