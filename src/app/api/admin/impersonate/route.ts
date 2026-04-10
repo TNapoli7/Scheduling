@@ -3,40 +3,64 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export async function POST(req: NextRequest) {
+  const startedAt = new Date().toISOString();
+  const ip =
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    req.headers.get("x-real-ip") ||
+    "unknown";
+  const userAgent = req.headers.get("user-agent") || "unknown";
+
   try {
-    // 1. Verify the caller is a super admin
+    // 1. Verify the caller is authenticated
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { data: profile } = await supabase
+    // 2. Verify the caller is a super admin
+    const { data: callerProfile } = await supabase
       .from("profiles")
-      .select("is_super_admin")
+      .select("is_super_admin, full_name, email")
       .eq("id", user.id)
       .single();
 
-    if (!profile?.is_super_admin) {
+    if (!callerProfile?.is_super_admin) {
+      console.warn(
+        "[IMPERSONATE][DENIED] non-super-admin attempt",
+        JSON.stringify({ callerId: user.id, ip, userAgent, startedAt })
+      );
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    // 2. Get target user ID
-    const body = await req.json();
+    // 3. Validate request body
+    let body: { userId?: string };
+    try {
+      body = await req.json();
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    }
     const targetUserId = body.userId;
-
-    if (!targetUserId) {
+    if (!targetUserId || typeof targetUserId !== "string") {
       return NextResponse.json({ error: "Missing userId" }, { status: 400 });
     }
 
-    // 3. Generate a magic link / session for the target user
-    const admin = createAdminClient();
+    // 4. Guard: cannot impersonate yourself
+    if (targetUserId === user.id) {
+      return NextResponse.json(
+        { error: "Cannot impersonate yourself" },
+        { status: 400 }
+      );
+    }
 
-    // Get the target user's email
+    // 5. Lookup target user via admin client (bypass RLS)
+    const admin = createAdminClient();
     const { data: targetProfile } = await admin
       .from("profiles")
-      .select("email")
+      .select("id, email, is_super_admin, org_id, full_name")
       .eq("id", targetUserId)
       .single();
 
@@ -44,28 +68,73 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    // Generate a magic link that auto-signs in as the target user
-    const { data: linkData, error: linkError } = await admin.auth.admin.generateLink({
-      type: "magiclink",
-      email: targetProfile.email,
-      options: {
-        redirectTo: `${req.nextUrl.origin}/dashboard`,
-      },
-    });
+    // 6. Guard: cannot impersonate other super admins (prevents privilege loops)
+    if (targetProfile.is_super_admin) {
+      console.warn(
+        "[IMPERSONATE][DENIED] target is super_admin",
+        JSON.stringify({
+          callerId: user.id,
+          targetId: targetUserId,
+          ip,
+          userAgent,
+          startedAt,
+        })
+      );
+      return NextResponse.json(
+        { error: "Cannot impersonate another super admin" },
+        { status: 403 }
+      );
+    }
 
-    if (linkError || !linkData) {
+    // 7. Generate a magic link that auto-signs in as the target user
+    const { data: linkData, error: linkError } =
+      await admin.auth.admin.generateLink({
+        type: "magiclink",
+        email: targetProfile.email,
+        options: {
+          redirectTo: `${req.nextUrl.origin}/dashboard`,
+        },
+      });
+
+    if (linkError || !linkData?.properties?.hashed_token) {
       return NextResponse.json(
         { error: linkError?.message || "Failed to generate link" },
         { status: 500 }
       );
     }
 
-    // The hashed_token can be used to construct the verification URL
+    // 8. Audit log (structured — scrape via log aggregator)
+    console.warn(
+      "[IMPERSONATE][GRANTED]",
+      JSON.stringify({
+        callerId: user.id,
+        callerEmail: callerProfile.email,
+        targetId: targetUserId,
+        targetEmail: targetProfile.email,
+        targetOrgId: targetProfile.org_id,
+        ip,
+        userAgent,
+        startedAt,
+      })
+    );
+
+    // Best-effort persistent audit — no-op if table does not exist
+    try {
+      await admin.from("impersonation_logs").insert({
+        caller_id: user.id,
+        target_id: targetUserId,
+        ip,
+        user_agent: userAgent,
+      });
+    } catch (_auditErr) {
+      // table may not exist yet — do not block impersonation
+    }
+
     const verifyUrl = `${req.nextUrl.origin}/auth/confirm?token_hash=${linkData.properties.hashed_token}&type=magiclink&next=/dashboard`;
 
     return NextResponse.json({ url: verifyUrl });
   } catch (err) {
-    console.error("Impersonate error:", err);
+    console.error("[IMPERSONATE][ERROR]", err);
     return NextResponse.json({ error: "Internal error" }, { status: 500 });
   }
 }
