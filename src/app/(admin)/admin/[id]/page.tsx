@@ -151,7 +151,7 @@ export default function OrgDetailPage() {
   if (loading) {
     return (
       <div className="max-w-4xl mx-auto p-6 space-y-6">
-        <div className="h-8 w-64 bg-stone-200 rounded animate-pulse" />
+        <div className="h-8 w-64 bg-[color:var(--border-light)] rounded animate-pulse" />
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <SkeletonCard />
           <SkeletonCard />
@@ -178,19 +178,19 @@ export default function OrgDetailPage() {
       <div>
         <a
           href="/admin"
-          className="inline-flex items-center gap-1 text-sm text-stone-500 hover:text-stone-700 mb-3 transition-colors"
+          className="inline-flex items-center gap-1 text-sm text-[color:var(--text-muted)] hover:text-[color:var(--text-secondary)] mb-3 transition-colors"
         >
           <ChevronLeft className="w-4 h-4" />
           Voltar
         </a>
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-stone-100 rounded-xl flex items-center justify-center">
-              <Building2 className="w-6 h-6 text-stone-600" />
+            <div className="w-12 h-12 bg-[color:var(--surface-sunken)] rounded-xl flex items-center justify-center">
+              <Building2 className="w-6 h-6 text-[color:var(--text-secondary)]" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-stone-900">{org.name}</h1>
-              <p className="text-sm text-stone-500">{org.sector} &middot; Registada em {createdDate}</p>
+              <h1 className="text-2xl font-bold text-[color:var(--text-primary)] font-display tracking-tight">{org.name}</h1>
+              <p className="text-sm text-[color:var(--text-muted)]">{org.sector} &middot; Registada em {createdDate}</p>
             </div>
           </div>
           <Button onClick={openEdit}>
@@ -204,14 +204,14 @@ export default function OrgDetailPage() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card>
           <div className="flex items-center gap-4">
-            <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center">
-              <CreditCard className="w-5 h-5 text-indigo-600" />
+            <div className="w-10 h-10 bg-[color:var(--accent-soft)] rounded-xl flex items-center justify-center">
+              <CreditCard className="w-5 h-5 text-[color:var(--accent)]" />
             </div>
             <div>
-              <p className="text-xs text-stone-500">Plano</p>
-              <p className="text-lg font-bold text-stone-900 capitalize">{org.plan_name}</p>
+              <p className="text-xs text-[color:var(--text-muted)]">Plano</p>
+              <p className="text-lg font-bold text-[color:var(--text-primary)] capitalize">{org.plan_name}</p>
               {org.plan_name !== "trial" && (
-                <p className="text-xs text-stone-500">{Number(org.base_price)}€ base + {Number(org.per_user_price)}€/user</p>
+                <p className="text-xs text-[color:var(--text-muted)]">{Number(org.base_price)}€ base + {Number(org.per_user_price)}€/user</p>
               )}
             </div>
           </div>
@@ -223,12 +223,12 @@ export default function OrgDetailPage() {
               <Users className="w-5 h-5 text-teal-600" />
             </div>
             <div>
-              <p className="text-xs text-stone-500">Utilizadores</p>
-              <p className="text-lg font-bold text-stone-900">
+              <p className="text-xs text-[color:var(--text-muted)]">Utilizadores</p>
+              <p className="text-lg font-bold text-[color:var(--text-primary)]">
                 {activeUsers}
-                <span className="text-sm font-normal text-stone-400 ml-1">/ {users.length}</span>
+                <span className="text-sm font-normal text-[color:var(--text-muted)] ml-1">/ {users.length}</span>
                 {org.max_users && (
-                  <span className="text-xs font-normal text-stone-400 ml-1">(max {org.max_users})</span>
+                  <span className="text-xs font-normal text-[color:var(--text-muted)] ml-1">(max {org.max_users})</span>
                 )}
               </p>
             </div>
@@ -237,13 +237,13 @@ export default function OrgDetailPage() {
 
         <Card>
           <div className="flex items-center gap-4">
-            <div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center">
-              <Calendar className="w-5 h-5 text-emerald-600" />
+            <div className="w-10 h-10 bg-[color:var(--success-soft)] rounded-xl flex items-center justify-center">
+              <Calendar className="w-5 h-5 text-[color:var(--success)]" />
             </div>
             <div>
-              <p className="text-xs text-stone-500">Receita mensal</p>
-              <p className="text-lg font-bold text-emerald-600">{revenue.toFixed(0)}€</p>
-              <p className="text-xs text-stone-500">{org.billing_cycle === "annual" ? "Anual" : "Mensal"}</p>
+              <p className="text-xs text-[color:var(--text-muted)]">Receita mensal</p>
+              <p className="text-lg font-bold text-[color:var(--success)]">{revenue.toFixed(0)}€</p>
+              <p className="text-xs text-[color:var(--text-muted)]">{org.billing_cycle === "annual" ? "Anual" : "Mensal"}</p>
             </div>
           </div>
         </Card>
@@ -252,8 +252,8 @@ export default function OrgDetailPage() {
       {/* Billing notes */}
       {org.billing_notes && (
         <Card>
-          <p className="text-xs font-medium text-stone-500 mb-1">Notas de billing</p>
-          <p className="text-sm text-stone-700">{org.billing_notes}</p>
+          <p className="text-xs font-medium text-[color:var(--text-muted)] mb-1">Notas de billing</p>
+          <p className="text-sm text-[color:var(--text-secondary)]">{org.billing_notes}</p>
         </Card>
       )}
 
@@ -264,7 +264,7 @@ export default function OrgDetailPage() {
           <Card>
             <div className="text-center py-8">
               <Users className="w-8 h-8 text-stone-300 mx-auto mb-2" />
-              <p className="text-sm text-stone-500">Sem utilizadores.</p>
+              <p className="text-sm text-[color:var(--text-muted)]">Sem utilizadores.</p>
             </div>
           </Card>
         ) : (
@@ -273,16 +273,16 @@ export default function OrgDetailPage() {
               <Card key={user.id}>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-9 h-9 bg-stone-100 rounded-full flex items-center justify-center flex-shrink-0">
+                    <div className="w-9 h-9 bg-[color:var(--surface-sunken)] rounded-full flex items-center justify-center flex-shrink-0">
                       {user.role === "admin" ? (
-                        <Shield className="w-4 h-4 text-indigo-600" />
+                        <Shield className="w-4 h-4 text-[color:var(--accent)]" />
                       ) : (
-                        <User className="w-4 h-4 text-stone-500" />
+                        <User className="w-4 h-4 text-[color:var(--text-muted)]" />
                       )}
                     </div>
                     <div className="min-w-0">
-                      <p className="font-medium text-stone-900 text-sm truncate">{user.full_name}</p>
-                      <p className="text-xs text-stone-500 truncate">{user.email}</p>
+                      <p className="font-medium text-[color:var(--text-primary)] text-sm truncate">{user.full_name}</p>
+                      <p className="text-xs text-[color:var(--text-muted)] truncate">{user.email}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
@@ -295,7 +295,7 @@ export default function OrgDetailPage() {
                     <button
                       onClick={() => impersonateUser(user.id)}
                       disabled={impersonating === user.id}
-                      className="inline-flex items-center gap-1 px-2 py-1 text-xs text-indigo-600 rounded-md hover:bg-indigo-50 transition-colors disabled:opacity-50"
+                      className="inline-flex items-center gap-1 px-2 py-1 text-xs text-[color:var(--accent)] rounded-md hover:bg-[color:var(--accent-soft)] transition-colors disabled:opacity-50"
                       title={`Entrar como ${user.full_name}`}
                     >
                       <LogIn className="w-3.5 h-3.5" />
@@ -313,11 +313,11 @@ export default function OrgDetailPage() {
       <Modal open={showEdit} onClose={() => setShowEdit(false)} title="Editar plano e billing" size="sm">
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-stone-700 mb-1">Plano</label>
+            <label className="block text-sm font-medium text-[color:var(--text-secondary)] mb-1">Plano</label>
             <select
               value={editPlan}
               onChange={(e) => setEditPlan(e.target.value)}
-              className="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm text-stone-900 focus:ring-2 focus:ring-indigo-500 focus:border-transparent focus:outline-none"
+              className="w-full rounded-lg border border-[color:var(--border)] px-3 py-2 text-sm text-[color:var(--text-primary)] focus:ring-2 focus:ring-indigo-500 focus:border-transparent focus:outline-none"
             >
               {PLAN_OPTIONS.map((p) => (
                 <option key={p.value} value={p.value}>{p.label}</option>
@@ -327,59 +327,59 @@ export default function OrgDetailPage() {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-stone-700 mb-1">Preco base (€)</label>
+              <label className="block text-sm font-medium text-[color:var(--text-secondary)] mb-1">Preco base (€)</label>
               <input
                 type="number"
                 step="0.01"
                 value={editBase}
                 onChange={(e) => setEditBase(e.target.value)}
-                className="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm text-stone-900 focus:ring-2 focus:ring-indigo-500 focus:border-transparent focus:outline-none"
+                className="w-full rounded-lg border border-[color:var(--border)] px-3 py-2 text-sm text-[color:var(--text-primary)] focus:ring-2 focus:ring-indigo-500 focus:border-transparent focus:outline-none"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-stone-700 mb-1">Por utilizador (€)</label>
+              <label className="block text-sm font-medium text-[color:var(--text-secondary)] mb-1">Por utilizador (€)</label>
               <input
                 type="number"
                 step="0.01"
                 value={editPerUser}
                 onChange={(e) => setEditPerUser(e.target.value)}
-                className="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm text-stone-900 focus:ring-2 focus:ring-indigo-500 focus:border-transparent focus:outline-none"
+                className="w-full rounded-lg border border-[color:var(--border)] px-3 py-2 text-sm text-[color:var(--text-primary)] focus:ring-2 focus:ring-indigo-500 focus:border-transparent focus:outline-none"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-stone-700 mb-1">Ciclo</label>
+              <label className="block text-sm font-medium text-[color:var(--text-secondary)] mb-1">Ciclo</label>
               <select
                 value={editCycle}
                 onChange={(e) => setEditCycle(e.target.value)}
-                className="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm text-stone-900 focus:ring-2 focus:ring-indigo-500 focus:border-transparent focus:outline-none"
+                className="w-full rounded-lg border border-[color:var(--border)] px-3 py-2 text-sm text-[color:var(--text-primary)] focus:ring-2 focus:ring-indigo-500 focus:border-transparent focus:outline-none"
               >
                 <option value="monthly">Mensal</option>
                 <option value="annual">Anual</option>
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-stone-700 mb-1">Max utilizadores</label>
+              <label className="block text-sm font-medium text-[color:var(--text-secondary)] mb-1">Max utilizadores</label>
               <input
                 type="number"
                 value={editMaxUsers}
                 onChange={(e) => setEditMaxUsers(e.target.value)}
                 placeholder="Ilimitado"
-                className="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm text-stone-900 focus:ring-2 focus:ring-indigo-500 focus:border-transparent focus:outline-none"
+                className="w-full rounded-lg border border-[color:var(--border)] px-3 py-2 text-sm text-[color:var(--text-primary)] focus:ring-2 focus:ring-indigo-500 focus:border-transparent focus:outline-none"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-stone-700 mb-1">Notas</label>
+            <label className="block text-sm font-medium text-[color:var(--text-secondary)] mb-1">Notas</label>
             <textarea
               value={editNotes}
               onChange={(e) => setEditNotes(e.target.value)}
               rows={2}
               placeholder="Ex: Promocode aplicado, desconto 20%..."
-              className="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm text-stone-900 focus:ring-2 focus:ring-indigo-500 focus:border-transparent focus:outline-none"
+              className="w-full rounded-lg border border-[color:var(--border)] px-3 py-2 text-sm text-[color:var(--text-primary)] focus:ring-2 focus:ring-indigo-500 focus:border-transparent focus:outline-none"
             />
           </div>
 
@@ -389,9 +389,9 @@ export default function OrgDetailPage() {
               id="edit-active"
               checked={editActive}
               onChange={(e) => setEditActive(e.target.checked)}
-              className="rounded border-stone-300 text-indigo-600 focus:ring-indigo-500"
+              className="rounded border-[color:var(--border)] text-[color:var(--accent)] focus:ring-indigo-500"
             />
-            <label htmlFor="edit-active" className="text-sm text-stone-700">
+            <label htmlFor="edit-active" className="text-sm text-[color:var(--text-secondary)]">
               Organizacao ativa
             </label>
           </div>
