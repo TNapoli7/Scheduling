@@ -34,6 +34,7 @@ export interface Organization {
 export interface OrgSummary extends Organization {
   active_users: number;
   total_users: number;
+  last_login_at: string | null;
 }
 
 export interface Profile {
