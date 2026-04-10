@@ -15,6 +15,7 @@ import {
   ArrowRightLeft,
   CalendarOff,
 } from "lucide-react";
+import { SkeletonCard, SkeletonTable } from "@/components/ui/skeleton";
 import type { Profile, ScheduleEntry, ShiftTemplate, TimeOffRequest } from "@/types/database";
 
 const MONTH_NAMES = [
@@ -261,8 +262,17 @@ export default function DashboardPage() {
   if (loading) {
     return (
       <div className="space-y-6">
-        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-        <div className="text-center py-12 text-gray-500">A carregar...</div>
+        <div>
+          <div className="h-8 w-48 bg-gray-200 rounded animate-pulse" />
+          <div className="h-4 w-32 bg-gray-200 rounded animate-pulse mt-2" />
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <SkeletonCard />
+          <SkeletonCard />
+          <SkeletonCard />
+          <SkeletonCard />
+        </div>
+        <SkeletonTable rows={4} cols={5} />
       </div>
     );
   }

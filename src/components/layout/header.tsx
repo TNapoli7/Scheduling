@@ -122,7 +122,7 @@ export function Header({ userName, unreadCount: initialUnread, onMenuClick }: He
             </button>
 
             {showNotifications && (
-              <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-50 max-h-[400px] overflow-hidden flex flex-col">
+              <div className="absolute right-0 mt-2 w-80 max-w-[calc(100vw-2rem)] bg-white rounded-lg shadow-lg border border-gray-200 z-50 max-h-[400px] overflow-hidden flex flex-col">
                 <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
                   <h3 className="text-sm font-semibold text-gray-900">Notificacoes</h3>
                   {unreadCount > 0 && (

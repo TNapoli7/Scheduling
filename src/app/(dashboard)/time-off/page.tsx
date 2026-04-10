@@ -7,6 +7,8 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Modal } from "@/components/ui/modal";
+import { Palmtree } from "lucide-react";
+import { SkeletonCard, SkeletonList } from "@/components/ui/skeleton";
 import type { Profile, TimeOffRequest } from "@/types/database";
 
 const TYPE_LABELS: Record<string, string> = {
@@ -211,9 +213,13 @@ export default function TimeOffPage() {
 
   if (loading) {
     return (
-      <div className="space-y-6">
-        <h1 className="text-2xl font-bold text-gray-900">Ferias e Ausencias</h1>
-        <div className="text-center py-12 text-gray-500">A carregar...</div>
+      <div className="space-y-4">
+        <div>
+          <div className="h-8 w-48 bg-gray-200 rounded animate-pulse" />
+          <div className="h-4 w-64 bg-gray-200 rounded animate-pulse mt-2" />
+        </div>
+        <SkeletonCard />
+        <SkeletonList count={3} />
       </div>
     );
   }
@@ -294,7 +300,15 @@ export default function TimeOffPage() {
       {/* Request list */}
       {filtered.length === 0 ? (
         <Card>
-          <div className="text-center py-8 text-gray-500">Nenhum pedido encontrado.</div>
+          <div className="text-center py-10">
+            <Palmtree className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+            <p className="text-sm text-gray-500 mb-3">
+              {tab === "pending" ? "Sem pedidos pendentes." : tab === "approved" ? "Nenhum pedido aprovado." : tab === "rejected" ? "Nenhum pedido rejeitado." : "Nenhum pedido encontrado."}
+            </p>
+            {!isManager && (
+              <Button size="sm" onClick={() => setShowNew(true)}>Novo pedido</Button>
+            )}
+          </div>
         </Card>
       ) : (
         <div className="space-y-2">

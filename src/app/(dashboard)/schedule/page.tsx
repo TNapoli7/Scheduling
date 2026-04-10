@@ -13,6 +13,7 @@ import {
   type ComplianceViolation,
 } from "@/lib/compliance";
 import { generateSchedule, type SchedulerInput } from "@/lib/scheduler";
+import { SkeletonTable } from "@/components/ui/skeleton";
 import type {
   Profile,
   ShiftTemplate,
@@ -408,9 +409,15 @@ export default function SchedulePage() {
 
   if (loading) {
     return (
-      <div className="space-y-6">
-        <h1 className="text-2xl font-bold text-gray-900">Horario</h1>
-        <div className="text-center py-12 text-gray-500">A carregar...</div>
+      <div className="space-y-4">
+        <div>
+          <div className="h-8 w-32 bg-gray-200 rounded animate-pulse" />
+          <div className="h-4 w-24 bg-gray-200 rounded animate-pulse mt-2" />
+        </div>
+        <div className="flex justify-center">
+          <div className="h-6 w-48 bg-gray-200 rounded animate-pulse" />
+        </div>
+        <SkeletonTable rows={6} cols={10} />
       </div>
     );
   }
