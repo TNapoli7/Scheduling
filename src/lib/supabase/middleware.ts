@@ -37,19 +37,13 @@ export async function updateSession(request: NextRequest) {
     pathname === "/" ||
     pathname.startsWith("/login") ||
     pathname.startsWith("/callback") ||
-    pathname.startsWith("/auth/confirm");
+    pathname.startsWith("/auth/confirm") ||
+    pathname.startsWith("/api/");
 
   // Redirect unauthenticated users to login (but not from public paths)
   if (!user && !isPublicPath) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
-    return NextResponse.redirect(url);
-  }
-
-  // Redirect authenticated users away from login to dashboard
-  if (user && pathname === "/login") {
-    const url = request.nextUrl.clone();
-    url.pathname = "/dashboard";
     return NextResponse.redirect(url);
   }
 
