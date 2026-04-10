@@ -306,7 +306,7 @@ export default function OrgDetailPage() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
-                    <Badge variant={user.role === "admin" ? "info" : user.role === "manager" ? "default" : "default"}>
+                    <Badge variant={user.role === "admin" ? "accent" : user.role === "manager" ? "default" : "default"}>
                       {ROLE_LABELS[user.role] || user.role}
                     </Badge>
                     {!user.is_active && (
