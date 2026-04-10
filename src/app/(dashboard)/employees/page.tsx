@@ -321,7 +321,7 @@ export default function EmployeesPage() {
             required
           />
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Select
               label="Funcao"
               value={form.role}
@@ -336,7 +336,7 @@ export default function EmployeesPage() {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Select
               label="Contrato"
               value={form.contract_type}
