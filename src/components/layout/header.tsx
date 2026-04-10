@@ -91,12 +91,12 @@ export function Header({ userName, unreadCount: initialUnread, onMenuClick }: He
   }
 
   return (
-    <header className="sticky top-0 z-30 h-14 bg-white/80 backdrop-blur-md border-b border-stone-200/60 px-4 lg:px-6">
+    <header className="sticky top-0 z-30 h-14 bg-[color:var(--surface)]/80 backdrop-blur-md border-b border-[color:var(--border-light)]/60 px-4 lg:px-6">
       <div className="flex items-center justify-between h-full">
         {/* Left: mobile menu */}
         <button
           onClick={onMenuClick}
-          className="lg:hidden p-2 text-stone-500 hover:text-stone-700 rounded-lg hover:bg-stone-100"
+          className="lg:hidden p-2 text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)] rounded-lg hover:bg-[color:var(--surface-sunken)]"
         >
           <Menu className="w-5 h-5" />
         </button>
@@ -109,24 +109,24 @@ export function Header({ userName, unreadCount: initialUnread, onMenuClick }: He
           <div className="relative" ref={notifRef}>
             <button
               onClick={toggleNotifications}
-              className="relative p-2 text-stone-400 hover:text-stone-600 rounded-lg hover:bg-stone-100 transition-colors"
+              className="relative p-2 text-[color:var(--text-muted)] hover:text-[color:var(--text-secondary)] rounded-lg hover:bg-[color:var(--surface-sunken)] transition-colors"
             >
               <Bell className="w-[18px] h-[18px]" />
               {unreadCount > 0 && (
-                <span className="absolute top-1.5 right-1.5 w-4 h-4 bg-indigo-600 text-white text-[9px] font-bold rounded-full flex items-center justify-center ring-2 ring-white">
+                <span className="absolute top-1.5 right-1.5 w-4 h-4 bg-[color:var(--accent)] text-white text-[9px] font-bold rounded-full flex items-center justify-center ring-2 ring-white">
                   {unreadCount > 9 ? "9+" : unreadCount}
                 </span>
               )}
             </button>
 
             {showNotifications && (
-              <div className="absolute right-0 mt-2 w-80 max-w-[calc(100vw-2rem)] bg-white rounded-2xl shadow-xl border border-stone-200/60 z-50 max-h-[400px] overflow-hidden flex flex-col">
-                <div className="flex items-center justify-between px-4 py-3 border-b border-stone-100">
-                  <h3 className="text-sm font-semibold text-stone-900">Notificacoes</h3>
+              <div className="absolute right-0 mt-2 w-80 max-w-[calc(100vw-2rem)] bg-[color:var(--surface)] rounded-2xl shadow-xl border border-[color:var(--border-light)]/60 z-50 max-h-[400px] overflow-hidden flex flex-col">
+                <div className="flex items-center justify-between px-4 py-3 border-b border-[color:var(--border-light)]">
+                  <h3 className="text-sm font-semibold text-[color:var(--text-primary)]">Notificacoes</h3>
                   {unreadCount > 0 && (
                     <button
                       onClick={markAllRead}
-                      className="text-xs text-indigo-600 hover:text-indigo-700 font-medium"
+                      className="text-xs text-[color:var(--accent)] hover:text-[color:var(--accent-active)] font-medium"
                     >
                       Marcar como lidas
                     </button>
@@ -134,32 +134,32 @@ export function Header({ userName, unreadCount: initialUnread, onMenuClick }: He
                 </div>
                 <div className="overflow-y-auto flex-1">
                   {loadingNotifs ? (
-                    <div className="text-center py-8 text-stone-400 text-sm">A carregar...</div>
+                    <div className="text-center py-8 text-[color:var(--text-muted)] text-sm">A carregar...</div>
                   ) : notifications.length === 0 ? (
                     <div className="text-center py-8">
                       <Bell className="w-8 h-8 text-stone-200 mx-auto mb-2" />
-                      <p className="text-sm text-stone-400">Sem notificacoes</p>
+                      <p className="text-sm text-[color:var(--text-muted)]">Sem notificacoes</p>
                     </div>
                   ) : (
                     notifications.map((notif) => (
                       <div
                         key={notif.id}
-                        className={`px-4 py-3 border-b border-stone-50 hover:bg-stone-50 cursor-pointer flex items-start gap-3 transition-colors ${
-                          !notif.is_read ? "bg-indigo-50/40" : ""
+                        className={`px-4 py-3 border-b border-stone-50 hover:bg-[color:var(--surface-sunken)] cursor-pointer flex items-start gap-3 transition-colors ${
+                          !notif.is_read ? "bg-[color:var(--accent-soft)]/40" : ""
                         }`}
                         onClick={() => { if (!notif.is_read) markAsRead(notif.id); }}
                       >
                         <div className="flex-1 min-w-0">
-                          <p className={`text-sm leading-snug ${!notif.is_read ? "font-semibold text-stone-900" : "text-stone-600"}`}>
+                          <p className={`text-sm leading-snug ${!notif.is_read ? "font-semibold text-[color:var(--text-primary)]" : "text-[color:var(--text-secondary)]"}`}>
                             {notif.title}
                           </p>
                           {notif.body && (
-                            <p className="text-xs text-stone-400 mt-0.5 line-clamp-2">{notif.body}</p>
+                            <p className="text-xs text-[color:var(--text-muted)] mt-0.5 line-clamp-2">{notif.body}</p>
                           )}
                           <p className="text-[10px] text-stone-300 mt-1">{timeAgo(notif.created_at)}</p>
                         </div>
                         {!notif.is_read && (
-                          <div className="w-2 h-2 bg-indigo-500 rounded-full mt-1.5 flex-shrink-0" />
+                          <div className="w-2 h-2 bg-[color:var(--accent-soft)]0 rounded-full mt-1.5 flex-shrink-0" />
                         )}
                       </div>
                     ))
@@ -173,28 +173,28 @@ export function Header({ userName, unreadCount: initialUnread, onMenuClick }: He
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => { setShowDropdown(!showDropdown); setShowNotifications(false); }}
-              className="flex items-center gap-2 py-1.5 px-2 rounded-lg hover:bg-stone-100 transition-colors"
+              className="flex items-center gap-2 py-1.5 px-2 rounded-lg hover:bg-[color:var(--surface-sunken)] transition-colors"
             >
-              <div className="w-7 h-7 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center text-xs font-bold">
+              <div className="w-7 h-7 bg-[color:var(--accent-soft)] text-[color:var(--accent)] rounded-full flex items-center justify-center text-xs font-bold">
                 {userName.charAt(0).toUpperCase()}
               </div>
-              <span className="hidden sm:block text-sm font-medium text-stone-700">{userName}</span>
-              <ChevronDown className="hidden sm:block w-3.5 h-3.5 text-stone-400" />
+              <span className="hidden sm:block text-sm font-medium text-[color:var(--text-primary)]">{userName}</span>
+              <ChevronDown className="hidden sm:block w-3.5 h-3.5 text-[color:var(--text-muted)]" />
             </button>
 
             {showDropdown && (
-              <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-stone-200/60 py-1 z-50">
+              <div className="absolute right-0 mt-2 w-48 bg-[color:var(--surface)] rounded-xl shadow-xl border border-[color:var(--border-light)]/60 py-1 z-50">
                 <button
                   onClick={() => { setShowDropdown(false); router.push("/settings"); }}
-                  className="flex items-center gap-2.5 w-full px-4 py-2.5 text-sm text-stone-600 hover:bg-stone-50 transition-colors"
+                  className="flex items-center gap-2.5 w-full px-4 py-2.5 text-sm text-[color:var(--text-secondary)] hover:bg-[color:var(--surface-sunken)] transition-colors"
                 >
-                  <User className="w-4 h-4 text-stone-400" />
+                  <User className="w-4 h-4 text-[color:var(--text-muted)]" />
                   Perfil
                 </button>
-                <div className="border-t border-stone-100 my-1" />
+                <div className="border-t border-[color:var(--border-light)] my-1" />
                 <button
                   onClick={handleSignOut}
-                  className="flex items-center gap-2.5 w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                  className="flex items-center gap-2.5 w-full px-4 py-2.5 text-sm text-[color:var(--danger)] hover:bg-[color:var(--danger-soft)] transition-colors"
                 >
                   <LogOut className="w-4 h-4" />
                   Sair
