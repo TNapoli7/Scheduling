@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import type { Organization } from "@/types/database";
 
 const sectorOptions = [
-  { value: "farmacia", label: "Farmacia" },
+  { value: "farmacia", label: "Farmácia" },
   { value: "clinica", label: "Clinica" },
   { value: "hospital", label: "Hospital" },
   { value: "laboratorio", label: "Laboratorio" },
@@ -128,7 +128,7 @@ export default function SettingsPage() {
   if (loading) {
     return (
       <div className="space-y-6">
-        <h1 className="text-2xl font-bold text-stone-900">Definicoes</h1>
+        <h1 className="text-2xl font-bold text-stone-900">Definições</h1>
         <div className="text-center py-12 text-stone-500">A carregar...</div>
       </div>
     );
@@ -137,7 +137,7 @@ export default function SettingsPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-stone-900">Definicoes</h1>
+        <h1 className="text-2xl font-bold text-stone-900">Definições</h1>
         {success && (
           <Badge variant="success">Guardado com sucesso</Badge>
         )}
@@ -165,7 +165,7 @@ export default function SettingsPage() {
             label="Morada"
             value={address}
             onChange={(e) => setAddress(e.target.value)}
-            placeholder="Rua, numero, codigo postal, cidade"
+            placeholder="Rua, número, código postal, cidade"
           />
           <Input
             label="Feriado municipal"
@@ -179,7 +179,7 @@ export default function SettingsPage() {
 
       {/* Operating hours */}
       <Card>
-        <CardTitle>Horario de funcionamento</CardTitle>
+        <CardTitle>Horário de funcionamento</CardTitle>
         <div className="mt-4 space-y-3">
           {WEEKDAYS.map((day) => {
             const h = hours[day.key];
