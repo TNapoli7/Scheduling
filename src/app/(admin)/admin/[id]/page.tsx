@@ -412,7 +412,7 @@ export default function OrgDetailPage() {
               className="rounded border-[color:var(--border)] text-[color:var(--accent)] focus:ring-indigo-500"
             />
             <label htmlFor="edit-active" className="text-sm text-[color:var(--text-secondary)]">
-              Organizacao ativa
+              Organização ativa
             </label>
           </div>
 
