@@ -319,7 +319,7 @@ export default function DashboardPage() {
                       {currentScheduleStatus === "published" ? "Publicado" : "Rascunho"}
                     </Badge>
                   ) : (
-                    <Badge variant="default">Nao criado</Badge>
+                    <Badge variant="default">Não criado</Badge>
                   )}
                 </div>
               </div>
@@ -397,7 +397,7 @@ export default function DashboardPage() {
               <Palmtree className="w-6 h-6 text-teal-600" />
             </div>
             <div>
-              <p className="text-sm text-[color:var(--text-muted)]">Férias disponiveis</p>
+              <p className="text-sm text-[color:var(--text-muted)]">Férias disponíveis</p>
               <p className={`text-2xl font-bold ${remainingDays <= 3 ? "text-[color:var(--warning)]" : "text-[color:var(--text-primary)]"}`}>
                 {formatNum(remainingDays)}
                 <span className="text-sm font-normal text-[color:var(--text-muted)] ml-1">/ {vacationQuota}</span>
