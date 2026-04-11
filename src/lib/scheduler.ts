@@ -1,5 +1,5 @@
 /**
- * Auto-Scheduling Algorithm — Mapa de Horario
+ * Auto-Scheduling Algorithm — Mapa de Horário
  *
  * Deterministic scheduler that distributes shifts across employees
  * respecting compliance rules, unavailabilities, and fairness scores.
