@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { Testimonials } from "@/components/lp/testimonials";
 
 export default async function Home() {
   const supabase = await createClient();
@@ -35,7 +36,7 @@ export default async function Home() {
               Entrar
             </Link>
             <Link
-              href="/login"
+              href="/register"
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[color:var(--primary)] text-white text-sm font-semibold hover:bg-[color:var(--primary-hover)] transition-all shadow-sm hover:shadow-md"
             >
               Começar trial
@@ -75,7 +76,7 @@ export default async function Home() {
 
             <div className="mt-10 flex flex-col sm:flex-row gap-4">
               <Link
-                href="/login"
+                href="/register"
                 className="inline-flex items-center justify-center gap-2 px-7 py-4 rounded-full bg-[color:var(--primary)] text-white font-semibold hover:bg-[color:var(--primary-hover)] transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5"
               >
                 Começar trial de 14 dias
@@ -343,7 +344,7 @@ export default async function Home() {
                 </ul>
 
                 <Link
-                  href="/login"
+                  href="/register"
                   className="mt-10 w-full inline-flex items-center justify-center gap-2 px-7 py-4 rounded-full bg-[color:var(--primary)] text-white font-semibold hover:bg-[color:var(--primary-hover)] transition-all shadow-lg hover:shadow-xl"
                 >
                   Começar trial de 14 dias
@@ -415,6 +416,9 @@ export default async function Home() {
         </div>
       </section>
 
+      {/* Testimonials */}
+      <Testimonials />
+
       {/* Final CTA */}
       <section className="py-24 md:py-32">
         <div className="max-w-4xl mx-auto px-6">
@@ -430,7 +434,7 @@ export default async function Home() {
                 14 dias grátis. Sem cartão. Configura a tua primeira escala hoje.
               </p>
               <Link
-                href="/login"
+                href="/register"
                 className="mt-10 inline-flex items-center justify-center gap-2 px-8 py-4 rounded-full bg-[color:var(--accent)] text-white font-semibold hover:bg-[color:var(--accent-hover)] transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5"
               >
                 Começar trial
