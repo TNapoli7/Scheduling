@@ -288,21 +288,21 @@ export default function FairnessPage() {
       {/* Summary cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card>
-          <p className="text-sm text-stone-500">Score medio</p>
+          <p className="text-sm text-stone-500">Score médio</p>
           <p className={`text-3xl font-bold mt-1 ${scoreColor(avgScore)}`}>
             {avgScore}
             <span className="text-lg text-stone-400 font-normal">/100</span>
           </p>
         </Card>
         <Card>
-          <p className="text-sm text-stone-500">Media de horas</p>
+          <p className="text-sm text-stone-500">Média de horas</p>
           <p className="text-3xl font-bold mt-1 text-stone-900">
             {avgHours}
             <span className="text-lg text-stone-400 font-normal">h</span>
           </p>
         </Card>
         <Card>
-          <p className="text-sm text-stone-500">Funcionarios escalados</p>
+          <p className="text-sm text-stone-500">Funcionários escalados</p>
           <p className="text-3xl font-bold mt-1 text-stone-900">
             {activeMetrics.length}
             <span className="text-lg text-stone-400 font-normal">
@@ -325,7 +325,7 @@ export default function FairnessPage() {
             <thead>
               <tr className="bg-stone-50 text-left">
                 <th className="px-4 py-3 font-medium text-stone-600">
-                  Funcionario
+                  Funcionário
                 </th>
                 <th className="px-4 py-3 font-medium text-stone-600 text-center">
                   Turnos
