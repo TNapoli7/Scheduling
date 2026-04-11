@@ -122,7 +122,7 @@ export default function ShiftsPage() {
     } else {
       // Need to get the user's org_id for new templates
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { setError("Sessao expirada"); setSaving(false); return; }
+      if (!user) { setError("Sessão expirada"); setSaving(false); return; }
 
       const { data: profile } = await supabase
         .from("profiles")
@@ -131,7 +131,7 @@ export default function ShiftsPage() {
         .single();
 
       if (!profile?.org_id) {
-        setError("Organizacao nao encontrada");
+        setError("Organização nao encontrada");
         setSaving(false);
         return;
       }
@@ -311,18 +311,18 @@ export default function ShiftsPage() {
 
           {form.start_time && form.end_time && (
             <p className="text-sm text-stone-500">
-              Duracao: {computeDuration(form.start_time, form.end_time)}
+              Duração: {computeDuration(form.start_time, form.end_time)}
             </p>
           )}
 
           <Input
-            label="Staff minimo"
+            label="Staff mínimo"
             type="number"
             min={1}
             max={20}
             value={form.min_staff}
             onChange={(e) => setForm({ ...form, min_staff: parseInt(e.target.value) || 1 })}
-            hint="Numero minimo de pessoas por turno"
+            hint="Número mínimo de pessoas por turno"
           />
 
           {/* Color picker */}
