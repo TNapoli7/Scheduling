@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Mapa de Horario",
+  title: "Mapa de Horário",
   description: "Horarios simples, justos e legais para a tua equipa",
 };
 

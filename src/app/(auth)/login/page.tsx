@@ -37,7 +37,7 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-indigo-600">Mapa de Horario</h1>
+          <h1 className="text-3xl font-bold text-indigo-600">Mapa de Horário</h1>
           <p className="text-stone-500 mt-2">Horarios simples, justos e legais</p>
         </div>
 

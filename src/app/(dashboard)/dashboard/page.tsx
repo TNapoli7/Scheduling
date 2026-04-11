@@ -313,13 +313,13 @@ export default function DashboardPage() {
                   <Calendar className="w-6 h-6 text-teal-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-[color:var(--text-muted)]">Horario {MONTH_NAMES[currentMonth - 1]}</p>
+                  <p className="text-sm text-[color:var(--text-muted)]">Horário {MONTH_NAMES[currentMonth - 1]}</p>
                   {currentScheduleStatus ? (
                     <Badge variant={currentScheduleStatus === "published" ? "success" : "warning"}>
                       {currentScheduleStatus === "published" ? "Publicado" : "Rascunho"}
                     </Badge>
                   ) : (
-                    <Badge variant="default">Nao criado</Badge>
+                    <Badge variant="default">Não criado</Badge>
                   )}
                 </div>
               </div>
@@ -397,7 +397,7 @@ export default function DashboardPage() {
               <Palmtree className="w-6 h-6 text-teal-600" />
             </div>
             <div>
-              <p className="text-sm text-[color:var(--text-muted)]">Ferias disponiveis</p>
+              <p className="text-sm text-[color:var(--text-muted)]">Férias disponíveis</p>
               <p className={`text-2xl font-bold ${remainingDays <= 3 ? "text-[color:var(--warning)]" : "text-[color:var(--text-primary)]"}`}>
                 {formatNum(remainingDays)}
                 <span className="text-sm font-normal text-[color:var(--text-muted)] ml-1">/ {vacationQuota}</span>
@@ -523,7 +523,7 @@ export default function DashboardPage() {
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium text-[color:var(--text-primary)]">
-                            {req.type === "ferias" ? "Ferias" : req.type === "baixa" ? "Baixa" : req.type === "pessoal" ? "Pessoal" : "Ausencia"}
+                            {req.type === "ferias" ? "Férias" : req.type === "baixa" ? "Baixa" : req.type === "pessoal" ? "Pessoal" : "Ausência"}
                           </p>
                           <p className="text-xs text-[color:var(--text-muted)]">
                             {req.start_date}{req.period === "full_day" && req.start_date !== req.end_date ? ` a ${req.end_date}` : ""}
@@ -614,7 +614,7 @@ export default function DashboardPage() {
               className="inline-flex items-center gap-2 px-4 py-2 bg-[color:var(--surface)] text-[color:var(--text-secondary)] text-sm font-medium rounded-lg border border-[color:var(--border-light)] hover:bg-[color:var(--surface-sunken)] transition-colors"
             >
               <Palmtree className="w-4 h-4" />
-              Ferias
+              Férias
             </a>
           </div>
         </Card>

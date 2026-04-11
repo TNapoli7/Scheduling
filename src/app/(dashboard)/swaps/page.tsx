@@ -400,7 +400,7 @@ export default function SwapsPage() {
             </label>
             {myEntries.length === 0 ? (
               <p className="text-sm text-stone-500">
-                Nao tens turnos futuros atribuidos.
+                Não tens turnos futuros atribuídos.
               </p>
             ) : (
               <div className="space-y-2 max-h-48 overflow-y-auto">

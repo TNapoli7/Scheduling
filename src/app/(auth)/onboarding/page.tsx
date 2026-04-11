@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 
 const sectors = [
-  { value: "pharmacy", label: "Farmacia" },
+  { value: "pharmacy", label: "Farmácia" },
   { value: "clinic", label: "Clinica" },
   { value: "dental", label: "Clinica Dentaria" },
   { value: "lab", label: "Laboratorio" },
@@ -61,7 +61,7 @@ export default function OnboardingPage() {
 
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { setError("Sessao expirada"); setLoading(false); return; }
+    if (!user) { setError("Sessão expirada"); setLoading(false); return; }
 
     // Create organization
     const { data: org, error: orgError } = await supabase
@@ -104,7 +104,7 @@ export default function OnboardingPage() {
     <div className="min-h-screen bg-stone-50 flex items-center justify-center px-4">
       <div className="w-full max-w-lg">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-indigo-600">Mapa de Horario</h1>
+          <h1 className="text-3xl font-bold text-indigo-600">Mapa de Horário</h1>
           <p className="text-stone-500 mt-2">Configura a tua empresa em 3 passos</p>
         </div>
 
@@ -138,7 +138,7 @@ export default function OnboardingPage() {
 
               <Input
                 label="Nome da empresa"
-                placeholder="Farmacia Central"
+                placeholder="Farmácia Central"
                 value={orgName}
                 onChange={(e) => setOrgName(e.target.value)}
                 required
@@ -159,7 +159,7 @@ export default function OnboardingPage() {
 
               <Input
                 label="Morada (opcional)"
-                placeholder="Rua da Farmacia, 123"
+                placeholder="Rua da Farmácia, 123"
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
               />
@@ -173,7 +173,7 @@ export default function OnboardingPage() {
           {/* Step 2: Operating hours */}
           {step === 2 && (
             <div className="space-y-4">
-              <h2 className="text-xl font-semibold text-stone-900">Horario de funcionamento</h2>
+              <h2 className="text-xl font-semibold text-stone-900">Horário de funcionamento</h2>
               <p className="text-sm text-stone-600">Quando e que a empresa esta aberta?</p>
 
               <div className="space-y-3">

@@ -13,13 +13,13 @@ import type { Profile } from "@/types/database";
 const roleOptions = [
   { value: "admin", label: "Administrador" },
   { value: "manager", label: "Gestor" },
-  { value: "employee", label: "Funcionario" },
+  { value: "employee", label: "Funcionário" },
 ];
 
 const credentialOptions = [
   { value: "", label: "Sem credencial" },
   { value: "farmaceutico", label: "Farmaceutico" },
-  { value: "tecnico", label: "Tecnico de Farmacia" },
+  { value: "tecnico", label: "Técnico de Farmácia" },
   { value: "auxiliar", label: "Auxiliar" },
   { value: "enfermeiro", label: "Enfermeiro/a" },
   { value: "medico", label: "Medico/a" },
@@ -43,7 +43,7 @@ const roleBadge: Record<string, "info" | "success" | "default"> = {
 const roleLabel: Record<string, string> = {
   admin: "Admin",
   manager: "Gestor",
-  employee: "Funcionario",
+  employee: "Funcionário",
 };
 
 type EmployeeForm = {
@@ -221,7 +221,7 @@ export default function EmployeesPage() {
         ) : filtered.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-[color:var(--text-muted)]">
-              {search ? "Nenhum resultado encontrado." : "Ainda nao tens membros na equipa."}
+              {search ? "Nenhum resultado encontrado." : "Ainda não tens membros na equipa."}
             </p>
             {!search && (
               <Button onClick={openAdd} variant="ghost" className="mt-2">

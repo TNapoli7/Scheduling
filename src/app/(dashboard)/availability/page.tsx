@@ -195,7 +195,7 @@ export default function AvailabilityPage() {
           <p className="text-sm text-stone-500 mt-1">
             {isManager
               ? "Visualize e aprove indisponibilidades da equipa."
-              : "Marque os dias em que nao esta disponivel."}
+              : "Marque os dias em que não esta disponível."}
             {pendingCount > 0 && (
               <Badge variant="warning" className="ml-2">
                 {pendingCount} pendente{pendingCount !== 1 ? "s" : ""}
@@ -230,11 +230,11 @@ export default function AvailabilityPage() {
         </div>
         <div className="flex items-center gap-1.5">
           <div className="w-3 h-3 rounded bg-amber-100 border border-yellow-300" />
-          <span>Indisponivel (pendente)</span>
+          <span>Indisponível (pendente)</span>
         </div>
         <div className="flex items-center gap-1.5">
           <div className="w-3 h-3 rounded bg-red-100 border border-red-300" />
-          <span>Indisponivel (aprovado)</span>
+          <span>Indisponível (aprovado)</span>
         </div>
         <div className="flex items-center gap-1.5">
           <div className="w-3 h-3 rounded bg-stone-100 border border-stone-300 line-through" />
@@ -248,7 +248,7 @@ export default function AvailabilityPage() {
           <thead>
             <tr className="bg-stone-50">
               <th className="sticky left-0 z-10 bg-stone-50 px-3 py-2 text-left font-medium text-stone-600 border-b border-r border-stone-200 min-w-[140px]">
-                Funcionario
+                Funcionário
               </th>
               {days.map((day) => {
                 const weekend = isWeekend(day);
@@ -288,11 +288,11 @@ export default function AvailabilityPage() {
                     if (avail.approval_status === "approved") {
                       bgClass = "bg-red-100";
                       content = "X";
-                      title = "Indisponivel (aprovado)";
+                      title = "Indisponível (aprovado)";
                     } else if (avail.approval_status === "pending") {
                       bgClass = "bg-amber-100";
                       content = "?";
-                      title = "Indisponivel (pendente)";
+                      title = "Indisponível (pendente)";
                     } else if (avail.approval_status === "rejected") {
                       bgClass = "bg-stone-100";
                       content = "—";

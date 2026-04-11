@@ -115,7 +115,7 @@ export default function AdminDashboard() {
             <h1 className="text-2xl font-bold text-[color:var(--text-primary)] font-display tracking-tight">Super Admin</h1>
           </div>
           <p className="text-[color:var(--text-muted)] text-sm">
-            Bem-vindo, {userName.split(" ")[0]}. Gestao de organizacoes e billing.
+            Bem-vindo, {userName.split(" ")[0]}. Gestão de organizações e billing.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -143,7 +143,7 @@ export default function AdminDashboard() {
               <Building2 className="w-6 h-6 text-[color:var(--accent)]" />
             </div>
             <div>
-              <p className="text-sm text-[color:var(--text-muted)]">Organizacoes</p>
+              <p className="text-sm text-[color:var(--text-muted)]">Organizações</p>
               <p className="text-2xl font-bold text-[color:var(--text-primary)]">{activeOrgs}<span className="text-sm font-normal text-[color:var(--text-muted)] ml-1">/ {totalOrgs}</span></p>
             </div>
           </div>
@@ -189,7 +189,7 @@ export default function AdminDashboard() {
       {/* Org list */}
       <div>
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-          <CardTitle>Organizacoes</CardTitle>
+          <CardTitle>Organizações</CardTitle>
           <div className="relative">
             <Search className="w-4 h-4 text-[color:var(--text-muted)] absolute left-3 top-1/2 -translate-y-1/2" />
             <input
@@ -207,7 +207,7 @@ export default function AdminDashboard() {
             <div className="text-center py-10">
               <Building2 className="w-10 h-10 text-stone-300 mx-auto mb-3" />
               <p className="text-sm text-[color:var(--text-muted)]">
-                {search ? "Nenhuma organizacao encontrada." : "Ainda nao existem organizacoes."}
+                {search ? "Nenhuma organização encontrada." : "Ainda não existem organizações."}
               </p>
             </div>
           </Card>
@@ -248,7 +248,7 @@ export default function AdminDashboard() {
                             {org.last_login_at && (
                               <>
                                 <span>&middot;</span>
-                                <span>Ultimo login: {new Date(org.last_login_at).toLocaleDateString("pt-PT")}</span>
+                                <span>Último login: {new Date(org.last_login_at).toLocaleDateString("pt-PT")}</span>
                               </>
                             )}
                             {org.plan_name !== "trial" && (
