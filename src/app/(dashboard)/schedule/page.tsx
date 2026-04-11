@@ -511,7 +511,7 @@ export default function SchedulePage() {
             )}
             {blockCount > 0 && (
               <span className="ml-2 text-[color:var(--danger)] font-medium">
-                {blockCount} violacao{blockCount !== 1 ? "oes" : ""}
+                {blockCount} violação{blockCount !== 1 ? "oes" : ""}
               </span>
             )}
             {warnCount > 0 && (
@@ -1009,7 +1009,7 @@ export default function SchedulePage() {
                   loading={generating}
                   disabled={!canGenerate}
                 >
-                  Pre-visualizar
+                  Pré-visualizar
                 </Button>
               </div>
             </>
@@ -1019,7 +1019,7 @@ export default function SchedulePage() {
             <>
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
                 <p className="text-sm font-medium text-blue-900">
-                  Pre-visualizacao
+                  Pré-visualização
                 </p>
                 <p className="text-xs text-blue-700 mt-1">
                   Ainda nada foi guardado. Revise antes de confirmar.
