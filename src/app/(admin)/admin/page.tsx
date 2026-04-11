@@ -115,7 +115,7 @@ export default function AdminDashboard() {
             <h1 className="text-2xl font-bold text-[color:var(--text-primary)] font-display tracking-tight">Super Admin</h1>
           </div>
           <p className="text-[color:var(--text-muted)] text-sm">
-            Bem-vindo, {userName.split(" ")[0]}. Gestao de organizacoes e billing.
+            Bem-vindo, {userName.split(" ")[0]}. Gestão de organizacoes e billing.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -248,7 +248,7 @@ export default function AdminDashboard() {
                             {org.last_login_at && (
                               <>
                                 <span>&middot;</span>
-                                <span>Ultimo login: {new Date(org.last_login_at).toLocaleDateString("pt-PT")}</span>
+                                <span>Último login: {new Date(org.last_login_at).toLocaleDateString("pt-PT")}</span>
                               </>
                             )}
                             {org.plan_name !== "trial" && (
