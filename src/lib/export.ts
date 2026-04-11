@@ -45,7 +45,7 @@ export function exportSchedulePDF(
 
   // Title
   doc.setFontSize(14);
-  doc.text(`Horario — ${MONTH_NAMES[month - 1]} ${year}`, 14, 15);
+  doc.text(`Horário — ${MONTH_NAMES[month - 1]} ${year}`, 14, 15);
   doc.setFontSize(9);
   doc.setTextColor(120);
   doc.text(orgName, 14, 21);
@@ -68,7 +68,7 @@ export function exportSchedulePDF(
 
   // Table headers
   const headers = [
-    "Funcionario",
+    "Funcionário",
     ...days.map((d) => {
       const date = new Date(d + "T00:00:00");
       const dow = DOW_LABELS[date.getDay()];
@@ -166,7 +166,7 @@ export function exportSchedulePDF(
     doc.setFontSize(7);
     doc.setTextColor(150);
     doc.text(
-      `Gerado em ${new Date().toLocaleDateString("pt-PT")} — Mapa de Horario`,
+      `Gerado em ${new Date().toLocaleDateString("pt-PT")} — Mapa de Horário`,
       14,
       doc.internal.pageSize.height - 5
     );
@@ -189,7 +189,7 @@ export function exportScheduleExcel(
 
   // Header row
   const headerRow = [
-    "Funcionario",
+    "Funcionário",
     ...days.map((d) => {
       const date = new Date(d + "T00:00:00");
       return `${DOW_LABELS[date.getDay()]} ${date.getDate()}`;
@@ -226,7 +226,7 @@ export function exportScheduleExcel(
 
   // Schedule sheet
   const wsData = [
-    [`Horario — ${MONTH_NAMES[month - 1]} ${year}`],
+    [`Horário — ${MONTH_NAMES[month - 1]} ${year}`],
     [orgName],
     [],
     headerRow,
@@ -242,10 +242,10 @@ export function exportScheduleExcel(
     { wch: 12 },
   ];
 
-  XLSX.utils.book_append_sheet(wb, ws, "Horario");
+  XLSX.utils.book_append_sheet(wb, ws, "Horário");
 
   // Summary sheet — hours per employee
-  const summaryHeader = ["Funcionario", "Contrato", "Horas Semanais", "Horas Atribuidas", "Turnos Total"];
+  const summaryHeader = ["Funcionário", "Contrato", "Horas Semanais", "Horas Atribuidas", "Turnos Total"];
   const summaryRows = employees.map((emp) => {
     const empEntries = entries.filter((e) => e.user_id === emp.id);
     let totalHours = 0;
@@ -293,7 +293,7 @@ export function exportHoursReportExcel(
   const days = getDaysInMonth(year, month);
 
   const headers = [
-    "Funcionario",
+    "Funcionário",
     "Contrato",
     "Horas/Semana",
     "Turnos Diurnos",
