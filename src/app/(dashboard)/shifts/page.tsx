@@ -131,7 +131,7 @@ export default function ShiftsPage() {
         .single();
 
       if (!profile?.org_id) {
-        setError("Organização nao encontrada");
+        setError("Organização não encontrada");
         setSaving(false);
         return;
       }
@@ -221,7 +221,7 @@ export default function ShiftsPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <p className="text-stone-500 mb-4">Ainda nao tens turnos definidos.</p>
+            <p className="text-stone-500 mb-4">Ainda não tens turnos definidos.</p>
             <div className="flex justify-center gap-3">
               <Button variant="secondary" onClick={loadPresets}>
                 Carregar exemplos
@@ -296,7 +296,7 @@ export default function ShiftsPage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input
-              label="Hora inicio"
+              label="Hora início"
               type="time"
               value={form.start_time}
               onChange={(e) => setForm({ ...form, start_time: e.target.value })}
