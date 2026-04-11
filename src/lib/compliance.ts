@@ -72,7 +72,7 @@ function checkRestBetweenShifts(
 
     if (restHours < 11) {
       violations.push({
-        rule: `Descanso de ${restHours.toFixed(1)}h entre turnos (minimo 11h)`,
+        rule: `Descanso de ${restHours.toFixed(1)}h entre turnos (mínimo 11h)`,
         code: "REST_11H",
         severity: "block",
         message: `Apenas ${restHours.toFixed(1)}h de descanso entre turnos`,
@@ -115,7 +115,7 @@ function checkWeeklyHours(
     if (hours > maxHours + 2) {
       // More than 2h overtime in a week
       violations.push({
-        rule: `${hours.toFixed(1)}h na semana de ${weekStart} (maximo ${maxHours}h + 2h extra)`,
+        rule: `${hours.toFixed(1)}h na semana de ${weekStart} (máximo ${maxHours}h + 2h extra)`,
         code: "MAX_WEEKLY_HOURS",
         severity: "block",
         message: `Excede horas semanais permitidas`,
@@ -228,10 +228,10 @@ function checkDailyHours(
   for (const [date, hours] of dayHours) {
     if (hours > 10) {
       violations.push({
-        rule: `${hours.toFixed(1)}h num dia (maximo 10h incluindo extras)`,
+        rule: `${hours.toFixed(1)}h num dia (máximo 10h incluindo extras)`,
         code: "MAX_DAILY_10H",
         severity: "block",
-        message: `Excede maximo diario de 10h`,
+        message: `Excede máximo diário de 10h`,
         date,
         userId,
       });
