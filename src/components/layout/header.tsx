@@ -122,7 +122,7 @@ export function Header({ userName, unreadCount: initialUnread, onMenuClick }: He
             {showNotifications && (
               <div className="absolute right-0 mt-2 w-80 max-w-[calc(100vw-2rem)] bg-[color:var(--surface)] rounded-2xl shadow-xl border border-[color:var(--border-light)]/60 z-50 max-h-[400px] overflow-hidden flex flex-col">
                 <div className="flex items-center justify-between px-4 py-3 border-b border-[color:var(--border-light)]">
-                  <h3 className="text-sm font-semibold text-[color:var(--text-primary)]">Notificacoes</h3>
+                  <h3 className="text-sm font-semibold text-[color:var(--text-primary)]">Notificações</h3>
                   {unreadCount > 0 && (
                     <button
                       onClick={markAllRead}
