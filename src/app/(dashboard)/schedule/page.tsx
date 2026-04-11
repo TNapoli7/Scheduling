@@ -441,7 +441,7 @@ export default function SchedulePage() {
     const notifications = employees.map((emp) => ({
       user_id: emp.id,
       type: "schedule_published",
-      title: "Horario publicado",
+      title: "Horário publicado",
       body: `O horario de ${MONTH_NAMES[month - 1]} ${year} foi publicado.`,
       metadata: { month, year, schedule_id: schedule.id },
     }));
@@ -502,7 +502,7 @@ export default function SchedulePage() {
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-[color:var(--text-primary)] font-display tracking-tight">Horario</h1>
+          <h1 className="text-2xl font-bold text-[color:var(--text-primary)] font-display tracking-tight">Horário</h1>
           <p className="text-sm text-[color:var(--text-muted)] mt-1">
             {schedule?.status === "published" ? (
               <Badge variant="success">Publicado</Badge>
@@ -573,7 +573,7 @@ export default function SchedulePage() {
                   d="M13 10V3L4 14h7v7l9-11h-7z"
                 />
               </svg>
-              Gerar Horario
+              Gerar Horário
             </Button>
           )}
           {schedule?.status === "draft" && (
@@ -682,7 +682,7 @@ export default function SchedulePage() {
         ))}
         <div className="flex items-center gap-1.5 text-xs text-[color:var(--text-secondary)]">
           <div className="w-3 h-3 rounded bg-stone-300" />
-          <span>Indisponivel</span>
+          <span>Indisponível</span>
         </div>
       </div>
 
@@ -700,7 +700,7 @@ export default function SchedulePage() {
             <thead>
               <tr className="bg-[color:var(--surface-sunken)]">
                 <th className="sticky left-0 z-10 bg-[color:var(--surface-sunken)] px-3 py-2 text-left font-medium text-[color:var(--text-secondary)] border-b border-r border-[color:var(--border-light)] min-w-[140px]">
-                  Funcionario
+                  Funcionário
                 </th>
                 {visibleDays.map((day) => {
                   const weekend = isWeekend(day);
@@ -770,7 +770,7 @@ export default function SchedulePage() {
 
                     const tdTitle =
                       unavailable && !entry
-                        ? "Indisponivel"
+                        ? "Indisponível"
                         : cellViolations.length > 0
                         ? cellViolations.map((v) => v.rule).join("\n")
                         : undefined;
@@ -836,7 +836,7 @@ export default function SchedulePage() {
               )}
               {isUnavailable(assignModal.userId, assignModal.date) && (
                 <Badge variant="warning" className="ml-2">
-                  Indisponivel
+                  Indisponível
                 </Badge>
               )}
             </p>
@@ -924,7 +924,7 @@ export default function SchedulePage() {
       <Modal
         open={showGenerateModal}
         onClose={closeGenerateModal}
-        title="Gerar Horario Automaticamente"
+        title="Gerar Horário Automaticamente"
         size="md"
       >
         <div className="space-y-4">
@@ -1115,7 +1115,7 @@ export default function SchedulePage() {
             <>
               <div className="text-center py-4">
                 <h3 className="text-lg font-semibold text-[color:var(--text-primary)]">
-                  Horario gerado!
+                  Horário gerado!
                 </h3>
                 <p className="text-sm text-[color:var(--text-muted)] mt-1">
                   As atribuicoes foram guardadas.
