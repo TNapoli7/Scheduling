@@ -133,9 +133,62 @@ export default function LoginPage() {
             </Link>
           </p>
         </div>
+
+        {/* MOBILE — schedule preview (visible only below lg) */}
+        <div className="lg:hidden mt-10 rounded-2xl bg-[color:var(--primary)] px-6 py-8 mx-auto max-w-md">
+          <div className="bg-[color:var(--surface)] rounded-2xl p-5 shadow-xl">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-[color:var(--accent-soft)] flex items-center justify-center">
+                  <svg
+                    viewBox="0 0 24 24"
+                    className="w-4 h-4 text-[color:var(--accent)]"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                  >
+                    <rect x="3" y="5" width="18" height="16" rx="2" />
+                    <path d="M3 9h18M8 3v4M16 3v4" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="font-display text-sm font-semibold text-[color:var(--primary)]">
+                    Escala · Abril
+                  </p>
+                  <p className="text-[11px] text-[color:var(--text-muted)]">
+                    Farmácia Aurora
+                  </p>
+                </div>
+              </div>
+              <span className="text-[10px] font-semibold px-2 py-1 rounded-full bg-[color:var(--success-soft)] text-[color:var(--success)]">
+                PUBLICADA
+              </span>
+            </div>
+
+            <div className="grid grid-cols-3 gap-3 text-center pt-4 border-t border-[color:var(--border-light)]">
+              <div>
+                <p className="text-lg font-display font-semibold text-[color:var(--primary)]">4</p>
+                <p className="text-[10px] text-[color:var(--text-muted)] uppercase tracking-wider">pessoas</p>
+              </div>
+              <div>
+                <p className="text-lg font-display font-semibold text-[color:var(--primary)]">0</p>
+                <p className="text-[10px] text-[color:var(--text-muted)] uppercase tracking-wider">conflitos</p>
+              </div>
+              <div>
+                <p className="text-lg font-display font-semibold text-[color:var(--success)]">100%</p>
+                <p className="text-[10px] text-[color:var(--text-muted)] uppercase tracking-wider">equidade</p>
+              </div>
+            </div>
+          </div>
+
+          <p className="mt-5 text-center text-sm text-white/60">
+            Publica uma escala de um mês em 15 minutos.
+          </p>
+        </div>
       </div>
 
-      {/* RIGHT — schedule preview showcase */}
+      {/* RIGHT — schedule preview showcase (desktop only) */}
       <div className="hidden lg:flex w-1/2 bg-[color:var(--primary)] relative overflow-hidden">
         {/* Texture */}
         <div
