@@ -24,6 +24,13 @@ export default async function DashboardLayout({
   if (!profile) redirect("/login");
   if (!profile.org_id) redirect("/onboarding");
 
+  // Track last login (fire-and-forget, no await needed)
+  supabase
+    .from("profiles")
+    .update({ last_login_at: new Date().toISOString() })
+    .eq("id", user.id)
+    .then(() => {});
+
   const { count } = await supabase
     .from("notifications")
     .select("*", { count: "exact", head: true })
