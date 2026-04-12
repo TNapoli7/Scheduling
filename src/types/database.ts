@@ -50,6 +50,7 @@ export interface Profile {
   avatar_url: string | null;
   vacation_quota: number;
   is_super_admin: boolean;
+  last_login_at: string | null;
   created_at: string;
   updated_at: string;
 }
