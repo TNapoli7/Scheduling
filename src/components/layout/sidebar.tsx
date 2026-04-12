@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -14,8 +13,6 @@ import {
   X,
   CalendarOff,
   Palmtree,
-  PanelLeftClose,
-  PanelLeftOpen,
 } from "lucide-react";
 import type { UserRole } from "@/types/database";
 
@@ -28,76 +25,53 @@ interface SidebarProps {
 
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard, roles: ["admin", "manager", "employee"] },
-  { name: "Horário", href: "/schedule", icon: Calendar, roles: ["admin", "manager", "employee"] },
+  { name: "HorÃ¡rio", href: "/schedule", icon: Calendar, roles: ["admin", "manager", "employee"] },
   { name: "Equipa", href: "/employees", icon: Users, roles: ["admin", "manager"] },
   { name: "Turnos", href: "/shifts", icon: Clock, roles: ["admin", "manager"] },
   { name: "Disponibilidades", href: "/availability", icon: CalendarOff, roles: ["admin", "manager", "employee"] },
-  { name: "Férias", href: "/time-off", icon: Palmtree, roles: ["admin", "manager", "employee"] },
+  { name: "FÃ©rias", href: "/time-off", icon: Palmtree, roles: ["admin", "manager", "employee"] },
   { name: "Trocas", href: "/swaps", icon: ArrowLeftRight, roles: ["admin", "manager", "employee"] },
   { name: "Fairness", href: "/fairness", icon: BarChart3, roles: ["admin", "manager"] },
-  { name: "Definições", href: "/settings", icon: Settings, roles: ["admin"] },
+  { name: "DefiniÃ§Ãµes", href: "/settings", icon: Settings, roles: ["admin"] },
 ];
 
 export function Sidebar({ role, orgName, open, onClose }: SidebarProps) {
   const pathname = usePathname();
-  const [collapsed, setCollapsed] = useState(false);
   const filteredNav = navigation.filter((item) => item.roles.includes(role));
 
   return (
     <>
       {/* Mobile overlay */}
       {open && (
-        <div
-          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 lg:hidden"
-          onClick={onClose}
-        />
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 lg:hidden" onClick={onClose} />
       )}
 
       <aside
         className={`
-          fixed top-0 left-0 z-50 h-screen
-          bg-gradient-to-b from-[color:var(--primary)] via-[color:var(--primary)] to-[color:var(--primary-active)]
-          shadow-[4px_0_32px_-8px_rgba(15,27,45,0.25)]
-          lg:rounded-br-[28px]
-          transform transition-[transform,width] duration-300 ease-in-out
-          lg:sticky lg:top-0 lg:self-start lg:z-auto lg:translate-x-0
-          flex flex-col shrink-0
-          ${collapsed ? "lg:w-[76px]" : "lg:w-[248px]"}
-          w-[248px]
+          fixed top-0 left-0 z-50 h-full w-[240px] bg-stone-900
+          transform transition-transform duration-200 ease-in-out
+          lg:translate-x-0 lg:static lg:z-auto
           ${open ? "translate-x-0" : "-translate-x-full"}
         `}
       >
-        {/* Subtle inner glow at top */}
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-white/[0.04] to-transparent" />
-
         {/* Logo / Org name */}
-        <div className="relative flex items-center justify-between h-16 px-4 shrink-0">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-9 h-9 bg-[color:var(--accent)] rounded-xl flex items-center justify-center shadow-lg shadow-[color:var(--accent)]/20 shrink-0">
-              <Calendar className="w-[18px] h-[18px] text-white" strokeWidth={2.2} />
+        <div className="flex items-center justify-between h-16 px-5">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
+              <Calendar className="w-4 h-4 text-white" />
             </div>
-            {!collapsed && (
-              <div className="min-w-0">
-                <p className="text-sm font-display font-semibold text-white tracking-tight leading-tight">Mapa</p>
-                <p className="text-[10px] text-[color:var(--sidebar-fg-muted)] truncate">
-                  {orgName}
-                </p>
-              </div>
-            )}
+            <div>
+              <p className="text-sm font-bold text-white tracking-tight">Mapa</p>
+              <p className="text-[10px] text-stone-500 truncate max-w-[130px]">{orgName}</p>
+            </div>
           </div>
-
-          {/* Mobile close */}
-          <button
-            onClick={onClose}
-            className="lg:hidden text-[color:var(--sidebar-fg-muted)] hover:text-white p-1.5 rounded-lg hover:bg-white/5 transition"
-            aria-label="Fechar menu"
-          >
+          <button onClick={onClose} className="lg:hidden text-stone-500 hover:text-stone-300 p-1 rounded-lg hover:bg-stone-800">
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Navigation */}
-        <nav className="relative flex-1 overflow-y-auto px-3 pt-2 pb-4 space-y-1">
+        <nav className="mt-2 px-3 space-y-0.5">
           {filteredNav.map((item) => {
             const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
             return (
@@ -105,64 +79,26 @@ export function Sidebar({ role, orgName, open, onClose }: SidebarProps) {
                 key={item.name}
                 href={item.href}
                 onClick={onClose}
-                title={collapsed ? item.name : undefined}
                 className={`
-                  group relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium
+                  flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium
                   transition-all duration-150
-                  ${collapsed ? "lg:justify-center lg:px-0" : ""}
                   ${isActive
-                    ? "bg-white/[0.08] text-white"
-                    : "text-[color:var(--sidebar-fg-muted)] hover:bg-white/[0.04] hover:text-[color:var(--sidebar-fg)]"
+                    ? "bg-indigo-600/20 text-indigo-400"
+                    : "text-stone-400 hover:bg-stone-800 hover:text-stone-200"
                   }
                 `}
               >
-                {isActive && (
-                  <span className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-[3px] bg-[color:var(--accent)] rounded-r-full" />
-                )}
-                <item.icon
-                  className={`w-[18px] h-[18px] shrink-0 ${
-                    isActive
-                      ? "text-[color:var(--accent)]"
-                      : "text-[color:var(--sidebar-fg-muted)] group-hover:text-[color:var(--sidebar-fg)]"
-                  }`}
-                  strokeWidth={2}
-                />
-                <span className={`truncate ${collapsed ? "lg:hidden" : ""}`}>{item.name}</span>
+                <item.icon className={`w-[18px] h-[18px] ${isActive ? "text-indigo-400" : "text-stone-500"}`} />
+                {item.name}
               </Link>
             );
           })}
         </nav>
 
-        {/* Footer: collapse toggle + branding */}
-        <div className="relative shrink-0 border-t border-[color:var(--sidebar-border)] px-3 py-3 space-y-1">
-          <button
-            onClick={() => setCollapsed((c) => !c)}
-            className={`
-              hidden lg:flex items-center gap-2.5 w-full px-3 py-2 rounded-xl text-[12px] font-medium
-              text-[color:var(--sidebar-fg-muted)] hover:bg-white/[0.04] hover:text-[color:var(--sidebar-fg)]
-              transition-all duration-150
-              ${collapsed ? "justify-center px-0" : ""}
-            `}
-            title={collapsed ? "Expandir menu" : "Recolher menu"}
-            aria-label={collapsed ? "Expandir menu" : "Recolher menu"}
-          >
-            {collapsed ? (
-              <PanelLeftOpen className="w-[18px] h-[18px] shrink-0" strokeWidth={2} />
-            ) : (
-              <>
-                <PanelLeftClose className="w-[18px] h-[18px] shrink-0" strokeWidth={2} />
-                <span>Recolher</span>
-              </>
-            )}
-          </button>
-          {!collapsed && (
-            <div className="px-3 pt-1">
-              <p className="text-[10px] text-[color:var(--sidebar-fg-muted)]/70 leading-tight">
-                Mapa de Horário
-              </p>
-              <p className="text-[10px] text-[color:var(--sidebar-fg-muted)]/40 leading-tight">v1.0</p>
-            </div>
-          )}
+        {/* Bottom branding */}
+        <div className="absolute bottom-0 left-0 right-0 px-5 py-4 border-t border-stone-800">
+          <p className="text-[10px] text-stone-600">Mapa de Horario</p>
+          <p className="text-[10px] text-stone-700">v1.0</p>
         </div>
       </aside>
     </>
