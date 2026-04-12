@@ -14,6 +14,7 @@ import {
   LayoutDashboard,
   LogOut,
   Search,
+  Clock,
 } from "lucide-react";
 import { SkeletonCard, SkeletonList } from "@/components/ui/skeleton";
 import type { OrgSummary } from "@/types/database";
@@ -74,6 +75,12 @@ export default function AdminDashboard() {
       )
     : orgs;
 
+  function trialDaysLeft(trialEndsAt: string | null): number | null {
+    if (!trialEndsAt) return null;
+    const diff = new Date(trialEndsAt).getTime() - Date.now();
+    return Math.ceil(diff / (1000 * 60 * 60 * 24));
+  }
+
   const totalOrgs = orgs.length;
   const activeOrgs = orgs.filter((o) => o.is_active).length;
   const totalUsers = orgs.reduce((sum, o) => sum + (o.active_users || 0), 0);
@@ -109,7 +116,7 @@ export default function AdminDashboard() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <div className="w-8 h-8 bg-[color:var(--accent)] rounded-lg flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: "var(--primary)" }}>
               <LayoutDashboard className="w-4 h-4 text-white" />
             </div>
             <h1 className="text-2xl font-bold text-[color:var(--text-primary)] font-display tracking-tight">Super Admin</h1>
@@ -215,6 +222,7 @@ export default function AdminDashboard() {
           <div className="space-y-2">
             {filtered.map((org) => {
               const revenue = (Number(org.base_price) || 0) + ((Number(org.per_user_price) || 0) * (org.active_users || 0));
+              const daysLeft = trialDaysLeft(org.trial_ends_at);
               return (
                 <a key={org.id} href={`/admin/${org.id}`} className="block">
                   <Card className="hover:shadow-md transition-shadow cursor-pointer">
@@ -232,11 +240,26 @@ export default function AdminDashboard() {
                             {!org.is_active && (
                               <Badge variant="danger">Inativa</Badge>
                             )}
+                            {org.plan_name === "trial" && daysLeft !== null && (
+                              <>
+                                <span>&middot;</span>
+                                <span className={`font-medium flex items-center gap-1 ${daysLeft <= 3 ? "text-red-600" : daysLeft <= 7 ? "text-amber-600" : "text-stone-500"}`}>
+                                  <Clock className="w-3 h-3" />
+                                  {daysLeft > 0 ? `${daysLeft}d restantes` : "Trial expirado"}
+                                </span>
+                              </>
+                            )}
                           </div>
                           <div className="flex items-center gap-3 text-xs text-[color:var(--text-muted)] mt-0.5">
                             <span>{org.sector}</span>
                             <span>&middot;</span>
                             <span>{org.active_users} utilizador{org.active_users !== 1 ? "es" : ""}</span>
+                            {org.last_org_login && (
+                              <>
+                                <span>&middot;</span>
+                                <span>Último login {new Date(org.last_org_login).toLocaleDateString("pt-PT", { day: "numeric", month: "short" })}</span>
+                              </>
+                            )}
                             <span>&middot;</span>
                             <span>{org.total_users} total</span>
                             {org.trial_ends_at && (
