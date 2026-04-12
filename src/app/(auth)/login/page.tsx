@@ -31,7 +31,7 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex bg-[color:var(--background)]">
-      {/* LEFT â form */}
+      {/* LEFT — form */}
       <div className="w-full lg:w-1/2 flex flex-col justify-center px-6 md:px-12 lg:px-20 xl:px-28 py-12">
         <div className="w-full max-w-md mx-auto lg:mx-0">
           <Link
@@ -59,7 +59,7 @@ export default function LoginPage() {
               </svg>
             </div>
             <span className="font-display text-xl font-semibold text-[color:var(--primary)]">
-              Mapa de HorÃ¡rio
+              Mapa de Horário
             </span>
           </Link>
 
@@ -124,17 +124,17 @@ export default function LoginPage() {
           </form>
 
           <p className="mt-8 text-sm text-center text-[color:var(--text-secondary)]">
-            Ainda nÃ£o tens conta?{" "}
+            Ainda não tens conta?{" "}
             <Link
               href="/register"
               className="font-semibold text-[color:var(--primary)] hover:text-[color:var(--accent)] transition-colors"
             >
-              ComeÃ§ar trial grÃ¡tis
+              Começar trial grátis
             </Link>
           </p>
         </div>
 
-        {/* MOBILE â schedule preview (visible only below lg) */}
+        {/* MOBILE — schedule preview (visible only below lg) */}
         <div className="lg:hidden mt-10 rounded-2xl bg-[color:var(--primary)] px-6 py-8 mx-auto max-w-md">
           <div className="bg-[color:var(--surface)] rounded-2xl p-5 shadow-xl">
             <div className="flex items-center justify-between mb-4">
@@ -154,10 +154,10 @@ export default function LoginPage() {
                 </div>
                 <div>
                   <p className="font-display text-sm font-semibold text-[color:var(--primary)]">
-                    Escala Â· Abril
+                    Escala · Abril
                   </p>
                   <p className="text-[11px] text-[color:var(--text-muted)]">
-                    FarmÃ¡cia Aurora
+                    Farmácia Aurora
                   </p>
                 </div>
               </div>
@@ -183,12 +183,12 @@ export default function LoginPage() {
           </div>
 
           <p className="mt-5 text-center text-sm text-white/60">
-            Publica uma escala de um mÃªs em 15 minutos.
+            Publica uma escala de um mês em 15 minutos.
           </p>
         </div>
       </div>
 
-      {/* RIGHT â schedule preview showcase (desktop only) */}
+      {/* RIGHT — schedule preview showcase (desktop only) */}
       <div className="hidden lg:flex w-1/2 bg-[color:var(--primary)] relative overflow-hidden">
         {/* Texture */}
         <div
@@ -223,10 +223,10 @@ export default function LoginPage() {
                 </div>
                 <div>
                   <p className="font-display text-sm font-semibold text-[color:var(--primary)]">
-                    Escala Â· Abril
+                    Escala · Abril
                   </p>
                   <p className="text-[11px] text-[color:var(--text-muted)]">
-                    FarmÃ¡cia Aurora
+                    Farmácia Aurora
                   </p>
                 </div>
               </div>
@@ -300,10 +300,10 @@ export default function LoginPage() {
             </p>
             <h2 className="font-display text-3xl xl:text-4xl font-semibold text-white leading-tight">
               Publica uma escala de<br />
-              <span className="italic text-[color:var(--accent)]">um mÃªs em 15 minutos.</span>
+              <span className="italic text-[color:var(--accent)]">um mês em 15 minutos.</span>
             </h2>
             <p className="mt-4 text-white/60">
-              Respeita horÃ¡rios de trabalho, fÃ©rias, folgas e disponibilidades â automaticamente.
+              Respeita horários de trabalho, férias, folgas e disponibilidades — automaticamente.
             </p>
           </div>
         </div>
