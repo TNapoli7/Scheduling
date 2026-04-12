@@ -414,7 +414,7 @@ export default function DashboardPage() {
           <Card className="lg:col-span-2">
             <div className="p-4">
               <div className="flex items-center justify-between mb-4">
-                <CardTitle>O meu horario</CardTitle>
+                <CardTitle>O meu horário</CardTitle>
                 <div className="flex items-center gap-2">
                   <button onClick={prevMonth} className="p-1 rounded-lg hover:bg-[color:var(--surface-sunken)] transition-colors">
                     <ChevronLeft className="w-5 h-5 text-[color:var(--text-secondary)]" />
@@ -527,7 +527,7 @@ export default function DashboardPage() {
                           </p>
                           <p className="text-xs text-[color:var(--text-muted)]">
                             {req.start_date}{req.period === "full_day" && req.start_date !== req.end_date ? ` a ${req.end_date}` : ""}
-                            {req.period !== "full_day" ? ` (${req.period === "morning" ? "Manha" : "Tarde"})` : ""}
+                            {req.period !== "full_day" ? ` (${req.period === "morning" ? "Manhã" : "Tarde"})` : ""}
                           </p>
                         </div>
                         <Badge variant="warning">Pendente</Badge>
@@ -560,7 +560,7 @@ export default function DashboardPage() {
                     className="inline-flex items-center gap-2 px-3 py-2 text-sm text-[color:var(--text-secondary)] rounded-lg border border-[color:var(--border-light)] hover:bg-[color:var(--surface-sunken)] transition-colors"
                   >
                     <Palmtree className="w-4 h-4" />
-                    Pedir ferias
+                    Pedir férias
                   </a>
                   <a
                     href="/availability"
@@ -593,7 +593,7 @@ export default function DashboardPage() {
               className="inline-flex items-center gap-2 px-4 py-2 bg-[color:var(--accent)] text-white text-sm font-medium rounded-lg hover:bg-[color:var(--accent-hover)] transition-colors shadow-sm"
             >
               <Calendar className="w-4 h-4" />
-              {currentScheduleStatus ? "Ver horario" : "Criar horario"}
+              {currentScheduleStatus ? "Ver horário" : "Criar horário"}
             </a>
             <a
               href="/employees"

@@ -138,7 +138,7 @@ export function Header({ userName, unreadCount: initialUnread, onMenuClick }: He
                   ) : notifications.length === 0 ? (
                     <div className="text-center py-8">
                       <Bell className="w-8 h-8 text-stone-200 mx-auto mb-2" />
-                      <p className="text-sm text-[color:var(--text-muted)]">Sem notificacoes</p>
+                      <p className="text-sm text-[color:var(--text-muted)]">Sem notificações</p>
                     </div>
                   ) : (
                     notifications.map((notif) => (

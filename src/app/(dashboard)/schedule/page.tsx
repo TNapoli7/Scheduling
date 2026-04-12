@@ -442,7 +442,7 @@ export default function SchedulePage() {
       user_id: emp.id,
       type: "schedule_published",
       title: "Horário publicado",
-      body: `O horario de ${MONTH_NAMES[month - 1]} ${year} foi publicado.`,
+      body: `O horário de ${MONTH_NAMES[month - 1]} ${year} foi publicado.`,
       metadata: { month, year, schedule_id: schedule.id },
     }));
     if (notifications.length > 0) {
@@ -951,8 +951,8 @@ export default function SchedulePage() {
                 equilibrio de fairness.
                 {entries.length > 0 && (
                   <span className="block mt-1 text-[color:var(--warning)] font-medium">
-                    Nota: Ja existem {entries.length} atribuicoes. O algoritmo
-                    apenas preenche os turnos em falta. Para recomecar, limpe o
+                    Nota: Já existem {entries.length} atribuições. O algoritmo
+                    apenas preenche os turnos em falta. Para recomeçar, limpe o
                     horario primeiro.
                   </span>
                 )}
@@ -1118,12 +1118,12 @@ export default function SchedulePage() {
                   Horário gerado!
                 </h3>
                 <p className="text-sm text-[color:var(--text-muted)] mt-1">
-                  As atribuicoes foram guardadas.
+                  As atribuições foram guardadas.
                 </p>
               </div>
 
               <div className="flex gap-2 justify-end pt-2">
-                <Button onClick={closeGenerateModal}>Rever horario</Button>
+                <Button onClick={closeGenerateModal}>Rever horário</Button>
               </div>
             </>
           )}

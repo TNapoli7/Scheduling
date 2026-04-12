@@ -11,10 +11,10 @@ import type { Organization } from "@/types/database";
 
 const sectorOptions = [
   { value: "farmacia", label: "Farmácia" },
-  { value: "clinica", label: "Clinica" },
+  { value: "clinica", label: "Clínica" },
   { value: "hospital", label: "Hospital" },
-  { value: "laboratorio", label: "Laboratorio" },
-  { value: "consultorio", label: "Consultorio" },
+  { value: "laboratorio", label: "Laboratório" },
+  { value: "consultorio", label: "Consultório" },
   { value: "outro", label: "Outro" },
 ];
 
@@ -145,7 +145,7 @@ export default function SettingsPage() {
 
       {/* Company info */}
       <Card>
-        <CardTitle>Informacao da empresa</CardTitle>
+        <CardTitle>Informação da empresa</CardTitle>
         <div className="mt-4 space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input
@@ -254,7 +254,7 @@ export default function SettingsPage() {
       {/* Save button */}
       <div className="flex justify-end">
         <Button onClick={handleSave} loading={saving}>
-          Guardar alteracoes
+          Guardar alterações
         </Button>
       </div>
     </div>

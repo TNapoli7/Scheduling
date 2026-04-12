@@ -13,14 +13,14 @@ import type { Profile, TimeOffRequest } from "@/types/database";
 
 const TYPE_LABELS: Record<string, string> = {
   ferias: "Férias",
-  baixa: "Baixa medica",
+  baixa: "Baixa médica",
   pessoal: "Pessoal",
   outro: "Outro",
 };
 
 const PERIOD_LABELS: Record<string, string> = {
   full_day: "Dia inteiro",
-  morning: "Manha",
+  morning: "Manhã",
   afternoon: "Tarde",
 };
 
@@ -233,7 +233,7 @@ export default function TimeOffPage() {
           <p className="text-sm text-stone-500 mt-1">
             {isManager
               ? "Gerir pedidos de ferias e ausencias da equipa."
-              : "Pedir ferias e ver o estado dos seus pedidos."}
+              : "Pedir férias e ver o estado dos seus pedidos."}
           </p>
         </div>
         <Button onClick={() => setShowNew(true)}>Novo pedido</Button>
@@ -262,7 +262,7 @@ export default function TimeOffPage() {
             </div>
           </div>
           {remainingDays <= 3 && remainingDays > 0 && (
-            <p className="text-xs text-orange-600 mt-2">Atencion: restam poucos dias de ferias.</p>
+            <p className="text-xs text-orange-600 mt-2">Atenção: restam poucos dias de ferias.</p>
           )}
           {remainingDays <= 0 && (
             <p className="text-xs text-red-600 mt-2">Sem dias de ferias disponíveis.</p>
@@ -375,7 +375,7 @@ export default function TimeOffPage() {
       )}
 
       {/* New request modal */}
-      <Modal open={showNew} onClose={() => setShowNew(false)} title="Novo pedido de ausencia" size="sm">
+      <Modal open={showNew} onClose={() => setShowNew(false)} title="Novo pedido de ausência" size="sm">
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <div>
@@ -386,7 +386,7 @@ export default function TimeOffPage() {
                 className="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm text-stone-900 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
               >
                 <option value="ferias">Férias</option>
-                <option value="baixa">Baixa medica</option>
+                <option value="baixa">Baixa médica</option>
                 <option value="pessoal">Pessoal</option>
                 <option value="outro">Outro</option>
               </select>
