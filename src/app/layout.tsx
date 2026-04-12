@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Mapa de Horário",
-  description: "Horarios simples, justos e legais para a tua equipa",
+  description: "A plataforma que simplifica a gestão de escalas para farmácias, clínicas e laboratórios em Portugal. Cria horários em minutos, não em horas.",
 };
 
 export default function RootLayout({
