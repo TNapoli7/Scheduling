@@ -17,6 +17,8 @@ import {
   Shield,
   Calendar,
   LogIn,
+  Clock,
+  CalendarPlus,
 } from "lucide-react";
 import { SkeletonCard, SkeletonList } from "@/components/ui/skeleton";
 import type { Profile, Organization } from "@/types/database";
@@ -45,6 +47,7 @@ export default function OrgDetailPage() {
   const [saving, setSaving] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [impersonating, setImpersonating] = useState<string | null>(null);
+  const [extending, setExtending] = useState(false);
 
   // Edit form
   const [editPlan, setEditPlan] = useState("trial");
@@ -130,14 +133,16 @@ export default function OrgDetailPage() {
   
   async function extendTrial(days: number) {
     if (!org) return;
-    const current = org.trial_ends_at ? new Date(org.trial_ends_at).getTime() : Date.now();
-    const base = Math.max(current, Date.now());
-    const newDate = new Date(base + days * 86400000).toISOString();
-    const { error } = await supabase
+    setExtending(true);
+    const currentEnd = org.trial_ends_at ? new Date(org.trial_ends_at) : new Date();
+    const newEnd = new Date(currentEnd.getTime() + days * 24 * 60 * 60 * 1000);
+
+    await supabase
       .from("organizations")
-      .update({ trial_ends_at: newDate })
+      .update({ trial_ends_at: newEnd.toISOString() })
       .eq("id", orgId);
-    if (error) { alert("Erro ao prolongar trial: " + error.message); return; }
+
+    setExtending(false);
     fetchData();
   }
 
@@ -180,6 +185,12 @@ export default function OrgDetailPage() {
 
   const activeUsers = users.filter((u) => u.is_active).length;
   const revenue = (Number(org.base_price) || 0) + ((Number(org.per_user_price) || 0) * activeUsers);
+
+  // Trial info
+  const trialEndsAt = org.trial_ends_at ? new Date(org.trial_ends_at) : null;
+  const trialDaysLeft = trialEndsAt
+    ? Math.ceil((trialEndsAt.getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+    : null;
   const createdDate = new Date(org.created_at).toLocaleDateString("pt-PT", {
     day: "numeric",
     month: "long",
@@ -269,6 +280,40 @@ export default function OrgDetailPage() {
         </Card>
       </div>
 
+      {/* Trial info */}
+      {org.plan_name === "trial" && trialEndsAt && (
+        <Card>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${trialDaysLeft !== null && trialDaysLeft <= 3 ? "bg-red-50" : trialDaysLeft !== null && trialDaysLeft <= 7 ? "bg-amber-50" : "bg-indigo-50"}`}>
+                <Clock className={`w-5 h-5 ${trialDaysLeft !== null && trialDaysLeft <= 3 ? "text-red-600" : trialDaysLeft !== null && trialDaysLeft <= 7 ? "text-amber-600" : "text-indigo-600"}`} />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-stone-900">
+                  {trialDaysLeft !== null && trialDaysLeft > 0
+                    ? `Trial expira em ${trialDaysLeft} dia${trialDaysLeft !== 1 ? "s" : ""}`
+                    : "Trial expirado"}
+                </p>
+                <p className="text-xs text-stone-500">
+                  {trialEndsAt.toLocaleDateString("pt-PT", { day: "numeric", month: "long", year: "numeric" })}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button variant="secondary" size="sm" onClick={() => extendTrial(7)} loading={extending}>
+                <CalendarPlus className="w-3.5 h-3.5" /> +7 dias
+              </Button>
+              <Button variant="secondary" size="sm" onClick={() => extendTrial(14)} loading={extending}>
+                +14 dias
+              </Button>
+              <Button variant="secondary" size="sm" onClick={() => extendTrial(30)} loading={extending}>
+                +30 dias
+              </Button>
+            </div>
+          </div>
+        </Card>
+      )}
+
       {/* Billing notes */}
       {org.billing_notes && (
         <Card>
@@ -302,7 +347,17 @@ export default function OrgDetailPage() {
                     </div>
                     <div className="min-w-0">
                       <p className="font-medium text-[color:var(--text-primary)] text-sm truncate">{user.full_name}</p>
-                      <p className="text-xs text-[color:var(--text-muted)] truncate">{user.email}</p>
+                      <div className="flex items-center gap-2 text-xs text-stone-500">
+                        <span className="truncate">{user.email}</span>
+                        {user.last_login_at && (
+                          <>
+                            <span>&middot;</span>
+                            <span className="whitespace-nowrap flex-shrink-0">
+                              Último login {new Date(user.last_login_at).toLocaleDateString("pt-PT", { day: "numeric", month: "short" })}
+                            </span>
+                          </>
+                        )}
+                      </div>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
@@ -347,7 +402,7 @@ export default function OrgDetailPage() {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-[color:var(--text-secondary)] mb-1">Preco base (€)</label>
+              <label className="block text-sm font-medium text-[color:var(--text-secondary)] mb-1">Preço base (€)</label>
               <input
                 type="number"
                 step="0.01"
