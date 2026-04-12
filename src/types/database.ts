@@ -176,3 +176,17 @@ export interface FairnessMetric {
   overtime_hours: number;
   fairness_score: number | null;
 }
+
+export interface ActivityLog {
+  id: string;
+  org_id: string;
+  user_id: string;
+  action: string;
+  entity_type: string;
+  entity_id: string | null;
+  details: Record<string, unknown>;
+  ip_address: string | null;
+  created_at: string;
+  // Joined
+  profile?: Profile;
+}
