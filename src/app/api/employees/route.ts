@@ -98,6 +98,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Log activity (server-side, fire-and-forget)
+    admin.rpc("log_activity", {
+      p_action: "employee_created",
+      p_entity_type: "employee",
+      p_entity_id: authData.user.id,
+      p_details: { email, full_name },
+    }).then(({ error: logErr }) => { if (logErr) console.warn("[activity-log]", logErr.message); });
+
     return NextResponse.json({
       success: true,
       userId: authData.user.id,

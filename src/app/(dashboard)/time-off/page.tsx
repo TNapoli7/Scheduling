@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { logActivity } from "@/lib/activity-log";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -118,6 +119,8 @@ export default function TimeOffPage() {
       status: "pending",
     });
 
+    logActivity("timeoff_requested", "timeoff", null, { type: newType, start_date: newStart, end_date: newPeriod !== "full_day" ? newStart : newEnd });
+
     // Notify managers
     const managers = employees.filter((e) => e.role === "admin" || e.role === "manager");
     if (managers.length > 0 && isManager === false) {
@@ -155,6 +158,12 @@ export default function TimeOffPage() {
         reviewed_at: new Date().toISOString(),
       })
       .eq("id", requestId);
+
+    if (status === "approved") {
+      logActivity("timeoff_approved", "timeoff", requestId);
+    } else if (status === "rejected") {
+      logActivity("timeoff_rejected", "timeoff", requestId);
+    }
 
     // Notify the employee
     const req = requests.find((r) => r.id === requestId);

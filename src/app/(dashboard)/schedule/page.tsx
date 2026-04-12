@@ -15,6 +15,7 @@ import {
 import { getPortugueseHolidaysRange } from "@/lib/holidays";
 import { exportSchedulePDF, exportScheduleExcel } from "@/lib/export";
 import { SkeletonTable } from "@/components/ui/skeleton";
+import { logActivity } from "@/lib/activity-log";
 import type {
   Profile,
   ShiftTemplate,
@@ -198,6 +199,9 @@ export default function SchedulePage() {
             .select()
             .single();
           sched = newSched;
+          if (newSched) {
+            logActivity("schedule_created", "schedule", newSched.id, { month, year });
+          }
         }
       }
     } else {
@@ -338,6 +342,7 @@ export default function SchedulePage() {
       });
     }
 
+    logActivity("shift_assigned", "schedule", schedule?.id, { employee_id: assignModal.userId, date: assignModal.date, shift_id: shiftId });
     setAssignModal(null);
     setSaving(false);
     fetchData();
@@ -349,6 +354,7 @@ export default function SchedulePage() {
     if (existing) {
       setSaving(true);
       await supabase.from("schedule_entries").delete().eq("id", existing.id);
+      logActivity("shift_removed", "schedule", schedule?.id, { employee_id: assignModal.userId, date: assignModal.date });
       setAssignModal(null);
       setSaving(false);
       fetchData();
@@ -416,6 +422,7 @@ export default function SchedulePage() {
       .from("schedule_entries")
       .delete()
       .eq("schedule_id", schedule.id);
+    logActivity("schedule_cleared", "schedule", schedule.id);
     setSaving(false);
     fetchData();
   }
@@ -438,6 +445,7 @@ export default function SchedulePage() {
       })
       .eq("id", schedule.id);
 
+    logActivity("schedule_published", "schedule", schedule.id);
     const notifications = employees.map((emp) => ({
       user_id: emp.id,
       type: "schedule_published",
@@ -467,6 +475,7 @@ export default function SchedulePage() {
       .from("schedules")
       .update({ status: "draft", published_at: null })
       .eq("id", schedule.id);
+    logActivity("schedule_unpublished", "schedule", schedule.id);
     setSaving(false);
     fetchData();
   }

@@ -26,6 +26,13 @@ export default function LoginPage() {
       setLoading(false);
       return;
     }
+
+    fetch("/api/log-activity", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "login", entity_type: "auth", details: { email } }),
+    }).catch(() => {});
+
     window.location.href = "/dashboard";
   }
 

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { logActivity } from "@/lib/activity-log";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -152,6 +153,8 @@ export default function SwapsPage() {
       status: "pending",
     });
 
+    logActivity("swap_requested", "swap");
+
     setSubmitting(false);
     setShowNewSwap(false);
     fetchData();
@@ -173,6 +176,12 @@ export default function SwapsPage() {
         reviewed_at: new Date().toISOString(),
       })
       .eq("id", swapId);
+
+    if (action === "approved") {
+      logActivity("swap_approved", "swap", swapId);
+    } else if (action === "rejected") {
+      logActivity("swap_rejected", "swap", swapId);
+    }
 
     // If approved, actually swap the shifts
     if (action === "approved") {

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { logActivity } from "@/lib/activity-log";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -134,6 +135,7 @@ export default function AvailabilityPage() {
         preference: "neutral",
         approval_status: "pending",
       });
+      logActivity("availability_submitted", "availability");
     }
 
     setSaving(false);
@@ -151,6 +153,12 @@ export default function AvailabilityPage() {
         reviewed_at: new Date().toISOString(),
       })
       .eq("id", availId);
+
+    if (status === "approved") {
+      logActivity("availability_approved", "availability", availId);
+    } else if (status === "rejected") {
+      logActivity("availability_rejected", "availability", availId);
+    }
 
     // Create notification for the employee
     const avail = availabilities.find((a) => a.id === availId);

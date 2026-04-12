@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { logActivity } from "@/lib/activity-log";
 
 type FakeLogo = { name: string; tagline: string; img: string };
 
@@ -63,6 +64,8 @@ export default function RegisterPage() {
       router.push("/onboarding");
       return;
     }
+
+    logActivity("signup", "auth", null, { email });
 
     setSentToEmail(true);
     setLoading(false);

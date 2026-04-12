@@ -228,6 +228,14 @@ export async function POST(request: Request) {
       }
     }
 
+    // Log activity (fire-and-forget)
+    supabase.rpc("log_activity", {
+      p_action: "schedule_generated",
+      p_entity_type: "schedule",
+      p_entity_id: scheduleId,
+      p_details: { entries_count: result.entries.length },
+    }).then(({ error: logErr }) => { if (logErr) console.warn("[activity-log]", logErr.message); });
+
     return NextResponse.json(response);
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Unknown error";

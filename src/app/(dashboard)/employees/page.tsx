@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { logActivity } from "@/lib/activity-log";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
@@ -138,6 +139,8 @@ export default function EmployeesPage() {
         setSaving(false);
         return;
       }
+
+      logActivity("employee_updated", "employee", editingId);
     } else {
       // Create employee via server API (no email sent)
       if (!form.email.trim()) {
@@ -178,6 +181,7 @@ export default function EmployeesPage() {
       .from("profiles")
       .update({ is_active: !emp.is_active })
       .eq("id", emp.id);
+    logActivity(emp.is_active ? "employee_deactivated" : "employee_activated", "employee", emp.id);
     fetchEmployees();
   }
 

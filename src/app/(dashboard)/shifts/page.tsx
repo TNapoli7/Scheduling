@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { logActivity } from "@/lib/activity-log";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -119,6 +120,8 @@ export default function ShiftsPage() {
         setSaving(false);
         return;
       }
+
+      logActivity("shift_updated", "shift", editingId);
     } else {
       // Need to get the user's org_id for new templates
       const { data: { user } } = await supabase.auth.getUser();
@@ -145,6 +148,8 @@ export default function ShiftsPage() {
         setSaving(false);
         return;
       }
+
+      logActivity("shift_created", "shift", null, { name: form.name });
     }
 
     setShowModal(false);
@@ -157,6 +162,7 @@ export default function ShiftsPage() {
       .from("shift_templates")
       .update({ is_active: !shift.is_active })
       .eq("id", shift.id);
+    logActivity(shift.is_active ? "shift_deactivated" : "shift_activated", "shift", shift.id);
     fetchShifts();
   }
 

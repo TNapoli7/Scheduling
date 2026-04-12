@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { Menu, Bell, LogOut, User, ChevronDown } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
+import { logActivity } from "@/lib/activity-log";
 import type { Notification } from "@/types/database";
 
 interface HeaderProps {
@@ -85,6 +86,7 @@ export function Header({ userName, unreadCount: initialUnread, onMenuClick }: He
   }
 
   async function handleSignOut() {
+    logActivity("logout", "auth");
     const supabase = createClient();
     await supabase.auth.signOut();
     router.push("/login");

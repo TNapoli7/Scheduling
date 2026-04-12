@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { logActivity } from "@/lib/activity-log";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
@@ -122,6 +123,8 @@ export default function SettingsPage() {
         updated_at: new Date().toISOString(),
       })
       .eq("id", org.id);
+
+    logActivity("settings_updated", "settings", org?.id);
 
     setSaving(false);
     setSuccess(true);
