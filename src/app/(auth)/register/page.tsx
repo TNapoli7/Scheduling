@@ -234,9 +234,75 @@ export default function RegisterPage() {
             </>
           )}
         </div>
+
+        {/* MOBILE — social proof (visible only below lg) */}
+        <div className="lg:hidden mt-10 rounded-2xl bg-[color:var(--surface-sunken)] border border-[color:var(--border)] px-6 py-8 mx-auto max-w-md">
+          <p className="text-xs font-semibold uppercase tracking-widest text-[color:var(--accent)] mb-2 text-center">
+            +200 equipas em Portugal
+          </p>
+          <h3 className="font-display text-xl font-semibold text-[color:var(--primary)] leading-tight text-center mb-6">
+            Clínicas e farmácias que{" "}
+            <span className="italic text-[color:var(--accent)]">fecharam o Excel.</span>
+          </h3>
+
+          {/* Logos compact row */}
+          <div className="grid grid-cols-3 gap-3 mb-6">
+            {fakeLogos.map((l) => (
+              <div key={l.name} className="flex flex-col items-center text-center">
+                <div className="w-10 h-10 rounded-lg bg-[color:var(--surface)] border border-[color:var(--border)] flex items-center justify-center mb-1 shadow-sm">
+                  <span className="font-display text-sm font-bold text-[color:var(--primary)]">
+                    {l.name
+                      .split(" ")
+                      .map((w) => w[0])
+                      .join("")
+                      .slice(0, 2)}
+                  </span>
+                </div>
+                <p className="font-display text-[10px] font-semibold text-[color:var(--primary)] leading-tight">
+                  {l.name}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          {/* Testimonial card */}
+          <div className="bg-[color:var(--surface)] rounded-xl p-4 shadow-sm border border-[color:var(--border-light)]">
+            <div className="flex gap-0.5 mb-2">
+              {[0, 1, 2, 3, 4].map((s) => (
+                <svg
+                  key={s}
+                  className="w-3.5 h-3.5 text-[color:var(--accent)]"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path d="M10 1.5l2.6 5.3 5.9.85-4.25 4.15 1 5.85L10 14.9l-5.25 2.75 1-5.85L1.5 7.65l5.9-.85L10 1.5z" />
+                </svg>
+              ))}
+            </div>
+            <p className="text-sm text-[color:var(--primary)] leading-snug">
+              &ldquo;Fiz o setup em 12 minutos. Na mesma semana tinha a escala do mês seguinte publicada.&rdquo;
+            </p>
+            <div className="mt-3 flex items-center gap-2.5">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="https://randomuser.me/api/portraits/women/28.jpg"
+                alt="Joana Ferreira"
+                className="w-9 h-9 rounded-full object-cover"
+              />
+              <div>
+                <p className="font-semibold text-xs text-[color:var(--primary)]">
+                  Joana Ferreira
+                </p>
+                <p className="text-[10px] text-[color:var(--text-muted)]">
+                  Diretora Geral · LusoMed
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* RIGHT — social proof */}
+      {/* RIGHT — social proof (desktop only) */}
       <div className="hidden lg:flex w-1/2 bg-[color:var(--surface-sunken)] relative overflow-hidden">
         <div
           className="absolute inset-0 opacity-[0.04]"
