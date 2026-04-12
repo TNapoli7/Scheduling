@@ -5,15 +5,15 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
-type FakeLogo = { name: string; tagline: string };
+type FakeLogo = { name: string; tagline: string; img: string };
 
 const fakeLogos: FakeLogo[] = [
-  { name: "Farmácia Aurora", tagline: "Desde 1978" },
-  { name: "Clínica Vida+", tagline: "Medicina integrada" },
-  { name: "Dental Porto", tagline: "Ortodontia" },
-  { name: "LusoMed", tagline: "Laboratório" },
-  { name: "Fisio Expert", tagline: "Reabilitação" },
-  { name: "Farmácia Central", tagline: "Bairro Alto" },
+  { name: "Farmácia Aurora", tagline: "Desde 1978", img: "https://images.unsplash.com/photo-1586015555751-63bb77f4322a?w=80&h=80&fit=crop&crop=center" },
+  { name: "Clínica Vida+", tagline: "Medicina integrada", img: "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=80&h=80&fit=crop&crop=center" },
+  { name: "Dental Porto", tagline: "Ortodontia", img: "https://images.unsplash.com/photo-1629909613654-28e377c37b09?w=80&h=80&fit=crop&crop=center" },
+  { name: "LusoMed", tagline: "Laboratório", img: "https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=80&h=80&fit=crop&crop=center" },
+  { name: "Fisio Expert", tagline: "Reabilitação", img: "https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=80&h=80&fit=crop&crop=center" },
+  { name: "Farmácia Central", tagline: "Bairro Alto", img: "https://images.unsplash.com/photo-1631549916768-4b9518c083e3?w=80&h=80&fit=crop&crop=center" },
 ];
 
 export default function RegisterPage() {
@@ -249,15 +249,12 @@ export default function RegisterPage() {
           <div className="grid grid-cols-3 gap-3 mb-6">
             {fakeLogos.map((l) => (
               <div key={l.name} className="flex flex-col items-center text-center">
-                <div className="w-10 h-10 rounded-lg bg-[color:var(--surface)] border border-[color:var(--border)] flex items-center justify-center mb-1 shadow-sm">
-                  <span className="font-display text-sm font-bold text-[color:var(--primary)]">
-                    {l.name
-                      .split(" ")
-                      .map((w) => w[0])
-                      .join("")
-                      .slice(0, 2)}
-                  </span>
-                </div>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={l.img}
+                  alt={l.name}
+                  className="w-10 h-10 rounded-lg object-cover mb-1 shadow-sm border border-[color:var(--border)]"
+                />
                 <p className="font-display text-[10px] font-semibold text-[color:var(--primary)] leading-tight">
                   {l.name}
                 </p>
