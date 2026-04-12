@@ -268,10 +268,10 @@ export default function AdminDashboard() {
                                 <span>Trial: {new Date(org.trial_ends_at).toLocaleDateString("pt-PT")}</span>
                               </>
                             )}
-                            {org.last_login_at && (
+                            {org.last_org_login && (
                               <>
                                 <span>&middot;</span>
-                                <span>Último login: {new Date(org.last_login_at).toLocaleDateString("pt-PT")}</span>
+                                <span>Último login: {new Date(org.last_org_login).toLocaleDateString("pt-PT")}</span>
                               </>
                             )}
                             {org.plan_name !== "trial" && (
