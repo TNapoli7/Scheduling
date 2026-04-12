@@ -9,9 +9,9 @@ import { Card } from "@/components/ui/card";
 
 const sectors = [
   { value: "pharmacy", label: "Farmácia" },
-  { value: "clinic", label: "Clinica" },
-  { value: "dental", label: "Clinica Dentaria" },
-  { value: "lab", label: "Laboratorio" },
+  { value: "clinic", label: "Clínica" },
+  { value: "dental", label: "Clínica Dentária" },
+  { value: "lab", label: "Laboratório" },
   { value: "physio", label: "Fisioterapia" },
   { value: "other", label: "Outro" },
 ];
@@ -27,8 +27,8 @@ const defaultHours = {
 };
 
 const dayLabels: Record<string, string> = {
-  monday: "Segunda", tuesday: "Terca", wednesday: "Quarta",
-  thursday: "Quinta", friday: "Sexta", saturday: "Sabado", sunday: "Domingo",
+  monday: "Segunda", tuesday: "Terça", wednesday: "Quarta",
+  thursday: "Quinta", friday: "Sexta", saturday: "Sábado", sunday: "Domingo",
 };
 
 export default function OnboardingPage() {
@@ -76,7 +76,7 @@ export default function OnboardingPage() {
       .single();
 
     if (orgError || !org) {
-      setError(orgError?.message || "Erro ao criar organizacao");
+      setError(orgError?.message || "Erro ao criar organização");
       setLoading(false);
       return;
     }
@@ -104,7 +104,7 @@ export default function OnboardingPage() {
     <div className="min-h-screen bg-stone-50 flex items-center justify-center px-4">
       <div className="w-full max-w-lg">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-indigo-600">Mapa de Horário</h1>
+          <h1 className="text-3xl font-bold" style={{ color: "var(--primary)" }}>Mapa de Horário</h1>
           <p className="text-stone-500 mt-2">Configura a tua empresa em 3 passos</p>
         </div>
 
@@ -200,7 +200,7 @@ export default function OnboardingPage() {
                             onChange={(e) => updateDay(day, "open", e.target.value)}
                             className="rounded border-stone-300 px-2 py-1 text-sm focus:ring-indigo-500 focus:border-indigo-500"
                           />
-                          <span className="text-stone-400">ate</span>
+                          <span className="text-stone-400">é</span>
                           <input
                             type="time"
                             value={d.close}
