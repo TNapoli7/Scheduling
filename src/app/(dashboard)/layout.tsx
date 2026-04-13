@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
+import { ChatWidget } from "@/components/chat/ChatWidget";
 import type { UserRole } from "@/types/database";
 
 export default async function DashboardLayout({
@@ -40,13 +41,16 @@ export default async function DashboardLayout({
   const org = profile.organizations as { name: string } | null;
 
   return (
-    <DashboardShell
-      role={profile.role as UserRole}
-      orgName={org?.name || ""}
-      userName={profile.full_name}
-      unreadCount={count || 0}
-    >
-      {children}
-    </DashboardShell>
+    <>
+      <DashboardShell
+        role={profile.role as UserRole}
+        orgName={org?.name || ""}
+        userName={profile.full_name}
+        unreadCount={count || 0}
+      >
+        {children}
+      </DashboardShell>
+      <ChatWidget />
+    </>
   );
 }

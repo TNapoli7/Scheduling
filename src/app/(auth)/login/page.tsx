@@ -2,9 +2,11 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useTranslations } from 'next-intl';
 import { createClient } from "@/lib/supabase/client";
 
 export default function LoginPage() {
+  const t = useTranslations('auth');
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -55,7 +57,7 @@ export default function LoginPage() {
             >
               <path d="M15 18l-6-6 6-6" />
             </svg>
-            Voltar ao site
+            {t('backToSite')}
           </Link>
 
           <Link href="/" className="flex items-center gap-2.5 mb-12">
@@ -81,11 +83,11 @@ export default function LoginPage() {
           </Link>
 
           <h1 className="font-display text-4xl md:text-5xl font-semibold text-[color:var(--primary)] leading-[1.1]">
-            Bem-vindo<br />
-            <span className="italic text-[color:var(--accent)]">de volta.</span>
+            {t('welcome')}<br />
+            <span className="italic text-[color:var(--accent)]">{t('welcomeBack')}</span>
           </h1>
           <p className="mt-4 text-[color:var(--text-secondary)]">
-            Entra para gerir as escalas da tua equipa.
+            {t('signInSubtitle')}
           </p>
 
           <form onSubmit={handleLogin} className="mt-8 space-y-4">
@@ -97,14 +99,14 @@ export default function LoginPage() {
 
             <div>
               <label className="block text-xs font-semibold uppercase tracking-wider text-[color:var(--text-secondary)] mb-1.5">
-                Email
+                {t('email')}
               </label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                placeholder="nome@farmacia.pt"
+                placeholder={t('emailPlaceholder')}
                 className="w-full h-12 px-4 rounded-xl border border-[color:var(--border)] bg-white text-[color:var(--primary)] placeholder:text-[color:var(--text-muted)] focus:outline-none focus:border-[color:var(--primary)] focus:ring-4 focus:ring-[color:var(--primary-soft)] transition-all"
               />
             </div>
@@ -112,13 +114,13 @@ export default function LoginPage() {
             <div>
               <div className="flex justify-between items-center mb-1.5">
                 <label className="block text-xs font-semibold uppercase tracking-wider text-[color:var(--text-secondary)]">
-                  Password
+                  {t('password')}
                 </label>
                 <Link
                   href="/forgot-password"
                   className="text-xs text-[color:var(--accent)] hover:underline font-medium"
                 >
-                  Esqueci-me
+                  {t('forgotPassword')}
                 </Link>
               </div>
               <input
@@ -126,7 +128,7 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                placeholder="A tua password"
+                placeholder={t('passwordPlaceholder')}
                 className="w-full h-12 px-4 rounded-xl border border-[color:var(--border)] bg-white text-[color:var(--primary)] placeholder:text-[color:var(--text-muted)] focus:outline-none focus:border-[color:var(--primary)] focus:ring-4 focus:ring-[color:var(--primary-soft)] transition-all"
               />
             </div>
@@ -136,17 +138,17 @@ export default function LoginPage() {
               disabled={loading}
               className="w-full h-12 rounded-xl bg-[color:var(--primary)] text-white font-semibold hover:bg-[color:var(--primary-hover)] active:scale-[0.99] transition-all shadow-sm hover:shadow-md disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              {loading ? "A entrar..." : "Entrar"}
+              {loading ? t('signingIn') : t('signIn')}
             </button>
           </form>
 
           <p className="mt-8 text-sm text-center text-[color:var(--text-secondary)]">
-            Ainda não tens conta?{" "}
+            {t('noAccount')}{" "}
             <Link
               href="/register"
               className="font-semibold text-[color:var(--primary)] hover:text-[color:var(--accent)] transition-colors"
             >
-              Começar trial grátis
+              {t('startTrial')}
             </Link>
           </p>
         </div>

@@ -1,0 +1,59 @@
+{
+  "navigation": {
+    "dashboard": "Dashboard",
+    "schedule": "Schedule",
+    "employees": "Team",
+    "shifts": "Shifts",
+    "availability": "Availability",
+    "timeOff": "Time Off",
+    "swaps": "Swaps",
+    "fairness": "Fairness",
+    "settings": "Settings",
+    "collapse": "Collapse",
+    "expand": "Expand"
+  },
+  "auth": {
+    "welcome": "Welcome",
+    "welcomeBack": "back.",
+    "signInSubtitle": "Sign in to manage your team's schedule.",
+    "email": "Email",
+    "password": "Password",
+    "forgotPassword": "Forgot password?",
+    "signIn": "Sign In",
+    "signingIn": "Signing in...",
+    "noAccount": "Don't have an account?",
+    "startTrial": "Start free trial",
+    "backToSite": "Back to site",
+    "emailPlaceholder": "name@pharmacy.com",
+    "passwordPlaceholder": "Your password"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "next": "Next",
+    "previous": "Previous",
+    "confirm": "Confirm"
+  },
+  "schedule": {
+    "title": "Schedule",
+    "people": "people",
+    "conflicts": "conflicts",
+    "fairness": "fairness",
+    "publish": "Published",
+    "month": "Month",
+    "publishDescription": "Publish a monthly schedule in 15 minutes.",
+    "fullDescription": "Publish a monthly schedule in 15 minutes."
+  },
+  "language": {
+    "selectLanguage": "Select language",
+    "portuguese": "Português",
+    "english": "English",
+    "spanish": "Español"
+  }
+}

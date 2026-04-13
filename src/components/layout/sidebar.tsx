@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useTranslations } from 'next-intl';
 import {
   Calendar,
   Users,
@@ -18,6 +19,8 @@ import {
   PanelLeftOpen,
 } from "lucide-react";
 import type { UserRole } from "@/types/database";
+import { LanguageSelector } from "./language-selector";
+import { useClientLocale } from "@/hooks/use-locale";
 
 interface SidebarProps {
   role: UserRole;
@@ -26,22 +29,25 @@ interface SidebarProps {
   onClose: () => void;
 }
 
-const navigation = [
-  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard, roles: ["admin", "manager", "employee"] },
-  { name: "Horário", href: "/schedule", icon: Calendar, roles: ["admin", "manager", "employee"] },
-  { name: "Equipa", href: "/employees", icon: Users, roles: ["admin", "manager"] },
-  { name: "Turnos", href: "/shifts", icon: Clock, roles: ["admin", "manager"] },
-  { name: "Disponibilidades", href: "/availability", icon: CalendarOff, roles: ["admin", "manager", "employee"] },
-  { name: "Férias", href: "/time-off", icon: Palmtree, roles: ["admin", "manager", "employee"] },
-  { name: "Trocas", href: "/swaps", icon: ArrowLeftRight, roles: ["admin", "manager", "employee"] },
-  { name: "Fairness", href: "/fairness", icon: BarChart3, roles: ["admin", "manager"] },
-  { name: "Definições", href: "/settings", icon: Settings, roles: ["admin"] },
-];
-
 export function Sidebar({ role, orgName, open, onClose }: SidebarProps) {
+  const t = useTranslations('navigation');
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
-  const filteredNav = navigation.filter((item) => item.roles.includes(role));
+  const locale = useClientLocale();
+
+  const navigationItems = [
+    { key: "dashboard", href: "/dashboard", icon: LayoutDashboard, roles: ["admin", "manager", "employee"] },
+    { key: "schedule", href: "/schedule", icon: Calendar, roles: ["admin", "manager", "employee"] },
+    { key: "employees", href: "/employees", icon: Users, roles: ["admin", "manager"] },
+    { key: "shifts", href: "/shifts", icon: Clock, roles: ["admin", "manager"] },
+    { key: "availability", href: "/availability", icon: CalendarOff, roles: ["admin", "manager", "employee"] },
+    { key: "timeOff", href: "/time-off", icon: Palmtree, roles: ["admin", "manager", "employee"] },
+    { key: "swaps", href: "/swaps", icon: ArrowLeftRight, roles: ["admin", "manager", "employee"] },
+    { key: "fairness", href: "/fairness", icon: BarChart3, roles: ["admin", "manager"] },
+    { key: "settings", href: "/settings", icon: Settings, roles: ["admin"] },
+  ];
+
+  const filteredNav = navigationItems.filter((item) => item.roles.includes(role));
 
   return (
     <>
@@ -103,7 +109,7 @@ export function Sidebar({ role, orgName, open, onClose }: SidebarProps) {
           <button
             onClick={onClose}
             className="lg:hidden text-[color:var(--sidebar-fg-muted)] hover:text-white p-1.5 rounded-lg hover:bg-white/5 transition"
-            aria-label="Fechar menu"
+            aria-label={t('close')}
           >
             <X className="w-4 h-4" />
           </button>
@@ -115,10 +121,10 @@ export function Sidebar({ role, orgName, open, onClose }: SidebarProps) {
             const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
             return (
               <Link
-                key={item.name}
+                key={item.key}
                 href={item.href}
                 onClick={onClose}
-                title={collapsed ? item.name : undefined}
+                title={collapsed ? t(item.key as any) : undefined}
                 className={`
                   group relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium
                   transition-all duration-150
@@ -140,14 +146,19 @@ export function Sidebar({ role, orgName, open, onClose }: SidebarProps) {
                   }`}
                   strokeWidth={2}
                 />
-                <span className={`truncate ${collapsed ? "lg:hidden" : ""}`}>{item.name}</span>
+                <span className={`truncate ${collapsed ? "lg:hidden" : ""}`}>{t(item.key as any)}</span>
               </Link>
             );
           })}
         </nav>
 
-        {/* Footer: collapse toggle + branding */}
+        {/* Footer: language selector, collapse toggle + branding */}
         <div className="relative shrink-0 border-t border-[color:var(--sidebar-border)] px-3 py-3 space-y-1">
+          {/* Language selector */}
+          <div className={`flex justify-center ${collapsed ? "lg:px-0" : ""}`}>
+            <LanguageSelector currentLocale={locale} />
+          </div>
+
           <button
             onClick={() => setCollapsed((c) => !c)}
             className={`
@@ -156,15 +167,15 @@ export function Sidebar({ role, orgName, open, onClose }: SidebarProps) {
               transition-all duration-150
               ${collapsed ? "justify-center px-0" : ""}
             `}
-            title={collapsed ? "Expandir menu" : "Recolher menu"}
-            aria-label={collapsed ? "Expandir menu" : "Recolher menu"}
+            title={collapsed ? t('expand') : t('collapse')}
+            aria-label={collapsed ? t('expand') : t('collapse')}
           >
             {collapsed ? (
               <PanelLeftOpen className="w-[18px] h-[18px] shrink-0" strokeWidth={2} />
             ) : (
               <>
                 <PanelLeftClose className="w-[18px] h-[18px] shrink-0" strokeWidth={2} />
-                <span>Recolher</span>
+                <span>{t('collapse')}</span>
               </>
             )}
           </button>

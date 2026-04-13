@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { ChatWidget } from "@/components/chat/ChatWidget";
 import {
   Calendar,
   Users,
@@ -526,6 +527,7 @@ export default function LandingPage() {
       <FAQ />
       <FinalCTA />
       <Footer />
+      <ChatWidget />
     </div>
   );
 }

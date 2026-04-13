@@ -1,0 +1,59 @@
+{
+  "navigation": {
+    "dashboard": "Panel de control",
+    "schedule": "Horario",
+    "employees": "Equipo",
+    "shifts": "Turnos",
+    "availability": "Disponibilidad",
+    "timeOff": "Tiempo libre",
+    "swaps": "Cambios",
+    "fairness": "Equidad",
+    "settings": "Configuración",
+    "collapse": "Contraer",
+    "expand": "Expandir"
+  },
+  "auth": {
+    "welcome": "Bienvenido",
+    "welcomeBack": "de vuelta.",
+    "signInSubtitle": "Inicia sesión para gestionar el horario de tu equipo.",
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "forgotPassword": "¿Olvidaste la contraseña?",
+    "signIn": "Iniciar sesión",
+    "signingIn": "Iniciando sesión...",
+    "noAccount": "¿No tienes cuenta?",
+    "startTrial": "Comenzar prueba gratuita",
+    "backToSite": "Volver al sitio",
+    "emailPlaceholder": "nombre@farmacia.es",
+    "passwordPlaceholder": "Tu contraseña"
+  },
+  "common": {
+    "loading": "Cargando...",
+    "error": "Error",
+    "success": "Éxito",
+    "cancel": "Cancelar",
+    "save": "Guardar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "close": "Cerrar",
+    "next": "Siguiente",
+    "previous": "Anterior",
+    "confirm": "Confirmar"
+  },
+  "schedule": {
+    "title": "Horario",
+    "people": "personas",
+    "conflicts": "conflictos",
+    "fairness": "equidad",
+    "publish": "Publicado",
+    "month": "Mes",
+    "publishDescription": "Publica un horario mensual en 15 minutos.",
+    "fullDescription": "Publica un horario mensual en 15 minutos."
+  },
+  "language": {
+    "selectLanguage": "Seleccionar idioma",
+    "portuguese": "Português",
+    "english": "English",
+    "spanish": "Español"
+  }
+}

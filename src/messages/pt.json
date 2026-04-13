@@ -1,0 +1,59 @@
+{
+  "navigation": {
+    "dashboard": "Dashboard",
+    "schedule": "Horário",
+    "employees": "Equipa",
+    "shifts": "Turnos",
+    "availability": "Disponibilidades",
+    "timeOff": "Férias",
+    "swaps": "Trocas",
+    "fairness": "Fairness",
+    "settings": "Definições",
+    "collapse": "Recolher",
+    "expand": "Expandir"
+  },
+  "auth": {
+    "welcome": "Bem-vindo",
+    "welcomeBack": "de volta.",
+    "signInSubtitle": "Entra para gerir as escalas da tua equipa.",
+    "email": "Email",
+    "password": "Password",
+    "forgotPassword": "Esqueci-me",
+    "signIn": "Entrar",
+    "signingIn": "A entrar...",
+    "noAccount": "Ainda não tens conta?",
+    "startTrial": "Começar trial grátis",
+    "backToSite": "Voltar ao site",
+    "emailPlaceholder": "nome@farmacia.pt",
+    "passwordPlaceholder": "A tua password"
+  },
+  "common": {
+    "loading": "A carregar...",
+    "error": "Erro",
+    "success": "Sucesso",
+    "cancel": "Cancelar",
+    "save": "Guardar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "close": "Fechar",
+    "next": "Próximo",
+    "previous": "Anterior",
+    "confirm": "Confirmar"
+  },
+  "schedule": {
+    "title": "Escala",
+    "people": "pessoas",
+    "conflicts": "conflitos",
+    "fairness": "equidade",
+    "publish": "Publicada",
+    "month": "Mês",
+    "publishDescription": "Publica uma escala de um mês em 15 minutos.",
+    "fullDescription": "Publica uma escala de um mês em 15 minutos."
+  },
+  "language": {
+    "selectLanguage": "Selecionar idioma",
+    "portuguese": "Português",
+    "english": "English",
+    "spanish": "Español"
+  }
+}

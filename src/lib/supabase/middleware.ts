@@ -1,6 +1,27 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
+const locales = ['pt', 'en', 'es'];
+const defaultLocale = 'pt';
+
+function getLocaleFromAcceptLanguage(acceptLanguage: string | null): string {
+  if (!acceptLanguage) return defaultLocale;
+
+  const languages = acceptLanguage
+    .split(',')
+    .map(lang => lang.split(';')[0].trim().toLowerCase());
+
+  // Check for exact locale match
+  for (const lang of languages) {
+    const locale = lang.split('-')[0];
+    if (locales.includes(locale)) {
+      return locale;
+    }
+  }
+
+  return defaultLocale;
+}
+
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
 
@@ -48,6 +69,25 @@ export async function updateSession(request: NextRequest) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);
+  }
+
+  // Handle language detection
+  let locale = defaultLocale;
+  
+  // Check for language cookie
+  const cookieLocale = request.cookies.get('NEXT_LOCALE')?.value;
+  if (cookieLocale && locales.includes(cookieLocale)) {
+    locale = cookieLocale;
+  } else {
+    // Detect from Accept-Language header
+    const acceptLanguage = request.headers.get('accept-language');
+    locale = getLocaleFromAcceptLanguage(acceptLanguage);
+    
+    // Set the cookie for future requests
+    supabaseResponse.cookies.set('NEXT_LOCALE', locale, {
+      maxAge: 60 * 60 * 24 * 365, // 1 year
+      path: '/',
+    });
   }
 
   return supabaseResponse;
