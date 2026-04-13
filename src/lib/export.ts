@@ -166,7 +166,7 @@ export function exportSchedulePDF(
     doc.setFontSize(7);
     doc.setTextColor(150);
     doc.text(
-      `Gerado em ${new Date().toLocaleDateString("pt-PT")} — Mapa de Horário`,
+      `Gerado em ${new Date().toLocaleDateString("pt-PT")} — Shiftera`,
       14,
       doc.internal.pageSize.height - 5
     );

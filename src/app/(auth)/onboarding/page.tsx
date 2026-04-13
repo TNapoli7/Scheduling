@@ -107,7 +107,7 @@ export default function OnboardingPage() {
     <div className="min-h-screen bg-stone-50 flex items-center justify-center px-4">
       <div className="w-full max-w-lg">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold" style={{ color: "var(--primary)" }}>Mapa de Horário</h1>
+          <h1 className="text-3xl font-bold" style={{ color: "var(--primary)" }}>Shiftera</h1>
           <p className="text-stone-500 mt-2">Configura a tua empresa em 3 passos</p>
         </div>
 

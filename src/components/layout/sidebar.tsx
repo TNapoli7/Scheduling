@@ -73,12 +73,25 @@ export function Sidebar({ role, orgName, open, onClose }: SidebarProps) {
         {/* Logo / Org name */}
         <div className="relative flex items-center justify-between h-16 px-4 shrink-0">
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-9 h-9 bg-[color:var(--accent)] rounded-xl flex items-center justify-center shadow-lg shadow-[color:var(--accent)]/20 shrink-0">
-              <Calendar className="w-[18px] h-[18px] text-white" strokeWidth={2.2} />
-            </div>
+            <svg viewBox="0 0 96 106" className="w-8 h-9 shrink-0">
+              <rect x="4" y="22" width="88" height="76" rx="10" ry="10" fill="#E8850A" />
+              <rect x="4" y="22" width="88" height="26" rx="10" ry="10" fill="#D47608" />
+              <rect x="4" y="38" width="88" height="10" fill="#D47608" />
+              <rect x="26" y="10" width="8" height="22" rx="4" fill="#E8850A" />
+              <rect x="62" y="10" width="8" height="22" rx="4" fill="#E8850A" />
+              <circle cx="28" cy="57" r="3" fill="#FFF" opacity="0.9" />
+              <circle cx="48" cy="57" r="3" fill="#FFF" opacity="0.9" />
+              <circle cx="68" cy="57" r="3" fill="#FFF" opacity="0.9" />
+              <circle cx="28" cy="72" r="3" fill="#FFF" opacity="0.9" />
+              <circle cx="48" cy="72" r="3" fill="#FFF" opacity="0.9" />
+              <circle cx="68" cy="72" r="3" fill="#FFF" opacity="0.9" />
+              <circle cx="28" cy="87" r="3" fill="#FFF" opacity="0.9" />
+              <circle cx="48" cy="87" r="3" fill="#FFF" opacity="0.9" />
+              <circle cx="68" cy="87" r="3" fill="#FFF" opacity="0.9" />
+            </svg>
             {!collapsed && (
               <div className="min-w-0">
-                <p className="text-sm font-display font-semibold text-white tracking-tight leading-tight">Mapa</p>
+                <p className="text-sm font-display font-semibold text-white tracking-tight leading-tight">Shiftera</p>
                 <p className="text-[10px] text-[color:var(--sidebar-fg-muted)] truncate">
                   {orgName}
                 </p>
@@ -158,7 +171,7 @@ export function Sidebar({ role, orgName, open, onClose }: SidebarProps) {
           {!collapsed && (
             <div className="px-3 pt-1">
               <p className="text-[10px] text-[color:var(--sidebar-fg-muted)]/70 leading-tight">
-                Mapa de Horário
+                Shiftera
               </p>
               <p className="text-[10px] text-[color:var(--sidebar-fg-muted)]/40 leading-tight">v1.0</p>
             </div>

@@ -26,7 +26,7 @@ function Navbar() {
             <Calendar className="w-4 h-4 text-white" />
           </div>
           <span className="text-lg font-bold text-stone-900">
-            Mapa de Horário
+            Shiftera
           </span>
         </Link>
 
@@ -408,7 +408,7 @@ function FAQ() {
     },
     {
       q: "Funciona para farmácias e clínicas?",
-      a: "Sim, o Mapa de Horário foi desenhado especificamente para farmácias, clínicas, laboratórios e consultórios em Portugal.",
+      a: "Sim, o Shiftera foi desenhado especificamente para farmácias, clínicas, laboratórios e consultórios em Portugal.",
     },
     {
       q: "Está conforme o Código do Trabalho?",
@@ -496,11 +496,11 @@ function Footer() {
             <Calendar className="w-3.5 h-3.5 text-white" />
           </div>
           <span className="text-sm font-semibold text-stone-700">
-            Mapa de Horário
+            Shiftera
           </span>
         </div>
         <div className="flex items-center gap-6 text-xs text-stone-400">
-          <span>© {new Date().getFullYear()} Mapa de Horário</span>
+          <span>© {new Date().getFullYear()} Shiftera</span>
           <a href="#" className="hover:text-stone-600 transition-colors">
             Termos
           </a>
