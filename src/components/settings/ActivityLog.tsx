@@ -158,7 +158,7 @@ export function ActivityLogPanel() {
     // Build query
     let query = supabase
       .from("activity_logs")
-      .select("*, profile:profiles!activity_logs_user_id_fkey(full_name)", {
+      .select("*, profile:profiles!activity_logs_user_id_profile_fkey(full_name)", {
         count: "exact",
       })
       .eq("org_id", profile.org_id!)
