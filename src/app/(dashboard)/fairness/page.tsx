@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { Card, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -30,11 +31,6 @@ interface EmployeeMetrics {
   fairnessScore: number;
 }
 
-const MONTH_NAMES = [
-  "Janeiro", "Fevereiro", "Marco", "Abril", "Maio", "Junho",
-  "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro",
-];
-
 function shiftDuration(start: string, end: string): number {
   const [sh, sm] = start.split(":").map(Number);
   const [eh, em] = end.split(":").map(Number);
@@ -54,6 +50,8 @@ function isWeekend(dateStr: string): boolean {
 }
 
 export default function FairnessPage() {
+  const t = useTranslations("fairnessPage");
+  const tMonths = useTranslations("months");
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth() + 1);
@@ -249,9 +247,9 @@ export default function FairnessPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-stone-900">Fairness</h1>
+          <h1 className="text-2xl font-bold text-stone-900">{t("title")}</h1>
           <p className="text-sm text-stone-500 mt-1">
-            Distribuicao justa de turnos e horas
+            {t("subtitle")}
           </p>
         </div>
         {activeMetrics.length > 0 && (
@@ -263,7 +261,7 @@ export default function FairnessPage() {
             <svg className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
-            Exportar Excel
+            {t("exportExcel")}
           </Button>
         )}
       </div>
@@ -276,7 +274,7 @@ export default function FairnessPage() {
           </svg>
         </Button>
         <h2 className="text-lg font-semibold text-stone-900 min-w-[180px] text-center">
-          {MONTH_NAMES[month - 1]} {year}
+          {tMonths(String(month))} {year}
         </h2>
         <Button variant="ghost" size="sm" onClick={nextMonth}>
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -288,14 +286,14 @@ export default function FairnessPage() {
       {/* Summary cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card>
-          <p className="text-sm text-stone-500">Score médio</p>
+          <p className="text-sm text-stone-500">{t("averageScore")}</p>
           <p className={`text-3xl font-bold mt-1 ${scoreColor(avgScore)}`}>
             {avgScore}
             <span className="text-lg text-stone-400 font-normal">/100</span>
           </p>
         </Card>
         <Card>
-          <p className="text-sm text-stone-500">Média de horas</p>
+          <p className="text-sm text-stone-500">{t("averageHours")}</p>
           <p className="text-3xl font-bold mt-1 text-stone-900">
             {avgHours}
             <span className="text-lg text-stone-400 font-normal">h</span>
@@ -316,7 +314,7 @@ export default function FairnessPage() {
       {metrics.length === 0 ? (
         <Card>
           <div className="text-center py-8 text-stone-500">
-            Nenhum dado para este mes.
+            Nenhum dado para este mês.
           </div>
         </Card>
       ) : (
@@ -402,15 +400,15 @@ export default function FairnessPage() {
       <div className="flex flex-wrap gap-4 text-xs text-stone-500 px-1">
         <div className="flex items-center gap-1.5">
           <div className="w-3 h-3 rounded-full bg-teal-100 border border-teal-300" />
-          80-100: Distribuicao justa
+          80-100: Distribuição justa
         </div>
         <div className="flex items-center gap-1.5">
           <div className="w-3 h-3 rounded-full bg-amber-100 border border-amber-300" />
-          60-79: Atenção necessaria
+          60-79: Atenção necessária
         </div>
         <div className="flex items-center gap-1.5">
           <div className="w-3 h-3 rounded-full bg-red-100 border border-red-300" />
-          0-59: Desequilibrio
+          0-59: Desequilíbrio
         </div>
       </div>
     </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { logActivity } from "@/lib/activity-log";
 import { Button } from "@/components/ui/button";
@@ -12,32 +13,33 @@ import { Palmtree } from "lucide-react";
 import { SkeletonCard, SkeletonList } from "@/components/ui/skeleton";
 import type { Profile, TimeOffRequest } from "@/types/database";
 
-const TYPE_LABELS: Record<string, string> = {
-  ferias: "Férias",
-  baixa: "Baixa médica",
-  pessoal: "Pessoal",
-  outro: "Outro",
-};
-
-const PERIOD_LABELS: Record<string, string> = {
-  full_day: "Dia inteiro",
-  morning: "Manhã",
-  afternoon: "Tarde",
-};
-
 const STATUS_VARIANT: Record<string, "warning" | "success" | "danger"> = {
   pending: "warning",
   approved: "success",
   rejected: "danger",
 };
 
-const STATUS_LABELS: Record<string, string> = {
-  pending: "Pendente",
-  approved: "Aprovado",
-  rejected: "Rejeitado",
-};
-
 export default function TimeOffPage() {
+  const t = useTranslations("timeOff");
+
+  const TYPE_LABELS: Record<string, string> = {
+    ferias: t("types.ferias"),
+    baixa: t("types.baixa"),
+    pessoal: t("types.pessoal"),
+    outro: t("types.outro"),
+  };
+
+  const PERIOD_LABELS: Record<string, string> = {
+    full_day: t("fullDay"),
+    morning: t("morning"),
+    afternoon: t("afternoon"),
+  };
+
+  const STATUS_LABELS: Record<string, string> = {
+    pending: t("statuses.pending"),
+    approved: t("statuses.approved"),
+    rejected: t("statuses.rejected"),
+  };
   const [myRole, setMyRole] = useState<string>("employee");
   const [myId, setMyId] = useState<string>("");
   const [orgId, setOrgId] = useState<string>("");
@@ -238,43 +240,43 @@ export default function TimeOffPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-stone-900">Férias e Ausências</h1>
+          <h1 className="text-2xl font-bold text-stone-900">{t("title")}</h1>
           <p className="text-sm text-stone-500 mt-1">
             {isManager
-              ? "Gerir pedidos de ferias e ausencias da equipa."
-              : "Pedir férias e ver o estado dos seus pedidos."}
+              ? t("subtitle")
+              : t("subtitleEmployee")}
           </p>
         </div>
-        <Button onClick={() => setShowNew(true)}>Novo pedido</Button>
+        <Button onClick={() => setShowNew(true)}>{t("newRequest")}</Button>
       </div>
 
       {/* Vacation balance */}
       <Card>
         <div className="p-4">
-          <p className="text-sm font-medium text-stone-500 mb-3">Saldo de ferias {currentYear}</p>
+          <p className="text-sm font-medium text-stone-500 mb-3">{t("vacationBalance")} {currentYear}</p>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <div>
               <p className="text-2xl font-bold text-stone-900">{vacationQuota}</p>
-              <p className="text-xs text-stone-500">Total</p>
+              <p className="text-xs text-stone-500">{t("total")}</p>
             </div>
             <div>
               <p className="text-2xl font-bold text-teal-600">{remainingDays % 1 === 0 ? remainingDays : remainingDays.toFixed(1).replace(".", ",")}</p>
-              <p className="text-xs text-stone-500">Disponiveis</p>
+              <p className="text-xs text-stone-500">{t("disponiveis")}</p>
             </div>
             <div>
               <p className="text-2xl font-bold text-indigo-600">{usedDays % 1 === 0 ? usedDays : usedDays.toFixed(1).replace(".", ",")}</p>
-              <p className="text-xs text-stone-500">Utilizados</p>
+              <p className="text-xs text-stone-500">{t("utilizados")}</p>
             </div>
             <div>
               <p className="text-2xl font-bold text-amber-600">{pendingDays % 1 === 0 ? pendingDays : pendingDays.toFixed(1).replace(".", ",")}</p>
-              <p className="text-xs text-stone-500">Pendentes</p>
+              <p className="text-xs text-stone-500">{t("pendentes")}</p>
             </div>
           </div>
           {remainingDays <= 3 && remainingDays > 0 && (
-            <p className="text-xs text-orange-600 mt-2">Atenção: restam poucos dias de ferias.</p>
+            <p className="text-xs text-orange-600 mt-2">{t("attention")}</p>
           )}
           {remainingDays <= 0 && (
-            <p className="text-xs text-red-600 mt-2">Sem dias de ferias disponíveis.</p>
+            <p className="text-xs text-red-600 mt-2">{t("noVacation")}</p>
           )}
         </div>
       </Card>
@@ -282,24 +284,24 @@ export default function TimeOffPage() {
       {/* Tabs */}
       <div className="flex gap-1 bg-stone-100 rounded-lg p-1 w-fit">
         {([
-          { key: "pending", label: "Pendentes", count: pendingCount },
-          { key: "approved", label: "Aprovados" },
-          { key: "rejected", label: "Rejeitados" },
-          { key: "all", label: "Todos" },
-        ] as const).map((t) => (
+          { key: "pending", label: t("tabPending"), count: pendingCount },
+          { key: "approved", label: t("tabApproved") },
+          { key: "rejected", label: t("tabRejected") },
+          { key: "all", label: t("tabAll") },
+        ] as const).map((tab) => (
           <button
-            key={t.key}
-            onClick={() => setTab(t.key)}
+            key={tab.key}
+            onClick={() => setTab(tab.key)}
             className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-              tab === t.key
+              tab === tab.key
                 ? "bg-white text-stone-900 shadow-sm"
                 : "text-stone-600 hover:text-stone-900"
             }`}
           >
-            {t.label}
-            {"count" in t && t.count ? (
+            {tab.label}
+            {"count" in tab && tab.count ? (
               <span className="ml-1.5 bg-amber-100 text-amber-700 text-xs px-1.5 py-0.5 rounded-full">
-                {t.count}
+                {tab.count}
               </span>
             ) : null}
           </button>
@@ -312,10 +314,10 @@ export default function TimeOffPage() {
           <div className="text-center py-10">
             <Palmtree className="w-10 h-10 text-stone-300 mx-auto mb-3" />
             <p className="text-sm text-stone-500 mb-3">
-              {tab === "pending" ? "Sem pedidos pendentes." : tab === "approved" ? "Nenhum pedido aprovado." : tab === "rejected" ? "Nenhum pedido rejeitado." : "Nenhum pedido encontrado."}
+              {tab === "pending" ? t("noPendingRequests") : tab === "approved" ? t("noApprovedRequests") : tab === "rejected" ? t("noRejectedRequests") : t("noRequestsFound")}
             </p>
             {!isManager && (
-              <Button size="sm" onClick={() => setShowNew(true)}>Novo pedido</Button>
+              <Button size="sm" onClick={() => setShowNew(true)}>{t("newRequest")}</Button>
             )}
           </div>
         </Card>
@@ -365,14 +367,14 @@ export default function TimeOffPage() {
                         loading={saving}
                         className="text-red-600 hover:bg-red-50"
                       >
-                        Rejeitar
+                        {t("reject")}
                       </Button>
                       <Button
                         size="sm"
                         onClick={() => reviewRequest(req.id, "approved")}
                         loading={saving}
                       >
-                        Aprovar
+                        {t("approve")}
                       </Button>
                     </div>
                   )}
@@ -384,63 +386,63 @@ export default function TimeOffPage() {
       )}
 
       {/* New request modal */}
-      <Modal open={showNew} onClose={() => setShowNew(false)} title="Novo pedido de ausência" size="sm">
+      <Modal open={showNew} onClose={() => setShowNew(false)} title={t("modalTitle")} size="sm">
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-stone-700 mb-1">Tipo</label>
+              <label className="block text-sm font-medium text-stone-700 mb-1">{t("typeLabel")}</label>
               <select
                 value={newType}
                 onChange={(e) => setNewType(e.target.value)}
                 className="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm text-stone-900 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
               >
-                <option value="ferias">Férias</option>
-                <option value="baixa">Baixa médica</option>
-                <option value="pessoal">Pessoal</option>
-                <option value="outro">Outro</option>
+                <option value="ferias">{t("types.ferias")}</option>
+                <option value="baixa">{t("types.baixa")}</option>
+                <option value="pessoal">{t("types.pessoal")}</option>
+                <option value="outro">{t("types.outro")}</option>
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-stone-700 mb-1">Período</label>
+              <label className="block text-sm font-medium text-stone-700 mb-1">{t("periodLabel")}</label>
               <select
                 value={newPeriod}
                 onChange={(e) => setNewPeriod(e.target.value)}
                 className="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm text-stone-900 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
               >
-                <option value="full_day">Dia inteiro</option>
-                <option value="morning">Manha (0,5 dia)</option>
-                <option value="afternoon">Tarde (0,5 dia)</option>
+                <option value="full_day">{t("fullDay")}</option>
+                <option value="morning">{t("morning")} (0,5 dia)</option>
+                <option value="afternoon">{t("afternoon")} (0,5 dia)</option>
               </select>
             </div>
           </div>
           <div className={`grid gap-3 ${newPeriod === "full_day" ? "grid-cols-2" : "grid-cols-1"}`}>
             <div>
               <label className="block text-sm font-medium text-stone-700 mb-1">
-                {newPeriod === "full_day" ? "Data início" : "Data"}
+                {newPeriod === "full_day" ? t("startDateLabel") : t("dateLabel")}
               </label>
               <Input type="date" value={newStart} onChange={(e) => setNewStart(e.target.value)} />
             </div>
             {newPeriod === "full_day" && (
               <div>
-                <label className="block text-sm font-medium text-stone-700 mb-1">Data fim</label>
+                <label className="block text-sm font-medium text-stone-700 mb-1">{t("endDateLabel")}</label>
                 <Input type="date" value={newEnd} onChange={(e) => setNewEnd(e.target.value)} />
               </div>
             )}
           </div>
           <div>
-            <label className="block text-sm font-medium text-stone-700 mb-1">Motivo (opcional)</label>
+            <label className="block text-sm font-medium text-stone-700 mb-1">{t("reasonLabel")}</label>
             <textarea
               value={newReason}
               onChange={(e) => setNewReason(e.target.value)}
               rows={2}
               className="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm text-stone-900 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-              placeholder="Ex: Férias de verão..."
+              placeholder={t("reasonPlaceholder")}
             />
           </div>
           <div className="flex gap-2 justify-end">
             <Button variant="ghost" onClick={() => setShowNew(false)}>Cancelar</Button>
             <Button onClick={createRequest} loading={saving} disabled={!newStart || (newPeriod === "full_day" && !newEnd)}>
-              Submeter pedido
+              {t("submitRequest")}
             </Button>
           </div>
         </div>

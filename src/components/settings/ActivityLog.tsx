@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import type { ActivityLog } from "@/types/database";
 import {
@@ -21,54 +22,6 @@ import {
 
 const PAGE_SIZE = 25;
 
-const ACTION_LABELS: Record<string, string> = {
-  // Auth
-  login: "Iniciou sessão",
-  logout: "Terminou sessão",
-  signup: "Registou conta",
-  // Schedule
-  schedule_created: "Criou horário",
-  schedule_published: "Publicou horário",
-  schedule_unpublished: "Reverteu horário para rascunho",
-  schedule_cleared: "Limpou entradas do horário",
-  schedule_generated: "Gerou horário automático",
-  schedule_archived: "Arquivou horário",
-  shift_assigned: "Atribuiu turno",
-  shift_removed: "Removeu atribuição de turno",
-  entry_added: "Adicionou turno",
-  entry_removed: "Removeu turno",
-  entry_updated: "Atualizou turno",
-  // Time off
-  timeoff_requested: "Pediu ausência",
-  timeoff_approved: "Aprovou ausência",
-  timeoff_rejected: "Rejeitou ausência",
-  // Swaps
-  swap_requested: "Pediu troca",
-  swap_approved: "Aprovou troca",
-  swap_rejected: "Rejeitou troca",
-  // Employees
-  employee_created: "Criou colaborador",
-  employee_invited: "Convidou colaborador",
-  employee_removed: "Removeu colaborador",
-  employee_updated: "Atualizou colaborador",
-  employee_activated: "Ativou colaborador",
-  employee_deactivated: "Desativou colaborador",
-  // Shifts
-  shift_created: "Criou modelo de turno",
-  shift_updated: "Atualizou modelo de turno",
-  shift_activated: "Ativou modelo de turno",
-  shift_deactivated: "Desativou modelo de turno",
-  // Availability
-  availability_submitted: "Submeteu disponibilidade",
-  availability_approved: "Aprovou disponibilidade",
-  availability_rejected: "Rejeitou disponibilidade",
-  // Settings & Org
-  settings_updated: "Atualizou definições",
-  organization_created: "Criou organização",
-  org_updated: "Atualizou organização",
-  settings_changed: "Alterou definições",
-};
-
 const ENTITY_ICONS: Record<string, typeof Clock> = {
   schedule: Calendar,
   schedule_entry: Clock,
@@ -81,20 +34,6 @@ const ENTITY_ICONS: Record<string, typeof Clock> = {
   organization: Briefcase,
   settings: Settings,
   auth: LogIn,
-};
-
-const ENTITY_LABELS: Record<string, string> = {
-  schedule: "Horário",
-  schedule_entry: "Turno",
-  time_off: "Ausência",
-  timeoff: "Ausência",
-  swap: "Troca",
-  employee: "Colaborador",
-  shift: "Turno",
-  availability: "Disponibilidade",
-  organization: "Organização",
-  settings: "Definições",
-  auth: "Autenticação",
 };
 
 function timeAgo(dateStr: string): string {
@@ -123,6 +62,7 @@ function formatDate(dateStr: string): string {
 }
 
 export function ActivityLogPanel() {
+  const t = useTranslations("activityLog");
   const [logs, setLogs] = useState<(ActivityLog & { profile?: { full_name: string } })[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);
@@ -130,6 +70,22 @@ export function ActivityLogPanel() {
   const [search, setSearch] = useState("");
   const [entityFilter, setEntityFilter] = useState<string>("all");
   const [userRole, setUserRole] = useState<string | null>(null);
+
+  const getActionLabel = (action: string) => {
+    try {
+      return t(`actions.${action}`);
+    } catch {
+      return action;
+    }
+  };
+
+  const getEntityLabel = (entity: string) => {
+    try {
+      return t(`entities.${entity}`);
+    } catch {
+      return entity;
+    }
+  };
 
   const fetchLogs = useCallback(async () => {
     setLoading(true);
@@ -193,7 +149,7 @@ export function ActivityLogPanel() {
       <div className="text-center py-12">
         <Shield className="w-10 h-10 text-stone-300 mx-auto mb-3" />
         <p className="text-sm text-stone-500">
-          Apenas gestores e administradores podem ver o histórico de atividade.
+          {t("noActivity")}
         </p>
       </div>
     );
@@ -208,7 +164,7 @@ export function ActivityLogPanel() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
           <input
             type="text"
-            placeholder="Pesquisar atividade..."
+            placeholder={t("title")}
             value={search}
             onChange={(e) => {
               setSearch(e.target.value);
@@ -229,10 +185,10 @@ export function ActivityLogPanel() {
             }}
             className="pl-9 pr-8 py-2 text-sm border border-stone-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 bg-white appearance-none cursor-pointer"
           >
-            <option value="all">Todas as categorias</option>
-            {Object.entries(ENTITY_LABELS).map(([key, label]) => (
+            <option value="all">{t("title")}</option>
+            {Object.entries(ENTITY_ICONS).map(([key]) => (
               <option key={key} value={key}>
-                {label}
+                {getEntityLabel(key)}
               </option>
             ))}
           </select>
@@ -252,15 +208,15 @@ export function ActivityLogPanel() {
         {/* Rows */}
         {loading ? (
           <div className="text-center py-12 text-sm text-stone-400">
-            A carregar...
+            {t("loadMore")}
           </div>
         ) : logs.length === 0 ? (
           <div className="text-center py-12">
             <Clock className="w-8 h-8 text-stone-200 mx-auto mb-2" />
             <p className="text-sm text-stone-400">
               {search || entityFilter !== "all"
-                ? "Nenhum resultado encontrado."
-                : "Ainda não há atividade registada."}
+                ? t("noActivity")
+                : t("noActivity")}
             </p>
           </div>
         ) : (
@@ -279,7 +235,7 @@ export function ActivityLogPanel() {
                   </div>
                   <div className="min-w-0">
                     <p className="text-sm text-stone-800 truncate">
-                      {ACTION_LABELS[log.action] || log.action}
+                      {getActionLabel(log.action)}
                     </p>
                     {log.details &&
                       Object.keys(log.details).length > 0 && (
@@ -300,7 +256,7 @@ export function ActivityLogPanel() {
 
                 {/* Entity type */}
                 <span className="text-xs text-stone-500 bg-stone-100 px-2 py-1 rounded-md truncate text-center">
-                  {ENTITY_LABELS[log.entity_type] || log.entity_type}
+                  {getEntityLabel(log.entity_type)}
                 </span>
 
                 {/* Timestamp */}

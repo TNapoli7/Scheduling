@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
+import { useTranslations } from "next-intl";
 import { Menu, Bell, LogOut, User, ChevronDown } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
@@ -13,18 +14,19 @@ interface HeaderProps {
   onMenuClick: () => void;
 }
 
-function timeAgo(dateStr: string): string {
+function timeAgo(dateStr: string, t: (key: string) => string): string {
   const diff = Date.now() - new Date(dateStr).getTime();
   const mins = Math.floor(diff / 60000);
-  if (mins < 1) return "agora";
-  if (mins < 60) return `${mins}min`;
+  if (mins < 1) return t('timeAgo.now');
+  if (mins < 60) return `${mins}${t('timeAgo.min')}`;
   const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h`;
+  if (hours < 24) return `${hours}${t('timeAgo.hour')}`;
   const days = Math.floor(hours / 24);
-  return `${days}d`;
+  return `${days}${t('timeAgo.day')}`;
 }
 
 export function Header({ userName, unreadCount: initialUnread, onMenuClick }: HeaderProps) {
+  const t = useTranslations('header');
   const [showDropdown, setShowDropdown] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -124,23 +126,23 @@ export function Header({ userName, unreadCount: initialUnread, onMenuClick }: He
             {showNotifications && (
               <div className="absolute right-0 mt-2 w-80 max-w-[calc(100vw-2rem)] bg-[color:var(--surface)] rounded-2xl shadow-xl border border-[color:var(--border-light)]/60 z-50 max-h-[400px] overflow-hidden flex flex-col">
                 <div className="flex items-center justify-between px-4 py-3 border-b border-[color:var(--border-light)]">
-                  <h3 className="text-sm font-semibold text-[color:var(--text-primary)]">Notificações</h3>
+                  <h3 className="text-sm font-semibold text-[color:var(--text-primary)]">{t('notifications')}</h3>
                   {unreadCount > 0 && (
                     <button
                       onClick={markAllRead}
                       className="text-xs text-[color:var(--accent)] hover:text-[color:var(--accent-active)] font-medium"
                     >
-                      Marcar como lidas
+                      {t('markAllRead')}
                     </button>
                   )}
                 </div>
                 <div className="overflow-y-auto flex-1">
                   {loadingNotifs ? (
-                    <div className="text-center py-8 text-[color:var(--text-muted)] text-sm">A carregar...</div>
+                    <div className="text-center py-8 text-[color:var(--text-muted)] text-sm">{t('notifications')}</div>
                   ) : notifications.length === 0 ? (
                     <div className="text-center py-8">
                       <Bell className="w-8 h-8 text-stone-200 mx-auto mb-2" />
-                      <p className="text-sm text-[color:var(--text-muted)]">Sem notificações</p>
+                      <p className="text-sm text-[color:var(--text-muted)]">{t('noNotifications')}</p>
                     </div>
                   ) : (
                     notifications.map((notif) => (
@@ -158,7 +160,7 @@ export function Header({ userName, unreadCount: initialUnread, onMenuClick }: He
                           {notif.body && (
                             <p className="text-xs text-[color:var(--text-muted)] mt-0.5 line-clamp-2">{notif.body}</p>
                           )}
-                          <p className="text-[10px] text-stone-300 mt-1">{timeAgo(notif.created_at)}</p>
+                          <p className="text-[10px] text-stone-300 mt-1">{timeAgo(notif.created_at, t)}</p>
                         </div>
                         {!notif.is_read && (
                           <div className="w-2 h-2 bg-[color:var(--accent-soft)]0 rounded-full mt-1.5 flex-shrink-0" />

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { logActivity } from "@/lib/activity-log";
 import { Button } from "@/components/ui/button";
@@ -8,11 +9,6 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { SkeletonTable } from "@/components/ui/skeleton";
 import type { Profile, Availability } from "@/types/database";
-
-const MONTH_NAMES = [
-  "Janeiro", "Fevereiro", "Marco", "Abril", "Maio", "Junho",
-  "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro",
-];
 
 function getDaysInMonth(year: number, month: number): string[] {
   const days: string[] = [];
@@ -27,9 +23,11 @@ function getDaysInMonth(year: number, month: number): string[] {
   return days;
 }
 
-function dayOfWeekPt(dateStr: string): string {
+function dayOfWeekPt(dateStr: string, tDays: any): string {
   const d = new Date(dateStr + "T00:00:00");
-  return ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"][d.getDay()];
+  const dayIndex = d.getDay();
+  const dayKeys = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+  return tDays(dayKeys[dayIndex]);
 }
 
 function isWeekend(dateStr: string): boolean {
@@ -38,6 +36,9 @@ function isWeekend(dateStr: string): boolean {
 }
 
 export default function AvailabilityPage() {
+  const t = useTranslations("availability");
+  const tMonths = useTranslations("months");
+  const tDays = useTranslations("daysShort");
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth() + 1);
@@ -199,11 +200,11 @@ export default function AvailabilityPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-stone-900">Disponibilidades</h1>
+          <h1 className="text-2xl font-bold text-stone-900">{t("title")}</h1>
           <p className="text-sm text-stone-500 mt-1">
             {isManager
-              ? "Visualize e aprove indisponibilidades da equipa."
-              : "Marque os dias em que não esta disponível."}
+              ? t("subtitleAdmin")
+              : t("subtitleEmployee")}
             {pendingCount > 0 && (
               <Badge variant="warning" className="ml-2">
                 {pendingCount} pendente{pendingCount !== 1 ? "s" : ""}
@@ -221,7 +222,7 @@ export default function AvailabilityPage() {
           </svg>
         </Button>
         <h2 className="text-lg font-semibold text-stone-900 min-w-[180px] text-center">
-          {MONTH_NAMES[month - 1]} {year}
+          {tMonths(String(month))} {year}
         </h2>
         <Button variant="ghost" size="sm" onClick={nextMonth}>
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -234,19 +235,19 @@ export default function AvailabilityPage() {
       <div className="flex flex-wrap gap-4 px-1 text-xs text-stone-600">
         <div className="flex items-center gap-1.5">
           <div className="w-3 h-3 rounded bg-green-100 border border-green-300" />
-          <span>Disponivel</span>
+          <span>{t("legendAvailable")}</span>
         </div>
         <div className="flex items-center gap-1.5">
           <div className="w-3 h-3 rounded bg-amber-100 border border-yellow-300" />
-          <span>Indisponível (pendente)</span>
+          <span>{t("legendPendingUnavailable")}</span>
         </div>
         <div className="flex items-center gap-1.5">
           <div className="w-3 h-3 rounded bg-red-100 border border-red-300" />
-          <span>Indisponível (aprovado)</span>
+          <span>{t("legendApprovedUnavailable")}</span>
         </div>
         <div className="flex items-center gap-1.5">
           <div className="w-3 h-3 rounded bg-stone-100 border border-stone-300 line-through" />
-          <span>Rejeitado</span>
+          <span>{t("legendRejected")}</span>
         </div>
       </div>
 
@@ -256,12 +257,12 @@ export default function AvailabilityPage() {
           <thead>
             <tr className="bg-stone-50">
               <th className="sticky left-0 z-10 bg-stone-50 px-3 py-2 text-left font-medium text-stone-600 border-b border-r border-stone-200 min-w-[140px]">
-                Funcionário
+                {t("employeeHeader")}
               </th>
               {days.map((day) => {
                 const weekend = isWeekend(day);
                 const dayNum = day.slice(8);
-                const dow = dayOfWeekPt(day);
+                const dow = dayOfWeekPt(day, tDays);
                 return (
                   <th
                     key={day}
@@ -290,21 +291,21 @@ export default function AvailabilityPage() {
 
                   let bgClass = weekend ? "bg-stone-50" : "";
                   let content = "";
-                  let title = "Disponivel";
+                  let title = t("legendAvailable");
 
                   if (avail) {
                     if (avail.approval_status === "approved") {
                       bgClass = "bg-red-100";
                       content = "X";
-                      title = "Indisponível (aprovado)";
+                      title = t("legendApprovedUnavailable");
                     } else if (avail.approval_status === "pending") {
                       bgClass = "bg-amber-100";
                       content = "?";
-                      title = "Indisponível (pendente)";
+                      title = t("legendPendingUnavailable");
                     } else if (avail.approval_status === "rejected") {
                       bgClass = "bg-stone-100";
                       content = "—";
-                      title = "Rejeitado";
+                      title = t("legendRejected");
                     }
                   }
 
@@ -359,7 +360,7 @@ export default function AvailabilityPage() {
                           {emp?.full_name || "—"}
                         </p>
                         <p className="text-xs text-stone-500">
-                          {parseInt(avail.date.slice(8))} {MONTH_NAMES[parseInt(avail.date.slice(5, 7)) - 1]}
+                          {parseInt(avail.date.slice(8))} {tMonths(String(parseInt(avail.date.slice(5, 7))))}
                           {avail.reason && ` — ${avail.reason}`}
                         </p>
                       </div>
@@ -371,14 +372,14 @@ export default function AvailabilityPage() {
                           loading={saving}
                           className="text-red-600 hover:bg-red-50"
                         >
-                          Rejeitar
+                          {t("rejectButton")}
                         </Button>
                         <Button
                           size="sm"
                           onClick={() => reviewAvailability(avail.id, "approved")}
                           loading={saving}
                         >
-                          Aprovar
+                          {t("approveButton")}
                         </Button>
                       </div>
                     </div>

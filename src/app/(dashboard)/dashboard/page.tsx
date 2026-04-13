@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { Card, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -18,14 +19,10 @@ import {
 import { SkeletonCard, SkeletonTable } from "@/components/ui/skeleton";
 import type { Profile, ScheduleEntry, ShiftTemplate, TimeOffRequest } from "@/types/database";
 
-const MONTH_NAMES = [
-  "Janeiro", "Fevereiro", "Marco", "Abril", "Maio", "Junho",
-  "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro",
-];
-
-const DAY_NAMES = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sab", "Dom"];
-
 export default function DashboardPage() {
+  const t = useTranslations("dashboard");
+  const m = useTranslations("months");
+  const d = useTranslations("daysShort");
   const supabase = createClient();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -285,9 +282,9 @@ export default function DashboardPage() {
     <div className="space-y-6">
       {/* Welcome */}
       <div>
-        <h1 className="text-2xl font-bold text-[color:var(--text-primary)] font-display tracking-tight">Ola, {firstName}</h1>
+        <h1 className="text-2xl font-bold text-[color:var(--text-primary)] font-display tracking-tight">{t("helloPrefix")} {firstName}</h1>
         <p className="text-[color:var(--text-muted)] mt-1">
-          {MONTH_NAMES[currentMonth - 1]} {currentYear}
+          {m(["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"][currentMonth - 1])} {currentYear}
         </p>
       </div>
 
@@ -301,7 +298,7 @@ export default function DashboardPage() {
                   <Users className="w-6 h-6 text-[color:var(--accent)]" />
                 </div>
                 <div>
-                  <p className="text-sm text-[color:var(--text-muted)]">Equipa</p>
+                  <p className="text-sm text-[color:var(--text-muted)]">{t("equipa")}</p>
                   <p className="text-2xl font-bold text-[color:var(--text-primary)]">{employeeCount}</p>
                 </div>
               </div>
@@ -313,13 +310,13 @@ export default function DashboardPage() {
                   <Calendar className="w-6 h-6 text-teal-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-[color:var(--text-muted)]">Horário {MONTH_NAMES[currentMonth - 1]}</p>
+                  <p className="text-sm text-[color:var(--text-muted)]">{t("horarioMonth")} {m(["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"][currentMonth - 1])}</p>
                   {currentScheduleStatus ? (
                     <Badge variant={currentScheduleStatus === "published" ? "success" : "warning"}>
-                      {currentScheduleStatus === "published" ? "Publicado" : "Rascunho"}
+                      {currentScheduleStatus === "published" ? t("publicado") : t("rascunho")}
                     </Badge>
                   ) : (
-                    <Badge variant="default">Não criado</Badge>
+                    <Badge variant="default">{t("nao_criado")}</Badge>
                   )}
                 </div>
               </div>
@@ -331,7 +328,7 @@ export default function DashboardPage() {
                   <AlertTriangle className="w-6 h-6 text-[color:var(--warning)]" />
                 </div>
                 <div>
-                  <p className="text-sm text-[color:var(--text-muted)]">Trocas pendentes</p>
+                  <p className="text-sm text-[color:var(--text-muted)]">{t("trocasPendentes")}</p>
                   <p className="text-2xl font-bold text-[color:var(--text-primary)]">{pendingSwaps}</p>
                 </div>
               </div>
@@ -347,7 +344,7 @@ export default function DashboardPage() {
                   <Clock className="w-6 h-6 text-[color:var(--accent)]" />
                 </div>
                 <div>
-                  <p className="text-sm text-[color:var(--text-muted)]">Turnos esta semana</p>
+                  <p className="text-sm text-[color:var(--text-muted)]">{t("turnos_esta_semana")}</p>
                   <p className="text-2xl font-bold text-[color:var(--text-primary)]">{upcomingShifts.length}</p>
                 </div>
               </div>
@@ -359,7 +356,7 @@ export default function DashboardPage() {
                   <CalendarOff className="w-6 h-6 text-[color:var(--warning)]" />
                 </div>
                 <div>
-                  <p className="text-sm text-[color:var(--text-muted)]">Pedidos pendentes</p>
+                  <p className="text-sm text-[color:var(--text-muted)]">{t("pedidos_pendentes")}</p>
                   <p className="text-2xl font-bold text-[color:var(--text-primary)]">{pendingTimeOff.length + pendingAvailability}</p>
                 </div>
               </div>
@@ -371,7 +368,7 @@ export default function DashboardPage() {
                   <Clock className="w-6 h-6 text-[color:var(--success)]" />
                 </div>
                 <div>
-                  <p className="text-sm text-[color:var(--text-muted)]">Horas este mes</p>
+                  <p className="text-sm text-[color:var(--text-muted)]">{t("horas_este_mes")}</p>
                   <p className="text-2xl font-bold text-[color:var(--text-primary)]">
                     {(() => {
                       const totalMin = myEntries.reduce((sum, e) => {
@@ -397,7 +394,7 @@ export default function DashboardPage() {
               <Palmtree className="w-6 h-6 text-teal-600" />
             </div>
             <div>
-              <p className="text-sm text-[color:var(--text-muted)]">Férias disponíveis</p>
+              <p className="text-sm text-[color:var(--text-muted)]">{t("ferias_disponiveis")}</p>
               <p className={`text-2xl font-bold ${remainingDays <= 3 ? "text-[color:var(--warning)]" : "text-[color:var(--text-primary)]"}`}>
                 {formatNum(remainingDays)}
                 <span className="text-sm font-normal text-[color:var(--text-muted)] ml-1">/ {vacationQuota}</span>
@@ -414,13 +411,13 @@ export default function DashboardPage() {
           <Card className="lg:col-span-2">
             <div className="p-4">
               <div className="flex items-center justify-between mb-4">
-                <CardTitle>O meu horário</CardTitle>
+                <CardTitle>{t("meu_horario")}</CardTitle>
                 <div className="flex items-center gap-2">
                   <button onClick={prevMonth} className="p-1 rounded-lg hover:bg-[color:var(--surface-sunken)] transition-colors">
                     <ChevronLeft className="w-5 h-5 text-[color:var(--text-secondary)]" />
                   </button>
                   <span className="text-sm font-medium text-[color:var(--text-secondary)] min-w-[120px] text-center">
-                    {MONTH_NAMES[calMonth - 1]} {calYear}
+                    {m(["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"][calMonth - 1])} {calYear}
                   </span>
                   <button onClick={nextMonth} className="p-1 rounded-lg hover:bg-[color:var(--surface-sunken)] transition-colors">
                     <ChevronRight className="w-5 h-5 text-[color:var(--text-secondary)]" />
@@ -430,9 +427,9 @@ export default function DashboardPage() {
 
               {/* Calendar grid */}
               <div className="grid grid-cols-7 gap-px bg-[color:var(--border-light)] rounded-xl overflow-hidden">
-                {DAY_NAMES.map((d) => (
-                  <div key={d} className="bg-[color:var(--surface-sunken)] py-2 text-center text-xs font-medium text-[color:var(--text-muted)]">
-                    {d}
+                {["mon", "tue", "wed", "qua", "thu", "fri", "sat", "sun"].map((dayKey) => (
+                  <div key={dayKey} className="bg-[color:var(--surface-sunken)] py-2 text-center text-xs font-medium text-[color:var(--text-muted)]">
+                    {d(dayKey)}
                   </div>
                 ))}
                 {calDays.map((day, i) => {
@@ -479,9 +476,9 @@ export default function DashboardPage() {
             {/* Upcoming shifts */}
             <Card>
               <div className="p-4">
-                <CardTitle>Proximos turnos</CardTitle>
+                <CardTitle>{t("proximos_turnos")}</CardTitle>
                 {upcomingShifts.length === 0 ? (
-                  <p className="text-sm text-[color:var(--text-muted)] mt-3">Sem turnos nos proximos 7 dias.</p>
+                  <p className="text-sm text-[color:var(--text-muted)] mt-3">{t("sem_turnos_proximos_7")}</p>
                 ) : (
                   <div className="mt-3 space-y-2">
                     {upcomingShifts.map((entry) => {
@@ -500,7 +497,7 @@ export default function DashboardPage() {
                             </p>
                           </div>
                           {entry.date === todayStr && (
-                            <Badge variant="success">Hoje</Badge>
+                            <Badge variant="success">{t("hoje")}</Badge>
                           )}
                         </div>
                       );
@@ -514,7 +511,7 @@ export default function DashboardPage() {
             {(pendingTimeOff.length > 0 || pendingAvailability > 0) && (
               <Card>
                 <div className="p-4">
-                  <CardTitle>Pedidos pendentes</CardTitle>
+                  <CardTitle>{t("pedidos_pendentes_card")}</CardTitle>
                   <div className="mt-3 space-y-2">
                     {pendingTimeOff.map((req) => (
                       <div key={req.id} className="flex items-center gap-3 py-2 border-b border-[color:var(--border-light)] last:border-0">
@@ -539,10 +536,10 @@ export default function DashboardPage() {
                           <CalendarOff className="w-4 h-4 text-[color:var(--warning)]" />
                         </div>
                         <div className="flex-1">
-                          <p className="text-sm font-medium text-[color:var(--text-primary)]">Indisponibilidades</p>
-                          <p className="text-xs text-[color:var(--text-muted)]">{pendingAvailability} dia{pendingAvailability !== 1 ? "s" : ""} pendente{pendingAvailability !== 1 ? "s" : ""}</p>
+                          <p className="text-sm font-medium text-[color:var(--text-primary)]">{t("indisponibilidades")}</p>
+                          <p className="text-xs text-[color:var(--text-muted)]">{pendingAvailability} {pendingAvailability !== 1 ? t("dias_pendentes") : t("dia_pendente")}</p>
                         </div>
-                        <Badge variant="warning">Pendente</Badge>
+                        <Badge variant="warning">{t("pendente")}</Badge>
                       </div>
                     )}
                   </div>
@@ -553,28 +550,28 @@ export default function DashboardPage() {
             {/* Quick links for employee */}
             <Card>
               <div className="p-4">
-                <CardTitle>Acoes rapidas</CardTitle>
+                <CardTitle>{t("acoes_rapidas")}</CardTitle>
                 <div className="mt-3 flex flex-col gap-2">
                   <a
                     href="/time-off"
                     className="inline-flex items-center gap-2 px-3 py-2 text-sm text-[color:var(--text-secondary)] rounded-lg border border-[color:var(--border-light)] hover:bg-[color:var(--surface-sunken)] transition-colors"
                   >
                     <Palmtree className="w-4 h-4" />
-                    Pedir férias
+                    {t("pedir_ferias")}
                   </a>
                   <a
                     href="/availability"
                     className="inline-flex items-center gap-2 px-3 py-2 text-sm text-[color:var(--text-secondary)] rounded-lg border border-[color:var(--border-light)] hover:bg-[color:var(--surface-sunken)] transition-colors"
                   >
                     <CalendarOff className="w-4 h-4" />
-                    Marcar indisponibilidade
+                    {t("marcar_indisponibilidade")}
                   </a>
                   <a
                     href="/swaps"
                     className="inline-flex items-center gap-2 px-3 py-2 text-sm text-[color:var(--text-secondary)] rounded-lg border border-[color:var(--border-light)] hover:bg-[color:var(--surface-sunken)] transition-colors"
                   >
                     <ArrowRightLeft className="w-4 h-4" />
-                    Trocar turno
+                    {t("trocar_turno")}
                   </a>
                 </div>
               </div>
@@ -586,35 +583,35 @@ export default function DashboardPage() {
       {/* Manager: Quick actions */}
       {isManager && (
         <Card>
-          <CardTitle>Acoes rapidas</CardTitle>
+          <CardTitle>{t("acoes_rapidas")}</CardTitle>
           <div className="mt-4 flex flex-wrap gap-3">
             <a
               href="/schedule"
               className="inline-flex items-center gap-2 px-4 py-2 bg-[color:var(--accent)] text-white text-sm font-medium rounded-lg hover:bg-[color:var(--accent-hover)] transition-colors shadow-sm"
             >
               <Calendar className="w-4 h-4" />
-              {currentScheduleStatus ? "Ver horário" : "Criar horário"}
+              {currentScheduleStatus ? t("ver_horario") : t("criar_horario")}
             </a>
             <a
               href="/employees"
               className="inline-flex items-center gap-2 px-4 py-2 bg-[color:var(--surface)] text-[color:var(--text-secondary)] text-sm font-medium rounded-lg border border-[color:var(--border-light)] hover:bg-[color:var(--surface-sunken)] transition-colors"
             >
               <Users className="w-4 h-4" />
-              Gerir equipa
+              {t("gerir_equipa")}
             </a>
             <a
               href="/availability"
               className="inline-flex items-center gap-2 px-4 py-2 bg-[color:var(--surface)] text-[color:var(--text-secondary)] text-sm font-medium rounded-lg border border-[color:var(--border-light)] hover:bg-[color:var(--surface-sunken)] transition-colors"
             >
               <CalendarOff className="w-4 h-4" />
-              Disponibilidades
+              {t("disponibilidades")}
             </a>
             <a
               href="/time-off"
               className="inline-flex items-center gap-2 px-4 py-2 bg-[color:var(--surface)] text-[color:var(--text-secondary)] text-sm font-medium rounded-lg border border-[color:var(--border-light)] hover:bg-[color:var(--surface-sunken)] transition-colors"
             >
               <Palmtree className="w-4 h-4" />
-              Férias
+              {t("ferias")}
             </a>
           </div>
         </Card>

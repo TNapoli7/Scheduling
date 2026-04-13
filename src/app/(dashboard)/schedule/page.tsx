@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -40,30 +41,16 @@ function getDaysInMonth(year: number, month: number): string[] {
   return days;
 }
 
-function dayOfWeekPt(dateStr: string): string {
+function dayOfWeekPt(dateStr: string, getTranslation: (key: string) => string): string {
   const d = new Date(dateStr + "T00:00:00");
-  return ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"][d.getDay()];
+  const keys = ["sun", "mon", "tue", "wed", "qua", "thu", "fri", "sat"];
+  return getTranslation(keys[d.getDay()]);
 }
 
 function isWeekend(dateStr: string): boolean {
   const d = new Date(dateStr + "T00:00:00");
   return d.getDay() === 0 || d.getDay() === 6;
 }
-
-const MONTH_NAMES = [
-  "Janeiro",
-  "Fevereiro",
-  "Marco",
-  "Abril",
-  "Maio",
-  "Junho",
-  "Julho",
-  "Agosto",
-  "Setembro",
-  "Outubro",
-  "Novembro",
-  "Dezembro",
-];
 
 interface PreviewResult {
   totalEntries: number;
@@ -83,6 +70,10 @@ interface PreviewResult {
 }
 
 export default function SchedulePage() {
+  const t = useTranslations("schedulePage");
+  const m = useTranslations("months");
+  const d = useTranslations("daysShort");
+
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth() + 1);
@@ -138,13 +129,13 @@ export default function SchedulePage() {
   const generateIssues = useMemo(() => {
     const issues: string[] = [];
     if (employees.length === 0) {
-      issues.push("Não tens funcionários ativos. Vai a Funcionários e adiciona pelo menos um.");
+      issues.push(t("addEmployeesFirst"));
     }
     if (shifts.length === 0) {
-      issues.push("Não tens turnos configurados. Vai a Turnos e cria pelo menos um turno ativo.");
+      issues.push(t("createShiftsFirst"));
     }
     return issues;
-  }, [employees, shifts]);
+  }, [employees, shifts, t]);
   const canGenerate = generateIssues.length === 0;
 
   const fetchData = useCallback(async () => {
@@ -446,11 +437,12 @@ export default function SchedulePage() {
       .eq("id", schedule.id);
 
     logActivity("schedule_published", "schedule", schedule.id);
+    const monthKey = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"][month - 1];
     const notifications = employees.map((emp) => ({
       user_id: emp.id,
       type: "schedule_published",
-      title: "Horário publicado",
-      body: `O horário de ${MONTH_NAMES[month - 1]} ${year} foi publicado.`,
+      title: t("publishedTitle"),
+      body: `O horário de ${m(monthKey)} ${year} foi publicado.`,
       metadata: { month, year, schedule_id: schedule.id },
     }));
     if (notifications.length > 0) {
@@ -464,9 +456,7 @@ export default function SchedulePage() {
   async function unpublishSchedule() {
     if (!schedule) return;
     if (
-      !confirm(
-        "Tem a certeza que quer despublicar? O horario volta a rascunho e pode ser editado."
-      )
+      !confirm(t("confirmUnpublish"))
     ) {
       return;
     }
@@ -511,10 +501,10 @@ export default function SchedulePage() {
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-[color:var(--text-primary)] font-display tracking-tight">Horário</h1>
+          <h1 className="text-2xl font-bold text-[color:var(--text-primary)] font-display tracking-tight">{t("publishedTitle")}</h1>
           <p className="text-sm text-[color:var(--text-muted)] mt-1">
             {schedule?.status === "published" ? (
-              <Badge variant="success">Publicado</Badge>
+              <Badge variant="success">{t("publishedTitle")}</Badge>
             ) : (
               <Badge variant="default">Rascunho</Badge>
             )}
@@ -550,7 +540,7 @@ export default function SchedulePage() {
                   d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"
                 />
               </svg>
-              Ver problemas
+              {t("complianceIssuesTitle")}
             </Button>
           )}
           {schedule?.status === "draft" && entries.length > 0 && (
@@ -561,7 +551,7 @@ export default function SchedulePage() {
               loading={saving}
               className="text-[color:var(--danger)] hover:bg-[color:var(--danger-soft)]"
             >
-              Limpar
+              {t("unavailable")}
             </Button>
           )}
           {schedule?.status === "draft" && (
@@ -582,12 +572,12 @@ export default function SchedulePage() {
                   d="M13 10V3L4 14h7v7l9-11h-7z"
                 />
               </svg>
-              Gerar Horário
+              {t("autoGenerateTitle")}
             </Button>
           )}
           {schedule?.status === "draft" && (
             <Button onClick={publishSchedule} loading={saving}>
-              Publicar
+              {t("publishedTitle")}
             </Button>
           )}
           {schedule?.status === "published" && (
@@ -598,7 +588,7 @@ export default function SchedulePage() {
               loading={saving}
               className="text-[color:var(--warning)] hover:bg-[color:var(--warning-soft)]"
             >
-              Despublicar
+              {t("confirmUnpublish")}
             </Button>
           )}
           {entries.length > 0 && (
@@ -631,7 +621,7 @@ export default function SchedulePage() {
           &lt;
         </Button>
         <h2 className="text-lg font-semibold text-[color:var(--text-primary)] min-w-[180px] text-center font-display tracking-tight">
-          {MONTH_NAMES[month - 1]} {year}
+          {m(["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"][month - 1])} {year}
         </h2>
         <Button variant="ghost" size="sm" onClick={nextMonth}>
           &gt;
@@ -642,7 +632,7 @@ export default function SchedulePage() {
             size="sm"
             onClick={() => { setViewMode("month"); setWeekStart(0); }}
           >
-            Mês
+            {t("unavailable")}
           </Button>
           <Button
             variant={viewMode === "week" ? "primary" : "ghost"}
@@ -691,7 +681,7 @@ export default function SchedulePage() {
         ))}
         <div className="flex items-center gap-1.5 text-xs text-[color:var(--text-secondary)]">
           <div className="w-3 h-3 rounded bg-stone-300" />
-          <span>Indisponível</span>
+          <span>{t("unavailable")}</span>
         </div>
       </div>
 
@@ -699,8 +689,8 @@ export default function SchedulePage() {
         <Card>
           <div className="text-center py-8 text-[color:var(--text-muted)]">
             {employees.length === 0
-              ? "Adiciona funcionarios na pagina Equipa primeiro."
-              : "Cria turnos na pagina Turnos primeiro."}
+              ? t("addEmployeesFirst")
+              : t("createShiftsFirst")}
           </div>
         </Card>
       ) : (
@@ -715,7 +705,7 @@ export default function SchedulePage() {
                   const weekend = isWeekend(day);
                   const holiday = nationalHolidays[day];
                   const dayNum = day.slice(8);
-                  const dow = dayOfWeekPt(day);
+                  const dow = dayOfWeekPt(day, (key: string) => d(key));
                   const thClass =
                     "px-1 py-2 text-center font-medium border-b border-[color:var(--border-light)] min-w-[44px] " +
                     (holiday
@@ -779,7 +769,7 @@ export default function SchedulePage() {
 
                     const tdTitle =
                       unavailable && !entry
-                        ? "Indisponível"
+                        ? t("unavailable")
                         : cellViolations.length > 0
                         ? cellViolations.map((v) => v.rule).join("\n")
                         : undefined;
@@ -828,7 +818,7 @@ export default function SchedulePage() {
       <Modal
         open={!!assignModal}
         onClose={() => setAssignModal(null)}
-        title="Atribuir turno"
+        title={t("assignShiftTitle")}
         size="sm"
       >
         {assignModal && (
@@ -837,7 +827,7 @@ export default function SchedulePage() {
               <span className="font-medium">{assignModal.userName}</span>
               {" — "}
               {parseInt(assignModal.date.slice(8))}{" "}
-              {MONTH_NAMES[parseInt(assignModal.date.slice(5, 7)) - 1]}
+              {m(["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"][parseInt(assignModal.date.slice(5, 7)) - 1])}
               {nationalHolidays[assignModal.date] && (
                 <Badge variant="danger" className="ml-2">
                   {nationalHolidays[assignModal.date]}
@@ -845,7 +835,7 @@ export default function SchedulePage() {
               )}
               {isUnavailable(assignModal.userId, assignModal.date) && (
                 <Badge variant="warning" className="ml-2">
-                  Indisponível
+                  {t("unavailable")}
                 </Badge>
               )}
             </p>
@@ -882,7 +872,7 @@ export default function SchedulePage() {
                   loading={saving}
                   className="text-[color:var(--danger)] hover:text-[color:var(--danger)] hover:bg-[color:var(--danger-soft)] w-full"
                 >
-                  Remover atribuicao
+                  {t("assignShiftTitle")}
                 </Button>
               </div>
             )}
@@ -893,14 +883,14 @@ export default function SchedulePage() {
       <Modal
         open={!!violationModal}
         onClose={() => setViolationModal(null)}
-        title="Problemas de conformidade"
+        title={t("complianceIssuesTitle")}
         size="lg"
       >
         {violationModal && (
           <div className="space-y-3 max-h-[60vh] overflow-y-auto">
             {violationModal.length === 0 ? (
               <p className="text-sm text-[color:var(--text-muted)]">
-                Nenhum problema encontrado.
+                {t("noIssuesFound")}
               </p>
             ) : (
               violationModal.map((v, i) => {
@@ -933,7 +923,7 @@ export default function SchedulePage() {
       <Modal
         open={showGenerateModal}
         onClose={closeGenerateModal}
-        title="Gerar Horário Automaticamente"
+        title={t("autoGenerateTitle")}
         size="md"
       >
         <div className="space-y-4">
@@ -946,7 +936,7 @@ export default function SchedulePage() {
               )}
               {!canGenerate && (
                 <div className="text-sm text-[color:var(--warning)] bg-[color:var(--warning-soft)] border border-[color:var(--warning-soft)] rounded-md px-3 py-2">
-                  <p className="font-medium mb-1">Ainda não dá para gerar:</p>
+                  <p className="font-medium mb-1">{t("cannotGenerateYet")}:</p>
                   <ul className="list-disc ml-5 space-y-0.5">
                     {generateIssues.map((issue) => (
                       <li key={issue}>{issue}</li>
@@ -955,21 +945,17 @@ export default function SchedulePage() {
                 </div>
               )}
               <p className="text-sm text-[color:var(--text-secondary)]">
-                O algoritmo distribui os turnos pelos funcionarios respeitando
-                as regras de compliance, indisponibilidades aprovadas e
-                equilibrio de fairness.
+                {t("algorithmDescription")}
                 {entries.length > 0 && (
                   <span className="block mt-1 text-[color:var(--warning)] font-medium">
-                    Nota: Já existem {entries.length} atribuições. O algoritmo
-                    apenas preenche os turnos em falta. Para recomeçar, limpe o
-                    horario primeiro.
+                    {t("noteAlreadyAssignments")} {entries.length}. {t("algorithmFillsOnly")}. {t("clearFirstToRestart")}
                   </span>
                 )}
               </p>
 
               <div>
                 <h4 className="text-sm font-medium text-[color:var(--text-primary)] mb-2">
-                  Pessoas por turno (pode ajustar)
+                  {t("staffPerShift")}
                 </h4>
                 <div className="space-y-2">
                   {shifts.map((shift) => (
@@ -1004,21 +990,20 @@ export default function SchedulePage() {
 
               {Object.keys(unavailableDays).length > 0 && (
                 <p className="text-xs text-[color:var(--text-muted)]">
-                  {Object.keys(unavailableDays).length} funcionario(s) com
-                  indisponibilidades aprovadas este mes.
+                  {t("employeesWithUnavailability")} {Object.keys(unavailableDays).length}
                 </p>
               )}
 
               <div className="flex gap-2 justify-end pt-2">
                 <Button variant="ghost" onClick={closeGenerateModal}>
-                  Cancelar
+                  {t("cancel")}
                 </Button>
                 <Button
                   onClick={handleGenerate}
                   loading={generating}
                   disabled={!canGenerate}
                 >
-                  Pré-visualizar
+                  {t("preview")}
                 </Button>
               </div>
             </>
@@ -1028,10 +1013,10 @@ export default function SchedulePage() {
             <>
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
                 <p className="text-sm font-medium text-blue-900">
-                  Pré-visualização
+                  {t("preview")}
                 </p>
                 <p className="text-xs text-blue-700 mt-1">
-                  Ainda nada foi guardado. Revise antes de confirmar.
+                  {t("notSavedYet")}
                 </p>
               </div>
 
@@ -1040,18 +1025,14 @@ export default function SchedulePage() {
                   {previewResult.totalEntries}
                 </p>
                 <p className="text-xs text-[color:var(--text-muted)]">
-                  turno{previewResult.totalEntries !== 1 ? "s" : ""} ser
-                  {previewResult.totalEntries !== 1 ? "ao" : "a"} atribuido
-                  {previewResult.totalEntries !== 1 ? "s" : ""}
+                  {t("shiftsToAssign")}
                 </p>
               </div>
 
               {previewResult.unfilled.length > 0 && (
                 <div className="bg-[color:var(--warning-soft)] border border-[color:var(--warning-soft)] rounded-lg p-3">
                   <p className="text-sm font-medium text-[color:var(--warning)] mb-2">
-                    {previewResult.unfilled.length} turno
-                    {previewResult.unfilled.length !== 1 ? "s" : ""} por
-                    preencher
+                    {t("shiftsToFill", { count: previewResult.unfilled.length })}
                   </p>
                   <div className="space-y-1 max-h-32 overflow-y-auto">
                     {previewResult.unfilled.slice(0, 10).map((u, i) => (
@@ -1069,7 +1050,7 @@ export default function SchedulePage() {
                     ))}
                     {previewResult.unfilled.length > 10 && (
                       <div className="text-xs text-[color:var(--warning)] italic">
-                        + {previewResult.unfilled.length - 10} mais…
+                        {t("andMoreShifts", { count: previewResult.unfilled.length - 10 })}
                       </div>
                     )}
                   </div>
@@ -1079,7 +1060,7 @@ export default function SchedulePage() {
               {previewResult.hours.length > 0 && (
                 <div>
                   <h4 className="text-sm font-medium text-[color:var(--text-primary)] mb-2">
-                    Horas por funcionario
+                    {t("hoursPerEmployee")}
                   </h4>
                   <div className="space-y-1 max-h-48 overflow-y-auto">
                     {previewResult.hours.map((h) => {
@@ -1111,10 +1092,10 @@ export default function SchedulePage() {
                   onClick={() => setPreviewResult(null)}
                   disabled={confirming}
                 >
-                  Voltar
+                  {t("back")}
                 </Button>
                 <Button onClick={confirmGenerate} loading={confirming}>
-                  Confirmar e gravar
+                  {t("confirmAndSave")}
                 </Button>
               </div>
             </>
@@ -1124,15 +1105,15 @@ export default function SchedulePage() {
             <>
               <div className="text-center py-4">
                 <h3 className="text-lg font-semibold text-[color:var(--text-primary)]">
-                  Horário gerado!
+                  {t("scheduleGenerated")}
                 </h3>
                 <p className="text-sm text-[color:var(--text-muted)] mt-1">
-                  As atribuições foram guardadas.
+                  {t("assignmentsSaved")}
                 </p>
               </div>
 
               <div className="flex gap-2 justify-end pt-2">
-                <Button onClick={closeGenerateModal}>Rever horário</Button>
+                <Button onClick={closeGenerateModal}>{t("reviewSchedule")}</Button>
               </div>
             </>
           )}

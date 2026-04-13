@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { useTranslations } from 'next-intl';
 import { MessageCircle, Send, ChevronDown, X } from 'lucide-react';
 import './chat-widget.css';
 
@@ -22,6 +23,7 @@ type WidgetStep = 'chat' | 'contact';
 const SHIFTERA_ORANGE = '#E8850A';
 
 export function ChatWidget() {
+  const t = useTranslations('chatWidget');
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
@@ -44,14 +46,9 @@ export function ChatWidget() {
   // Initialize with welcome message on first open
   useEffect(() => {
     if (isOpen && messages.length === 0) {
-      const welcomeMessages: Record<string, string> = {
-        pt: 'Olá! Como posso ajudá-lo com o Shiftera?',
-        en: 'Hi there! How can I help you with Shiftera?',
-        es: '¡Hola! ¿Cómo puedo ayudarte con Shiftera?',
-      };
-      addMessage('assistant', welcomeMessages[language]);
+      addMessage('assistant', t('welcomeMessage'));
     }
-  }, [isOpen, language, messages.length]);
+  }, [isOpen, language, messages.length, t]);
 
   const addMessage = (type: 'user' | 'assistant', content: string) => {
     const message: Message = {
@@ -82,30 +79,14 @@ export function ChatWidget() {
       if (data.results && data.results.length > 0) {
         const result = data.results[0] as SearchResult;
         addMessage('assistant', result.answer);
-
-        const moreHelpMessages: Record<string, string> = {
-          pt: 'Posso ajudá-lo com mais alguma coisa?',
-          en: 'Can I help you with anything else?',
-          es: '¿Puedo ayudarte con algo más?',
-        };
-        addMessage('assistant', moreHelpMessages[language]);
+        addMessage('assistant', t('helpMore'));
       } else {
-        const noResultMessages: Record<string, string> = {
-          pt: 'Desculpe, não encontrei uma resposta para essa pergunta. Você pode entrar em contato com o suporte?',
-          en: "Sorry, I couldn't find an answer to that question. Would you like to contact support?",
-          es: 'Lo siento, no pude encontrar una respuesta a esa pregunta. ¿Deseas contactar con el soporte?',
-        };
-        addMessage('assistant', noResultMessages[language]);
+        addMessage('assistant', t('errorNoAnswer'));
         setStep('contact');
       }
     } catch (error) {
       console.error('Search error:', error);
-      const errorMessages: Record<string, string> = {
-        pt: 'Desculpe, ocorreu um erro. Por favor, tente novamente.',
-        en: "Sorry, an error occurred. Please try again.",
-        es: 'Lo siento, ocurrió un error. Por favor, inténtelo de nuevo.',
-      };
-      addMessage('assistant', errorMessages[language]);
+      addMessage('assistant', t('errorNoAnswer'));
     } finally {
       setIsLoading(false);
     }
@@ -135,7 +116,7 @@ export function ChatWidget() {
 
       if (response.ok) {
         setSubmitStatus('success');
-        addMessage('assistant', 'Thank you for your message! Our support team will get back to you shortly.');
+        addMessage('assistant', t('thankYou'));
         setFormData({ name: '', email: '', message: '' });
         setTimeout(() => {
           setStep('chat');
@@ -159,31 +140,6 @@ export function ChatWidget() {
     setStep('chat');
   };
 
-  const contactFormLabels: Record<string, Record<string, string>> = {
-    pt: {
-      name: 'Nome',
-      email: 'Email',
-      message: 'Mensagem',
-      submit: 'Enviar',
-      needsHelp: 'Precisa de mais ajuda?',
-    },
-    en: {
-      name: 'Name',
-      email: 'Email',
-      message: 'Message',
-      submit: 'Send',
-      needsHelp: 'Need more help?',
-    },
-    es: {
-      name: 'Nombre',
-      email: 'Correo',
-      message: 'Mensaje',
-      submit: 'Enviar',
-      needsHelp: '¿Necesitas más ayuda?',
-    },
-  };
-
-  const labels = contactFormLabels[language];
 
   return (
     <>
@@ -253,13 +209,7 @@ export function ChatWidget() {
                   type="text"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  placeholder={
-                    language === 'pt'
-                      ? 'Digite sua pergunta...'
-                      : language === 'es'
-                        ? 'Escribe tu pregunta...'
-                        : 'Type your question...'
-                  }
+                  placeholder={t('inputPlaceholder')}
                   disabled={isLoading}
                   className="chat-input"
                 />
@@ -274,11 +224,11 @@ export function ChatWidget() {
               </form>
             ) : (
               <form onSubmit={handleSubmitContact} className="contact-form">
-                <h3>{labels.needsHelp}</h3>
+                <h3>{t('contactFormTitle')}</h3>
 
                 <input
                   type="text"
-                  placeholder={labels.name}
+                  placeholder={t('nameLabel')}
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   disabled={submitStatus === 'loading'}
@@ -287,7 +237,7 @@ export function ChatWidget() {
 
                 <input
                   type="email"
-                  placeholder={labels.email}
+                  placeholder={t('emailLabel')}
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   disabled={submitStatus === 'loading'}
@@ -295,7 +245,7 @@ export function ChatWidget() {
                 />
 
                 <textarea
-                  placeholder={labels.message}
+                  placeholder={t('messageLabel')}
                   value={formData.message}
                   onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                   disabled={submitStatus === 'loading'}
@@ -316,7 +266,7 @@ export function ChatWidget() {
                   className="contact-submit"
                   style={{ backgroundColor: SHIFTERA_ORANGE }}
                 >
-                  {submitStatus === 'loading' ? 'Sending...' : labels.submit}
+                  {submitStatus === 'loading' ? t('submitButton') : t('submitButton')}
                 </button>
               </form>
             )}

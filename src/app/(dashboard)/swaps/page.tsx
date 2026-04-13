@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { logActivity } from "@/lib/activity-log";
 import { Button } from "@/components/ui/button";
@@ -29,6 +30,7 @@ interface SwapWithDetails {
 type TabFilter = "pending" | "approved" | "rejected" | "all";
 
 export default function SwapsPage() {
+  const t = useTranslations("swaps");
   const [swaps, setSwaps] = useState<SwapWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<TabFilter>("pending");
@@ -215,26 +217,26 @@ export default function SwapsPage() {
   const tabs: { key: TabFilter; label: string; count: number }[] = [
     {
       key: "pending",
-      label: "Pendentes",
+      label: t("tabPending"),
       count: swaps.filter((s) => s.status === "pending").length,
     },
     {
       key: "approved",
-      label: "Aprovados",
+      label: t("tabApproved"),
       count: swaps.filter((s) => s.status === "approved").length,
     },
     {
       key: "rejected",
-      label: "Rejeitados",
+      label: t("tabRejected"),
       count: swaps.filter((s) => s.status === "rejected").length,
     },
-    { key: "all", label: "Todos", count: swaps.length },
+    { key: "all", label: t("tabAll"), count: swaps.length },
   ];
 
   if (loading) {
     return (
       <div className="space-y-6">
-        <h1 className="text-2xl font-bold text-stone-900">Trocas</h1>
+        <h1 className="text-2xl font-bold text-stone-900">{t("title")}</h1>
         <div className="text-center py-12 text-stone-500">A carregar...</div>
       </div>
     );
@@ -244,8 +246,8 @@ export default function SwapsPage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-stone-900">Trocas</h1>
-        <Button onClick={openNewSwap}>Pedir troca</Button>
+        <h1 className="text-2xl font-bold text-stone-900">{t("title")}</h1>
+        <Button onClick={openNewSwap}>{t("newSwapButton")}</Button>
       </div>
 
       {/* Tabs */}
@@ -281,8 +283,8 @@ export default function SwapsPage() {
         <Card>
           <div className="text-center py-8 text-stone-500">
             {tab === "pending"
-              ? "Nenhum pedido de troca pendente."
-              : "Nenhum pedido de troca encontrado."}
+              ? t("noPendingSwaps")
+              : t("noSwapsFound")}
           </div>
         </Card>
       ) : (
@@ -303,10 +305,10 @@ export default function SwapsPage() {
                       }
                     >
                       {swap.status === "pending"
-                        ? "Pendente"
+                        ? t("statuses.pending")
                         : swap.status === "approved"
-                        ? "Aprovado"
-                        : "Rejeitado"}
+                        ? t("statuses.approved")
+                        : t("statuses.rejected")}
                     </Badge>
                     <span className="text-xs text-stone-400">
                       {new Date(swap.created_at).toLocaleDateString("pt-PT")}
@@ -375,7 +377,7 @@ export default function SwapsPage() {
                       onClick={() => handleAction(swap.id, "approved")}
                       loading={processing === swap.id}
                     >
-                      Aprovar
+                      {t("approveButton")}
                     </Button>
                     <Button
                       variant="ghost"
@@ -384,7 +386,7 @@ export default function SwapsPage() {
                       loading={processing === swap.id}
                       className="text-red-600 hover:text-red-700 hover:bg-red-50"
                     >
-                      Rejeitar
+                      {t("rejectButton")}
                     </Button>
                   </div>
                 )}
@@ -398,18 +400,18 @@ export default function SwapsPage() {
       <Modal
         open={showNewSwap}
         onClose={() => setShowNewSwap(false)}
-        title="Pedir troca de turno"
+        title={t("modalTitle")}
         size="md"
       >
         <div className="space-y-4">
           {/* Select my shift */}
           <div>
             <label className="block text-sm font-medium text-stone-700 mb-1">
-              O meu turno
+              {t("myShiftLabel")}
             </label>
             {myEntries.length === 0 ? (
               <p className="text-sm text-stone-500">
-                Não tens turnos futuros atribuídos.
+                {t("noFutureShifts")}
               </p>
             ) : (
               <div className="space-y-2 max-h-48 overflow-y-auto">
@@ -448,14 +450,14 @@ export default function SwapsPage() {
           {/* Select colleague */}
           <div>
             <label className="block text-sm font-medium text-stone-700 mb-1">
-              Trocar com
+              {t("selectColleagueLabel")}
             </label>
             <select
               value={selectedTarget}
               onChange={(e) => setSelectedTarget(e.target.value)}
               className="block w-full rounded-lg border border-stone-300 px-3 py-2 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
             >
-              <option value="">Selecionar colega...</option>
+              <option value="">{t("selectColleagueOption")}</option>
               {colleagues.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.full_name}
@@ -467,12 +469,12 @@ export default function SwapsPage() {
           {/* Reason */}
           <div>
             <label className="block text-sm font-medium text-stone-700 mb-1">
-              Motivo (opcional)
+              {t("reasonLabel")}
             </label>
             <textarea
               value={swapReason}
               onChange={(e) => setSwapReason(e.target.value)}
-              placeholder="Explica brevemente o motivo da troca..."
+              placeholder={t("reasonPlaceholder")}
               rows={2}
               className="block w-full rounded-lg border border-stone-300 px-3 py-2 text-sm text-stone-900 placeholder:text-stone-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
@@ -480,14 +482,14 @@ export default function SwapsPage() {
 
           <div className="flex justify-end gap-2 pt-2">
             <Button variant="ghost" onClick={() => setShowNewSwap(false)}>
-              Cancelar
+              {t("cancelButton")}
             </Button>
             <Button
               onClick={submitSwap}
               disabled={!selectedEntry || !selectedTarget}
               loading={submitting}
             >
-              Enviar pedido
+              {t("submitButton")}
             </Button>
           </div>
         </div>

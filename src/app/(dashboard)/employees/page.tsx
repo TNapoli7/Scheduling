@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { logActivity } from "@/lib/activity-log";
 import { Button } from "@/components/ui/button";
@@ -10,42 +11,6 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Modal } from "@/components/ui/modal";
 import type { Profile } from "@/types/database";
-
-const roleOptions = [
-  { value: "admin", label: "Administrador" },
-  { value: "manager", label: "Gestor" },
-  { value: "employee", label: "Funcionário" },
-];
-
-const credentialOptions = [
-  { value: "", label: "Sem credencial" },
-  { value: "farmaceutico", label: "Farmaceutico" },
-  { value: "tecnico", label: "Técnico de Farmácia" },
-  { value: "auxiliar", label: "Auxiliar" },
-  { value: "enfermeiro", label: "Enfermeiro/a" },
-  { value: "medico", label: "Medico/a" },
-  { value: "dentista", label: "Dentista" },
-  { value: "fisioterapeuta", label: "Fisioterapeuta" },
-  { value: "rececionista", label: "Rececionista" },
-  { value: "outro", label: "Outro" },
-];
-
-const contractOptions = [
-  { value: "full_time", label: "Tempo inteiro" },
-  { value: "part_time", label: "Part-time" },
-];
-
-const roleBadge: Record<string, "info" | "success" | "default"> = {
-  admin: "info",
-  manager: "success",
-  employee: "default",
-};
-
-const roleLabel: Record<string, string> = {
-  admin: "Admin",
-  manager: "Gestor",
-  employee: "Funcionário",
-};
 
 type EmployeeForm = {
   email: string;
@@ -65,7 +30,14 @@ const emptyForm: EmployeeForm = {
   weekly_hours: 40,
 };
 
+const roleBadge: Record<string, "info" | "success" | "default"> = {
+  admin: "info",
+  manager: "success",
+  employee: "default",
+};
+
 export default function EmployeesPage() {
+  const t = useTranslations("employees");
   const [employees, setEmployees] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -76,6 +48,36 @@ export default function EmployeesPage() {
   const [search, setSearch] = useState("");
 
   const supabase = createClient();
+
+  const roleOptions = [
+    { value: "admin", label: t("roles.admin") },
+    { value: "manager", label: t("roles.manager") },
+    { value: "employee", label: t("roles.employee") },
+  ];
+
+  const credentialOptions = [
+    { value: "", label: t("credentials.none") },
+    { value: "farmaceutico", label: t("credentials.farmaceutico") },
+    { value: "tecnico", label: t("credentials.tecnico") },
+    { value: "auxiliar", label: t("credentials.auxiliar") },
+    { value: "enfermeiro", label: t("credentials.enfermeiro") },
+    { value: "medico", label: t("credentials.medico") },
+    { value: "dentista", label: t("credentials.dentista") },
+    { value: "fisioterapeuta", label: t("credentials.fisioterapeuta") },
+    { value: "rececionista", label: t("credentials.rececionista") },
+    { value: "outro", label: t("credentials.outro") },
+  ];
+
+  const contractOptions = [
+    { value: "full_time", label: t("contracts.full_time") },
+    { value: "part_time", label: t("contracts.part_time") },
+  ];
+
+  const roleLabel: Record<string, string> = {
+    admin: t("roles.admin"),
+    manager: t("roles.manager"),
+    employee: t("roles.employee"),
+  };
 
   const fetchEmployees = useCallback(async () => {
     const { data } = await supabase
@@ -116,7 +118,7 @@ export default function EmployeesPage() {
     setError("");
 
     if (!form.full_name.trim()) {
-      setError("Nome e obrigatorio");
+      setError(t("errorRequired"));
       setSaving(false);
       return;
     }
@@ -144,7 +146,7 @@ export default function EmployeesPage() {
     } else {
       // Create employee via server API (no email sent)
       if (!form.email.trim()) {
-        setError("Email e obrigatorio");
+        setError(t("errorEmailRequired"));
         setSaving(false);
         return;
       }
@@ -165,7 +167,7 @@ export default function EmployeesPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error || "Erro ao criar funcionario");
+        setError(data.error || t("errorCreate"));
         setSaving(false);
         return;
       }
@@ -198,22 +200,22 @@ export default function EmployeesPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-[color:var(--text-primary)] font-display tracking-tight">Equipa</h1>
+          <h1 className="text-2xl font-bold text-[color:var(--text-primary)] font-display tracking-tight">{t("title")}</h1>
           <p className="text-sm text-[color:var(--text-muted)] mt-1">
-            {activeCount} ativo{activeCount !== 1 ? "s" : ""} de {employees.length} total
+            {activeCount} {activeCount === 1 ? t("active") : t("active")} {t("total")} {employees.length}
           </p>
         </div>
         <Button onClick={openAdd}>
           <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
           </svg>
-          Adicionar
+          {t("addButton")}
         </Button>
       </div>
 
       {/* Search */}
       <Input
-        placeholder="Pesquisar por nome, email ou credencial..."
+        placeholder={t("searchPlaceholder")}
         value={search}
         onChange={(e) => setSearch(e.target.value)}
       />
@@ -221,15 +223,15 @@ export default function EmployeesPage() {
       {/* Table */}
       <Card padding="sm">
         {loading ? (
-          <div className="text-center py-12 text-[color:var(--text-muted)]">A carregar...</div>
+          <div className="text-center py-12 text-[color:var(--text-muted)]">{t("loading")}</div>
         ) : filtered.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-[color:var(--text-muted)]">
-              {search ? "Nenhum resultado encontrado." : "Ainda não tens membros na equipa."}
+              {search ? t("noResults") : t("noTeamMembers")}
             </p>
             {!search && (
               <Button onClick={openAdd} variant="ghost" className="mt-2">
-                Adicionar o primeiro membro
+                {t("addFirstMember")}
               </Button>
             )}
           </div>
@@ -238,12 +240,12 @@ export default function EmployeesPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-[color:var(--border-light)]">
-                  <th className="text-left py-3 px-4 font-medium text-[color:var(--text-muted)]">Nome</th>
-                  <th className="text-left py-3 px-4 font-medium text-[color:var(--text-muted)] hidden sm:table-cell">Credencial</th>
-                  <th className="text-left py-3 px-4 font-medium text-[color:var(--text-muted)] hidden md:table-cell">Contrato</th>
-                  <th className="text-left py-3 px-4 font-medium text-[color:var(--text-muted)]">Role</th>
-                  <th className="text-left py-3 px-4 font-medium text-[color:var(--text-muted)]">Estado</th>
-                  <th className="text-right py-3 px-4 font-medium text-[color:var(--text-muted)]">Acoes</th>
+                  <th className="text-left py-3 px-4 font-medium text-[color:var(--text-muted)]">{t("tableNameHeader")}</th>
+                  <th className="text-left py-3 px-4 font-medium text-[color:var(--text-muted)] hidden sm:table-cell">{t("tableCredentialHeader")}</th>
+                  <th className="text-left py-3 px-4 font-medium text-[color:var(--text-muted)] hidden md:table-cell">{t("tableContractHeader")}</th>
+                  <th className="text-left py-3 px-4 font-medium text-[color:var(--text-muted)]">{t("tableRoleHeader")}</th>
+                  <th className="text-left py-3 px-4 font-medium text-[color:var(--text-muted)]">{t("tableStatusHeader")}</th>
+                  <th className="text-right py-3 px-4 font-medium text-[color:var(--text-muted)]">{t("tableActionsHeader")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -259,7 +261,7 @@ export default function EmployeesPage() {
                       {emp.credential || "—"}
                     </td>
                     <td className="py-3 px-4 text-[color:var(--text-secondary)] hidden md:table-cell">
-                      {emp.contract_type === "full_time" ? `Tempo inteiro (${emp.weekly_hours}h)` : `Part-time (${emp.weekly_hours}h)`}
+                      {emp.contract_type === "full_time" ? `${t("contracts.full_time")} (${emp.weekly_hours}h)` : `${t("contracts.part_time")} (${emp.weekly_hours}h)`}
                     </td>
                     <td className="py-3 px-4">
                       <Badge variant={roleBadge[emp.role] || "default"}>
@@ -268,20 +270,20 @@ export default function EmployeesPage() {
                     </td>
                     <td className="py-3 px-4">
                       <Badge variant={emp.is_active ? "success" : "danger"}>
-                        {emp.is_active ? "Ativo" : "Inativo"}
+                        {emp.is_active ? t("activeStatus") : t("inactiveStatus")}
                       </Badge>
                     </td>
                     <td className="py-3 px-4 text-right">
                       <div className="flex items-center justify-end gap-2">
                         <Button variant="ghost" size="sm" onClick={() => openEdit(emp)}>
-                          Editar
+                          {t("editButton")}
                         </Button>
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={() => toggleActive(emp)}
                         >
-                          {emp.is_active ? "Desativar" : "Ativar"}
+                          {emp.is_active ? t("deactivateButton") : t("activateButton")}
                         </Button>
                       </div>
                     </td>
@@ -297,7 +299,7 @@ export default function EmployeesPage() {
       <Modal
         open={showModal}
         onClose={() => setShowModal(false)}
-        title={editingId ? "Editar membro" : "Adicionar membro"}
+        title={editingId ? t("modalEditTitle") : t("modalAddTitle")}
       >
         <div className="space-y-4">
           {error && (
@@ -308,9 +310,9 @@ export default function EmployeesPage() {
 
           {!editingId && (
             <Input
-              label="Email"
+              label={t("emailLabel")}
               type="email"
-              placeholder="nome@empresa.pt"
+              placeholder={t("emailPlaceholder")}
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
               required
@@ -318,8 +320,8 @@ export default function EmployeesPage() {
           )}
 
           <Input
-            label="Nome completo"
-            placeholder="Maria Silva"
+            label={t("fullNameLabel")}
+            placeholder={t("fullNamePlaceholder")}
             value={form.full_name}
             onChange={(e) => setForm({ ...form, full_name: e.target.value })}
             required
@@ -327,13 +329,13 @@ export default function EmployeesPage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Select
-              label="Funcao"
+              label={t("functionLabel")}
               value={form.role}
               onChange={(e) => setForm({ ...form, role: e.target.value })}
               options={roleOptions}
             />
             <Select
-              label="Credencial"
+              label={t("credentialLabel")}
               value={form.credential}
               onChange={(e) => setForm({ ...form, credential: e.target.value })}
               options={credentialOptions}
@@ -342,7 +344,7 @@ export default function EmployeesPage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Select
-              label="Contrato"
+              label={t("contractLabel")}
               value={form.contract_type}
               onChange={(e) => setForm({
                 ...form,
@@ -352,7 +354,7 @@ export default function EmployeesPage() {
               options={contractOptions}
             />
             <Input
-              label="Horas semanais"
+              label={t("hoursLabel")}
               type="number"
               min={1}
               max={60}
@@ -363,10 +365,10 @@ export default function EmployeesPage() {
 
           <div className="flex justify-end gap-3 pt-4 border-t border-[color:var(--border-light)]">
             <Button variant="secondary" onClick={() => setShowModal(false)}>
-              Cancelar
+              {t("cancelButton")}
             </Button>
             <Button onClick={handleSave} loading={saving}>
-              {editingId ? "Guardar" : "Criar funcionario"}
+              {editingId ? t("saveButton") : t("createButton")}
             </Button>
           </div>
         </div>

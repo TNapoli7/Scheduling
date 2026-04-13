@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { logActivity } from "@/lib/activity-log";
 import { Button } from "@/components/ui/button";
@@ -9,17 +10,6 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Modal } from "@/components/ui/modal";
 import type { ShiftTemplate } from "@/types/database";
-
-const defaultColors = [
-  { value: "#3B82F6", label: "Azul" },
-  { value: "#10B981", label: "Verde" },
-  { value: "#F59E0B", label: "Amarelo" },
-  { value: "#EF4444", label: "Vermelho" },
-  { value: "#8B5CF6", label: "Roxo" },
-  { value: "#EC4899", label: "Rosa" },
-  { value: "#06B6D4", label: "Ciano" },
-  { value: "#F97316", label: "Laranja" },
-];
 
 type ShiftForm = {
   name: string;
@@ -48,6 +38,18 @@ function computeDuration(start: string, end: string): string {
 }
 
 export default function ShiftsPage() {
+  const t = useTranslations("shifts");
+
+  const defaultColors = [
+    { value: "#3B82F6", label: t("colors.blue") },
+    { value: "#10B981", label: t("colors.green") },
+    { value: "#F59E0B", label: t("colors.yellow") },
+    { value: "#EF4444", label: t("colors.red") },
+    { value: "#8B5CF6", label: t("colors.purple") },
+    { value: "#EC4899", label: t("colors.pink") },
+    { value: "#06B6D4", label: t("colors.cyan") },
+    { value: "#F97316", label: t("colors.orange") },
+  ];
   const [shifts, setShifts] = useState<ShiftTemplate[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -96,7 +98,7 @@ export default function ShiftsPage() {
     setError("");
 
     if (!form.name.trim()) {
-      setError("Nome do turno e obrigatorio");
+      setError(t("errorRequired"));
       setSaving(false);
       return;
     }
@@ -125,7 +127,7 @@ export default function ShiftsPage() {
     } else {
       // Need to get the user's org_id for new templates
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { setError("Sessão expirada"); setSaving(false); return; }
+      if (!user) { setError(t("errorRequired")); setSaving(false); return; }
 
       const { data: profile } = await supabase
         .from("profiles")
@@ -134,7 +136,7 @@ export default function ShiftsPage() {
         .single();
 
       if (!profile?.org_id) {
-        setError("Organização não encontrada");
+        setError(t("errorRequired"));
         setSaving(false);
         return;
       }
@@ -179,10 +181,10 @@ export default function ShiftsPage() {
     if (!profile?.org_id) return;
 
     const presets = [
-      { name: "Manha", start_time: "08:00", end_time: "16:00", min_staff: 2, color: "#F59E0B", org_id: profile.org_id },
-      { name: "Tarde", start_time: "14:00", end_time: "22:00", min_staff: 2, color: "#3B82F6", org_id: profile.org_id },
-      { name: "Noite", start_time: "22:00", end_time: "08:00", min_staff: 1, color: "#8B5CF6", org_id: profile.org_id },
-      { name: "Partido", start_time: "09:00", end_time: "13:00", min_staff: 1, color: "#10B981", org_id: profile.org_id },
+      { name: t("presets.morning"), start_time: "08:00", end_time: "16:00", min_staff: 2, color: "#F59E0B", org_id: profile.org_id },
+      { name: t("presets.afternoon"), start_time: "14:00", end_time: "22:00", min_staff: 2, color: "#3B82F6", org_id: profile.org_id },
+      { name: t("presets.night"), start_time: "22:00", end_time: "08:00", min_staff: 1, color: "#8B5CF6", org_id: profile.org_id },
+      { name: t("presets.split"), start_time: "09:00", end_time: "13:00", min_staff: 1, color: "#10B981", org_id: profile.org_id },
     ];
 
     await supabase.from("shift_templates").insert(presets);
@@ -196,29 +198,29 @@ export default function ShiftsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-stone-900">Turnos</h1>
+          <h1 className="text-2xl font-bold text-stone-900">{t("title")}</h1>
           <p className="text-sm text-stone-500 mt-1">
-            {activeShifts.length} turno{activeShifts.length !== 1 ? "s" : ""} ativo{activeShifts.length !== 1 ? "s" : ""}
+            {activeShifts.length} {t("title")} {activeShifts.length === 1 ? t("subtitle") : ""}
           </p>
         </div>
         <div className="flex gap-2">
           {shifts.length === 0 && (
             <Button variant="secondary" onClick={loadPresets}>
-              Carregar exemplos
+              {t("loadPresetsButton")}
             </Button>
           )}
           <Button onClick={openAdd}>
             <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
             </svg>
-            Novo turno
+            {t("newShiftButton")}
           </Button>
         </div>
       </div>
 
       {/* Shift cards */}
       {loading ? (
-        <div className="text-center py-12 text-stone-500">A carregar...</div>
+        <div className="text-center py-12 text-stone-500">{t("subtitle")}</div>
       ) : shifts.length === 0 ? (
         <Card>
           <div className="text-center py-8">
@@ -227,13 +229,13 @@ export default function ShiftsPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <p className="text-stone-500 mb-4">Ainda não tens turnos definidos.</p>
+            <p className="text-stone-500 mb-4">{t("noShifts")}</p>
             <div className="flex justify-center gap-3">
               <Button variant="secondary" onClick={loadPresets}>
-                Carregar exemplos
+                {t("loadPresetsButton")}
               </Button>
               <Button onClick={openAdd}>
-                Criar turno
+                {t("newShiftButton")}
               </Button>
             </div>
           </div>
@@ -258,19 +260,19 @@ export default function ShiftsPage() {
                     </p>
                   </div>
                 </div>
-                {!shift.is_active && <Badge variant="danger">Inativo</Badge>}
+                {!shift.is_active && <Badge variant="danger">{t("inactiveStatus")}</Badge>}
               </div>
 
               <div className="mt-3 flex items-center justify-between">
                 <p className="text-sm text-stone-500">
-                  Min. {shift.min_staff} pessoa{shift.min_staff !== 1 ? "s" : ""}
+                  Min. {shift.min_staff} {t("minStaffLabel")}
                 </p>
                 <div className="flex gap-1">
                   <Button variant="ghost" size="sm" onClick={() => openEdit(shift)}>
-                    Editar
+                    {t("editButton")}
                   </Button>
                   <Button variant="ghost" size="sm" onClick={() => toggleActive(shift)}>
-                    {shift.is_active ? "Desativar" : "Ativar"}
+                    {shift.is_active ? t("deactivateButton") : t("activateButton")}
                   </Button>
                 </div>
               </div>
@@ -283,7 +285,7 @@ export default function ShiftsPage() {
       <Modal
         open={showModal}
         onClose={() => setShowModal(false)}
-        title={editingId ? "Editar turno" : "Novo turno"}
+        title={editingId ? t("modalEditTitle") : t("modalAddTitle")}
       >
         <div className="space-y-4">
           {error && (
@@ -293,8 +295,8 @@ export default function ShiftsPage() {
           )}
 
           <Input
-            label="Nome do turno"
-            placeholder="Ex: Manha, Tarde, Noite"
+            label={t("nameLabel")}
+            placeholder={t("namePlaceholder")}
             value={form.name}
             onChange={(e) => setForm({ ...form, name: e.target.value })}
             required
@@ -302,13 +304,13 @@ export default function ShiftsPage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input
-              label="Hora início"
+              label={t("startTimeLabel")}
               type="time"
               value={form.start_time}
               onChange={(e) => setForm({ ...form, start_time: e.target.value })}
             />
             <Input
-              label="Hora fim"
+              label={t("endTimeLabel")}
               type="time"
               value={form.end_time}
               onChange={(e) => setForm({ ...form, end_time: e.target.value })}
@@ -317,23 +319,23 @@ export default function ShiftsPage() {
 
           {form.start_time && form.end_time && (
             <p className="text-sm text-stone-500">
-              Duração: {computeDuration(form.start_time, form.end_time)}
+              {t("durationLabel")}: {computeDuration(form.start_time, form.end_time)}
             </p>
           )}
 
           <Input
-            label="Staff mínimo"
+            label={t("minStaffLabel")}
             type="number"
             min={1}
             max={20}
             value={form.min_staff}
             onChange={(e) => setForm({ ...form, min_staff: parseInt(e.target.value) || 1 })}
-            hint="Número mínimo de pessoas por turno"
+            hint={t("minStaffHint")}
           />
 
           {/* Color picker */}
           <div className="space-y-1">
-            <label className="block text-sm font-medium text-stone-700">Cor</label>
+            <label className="block text-sm font-medium text-stone-700">{t("colorLabel")}</label>
             <div className="flex gap-2 flex-wrap">
               {defaultColors.map((c) => (
                 <button
@@ -352,10 +354,10 @@ export default function ShiftsPage() {
 
           <div className="flex justify-end gap-3 pt-4 border-t border-stone-200">
             <Button variant="secondary" onClick={() => setShowModal(false)}>
-              Cancelar
+              {t("cancelButton")}
             </Button>
             <Button onClick={handleSave} loading={saving}>
-              {editingId ? "Guardar" : "Criar turno"}
+              {editingId ? t("saveButton") : t("createButton")}
             </Button>
           </div>
         </div>

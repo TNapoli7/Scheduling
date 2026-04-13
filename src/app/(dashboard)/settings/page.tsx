@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { logActivity } from "@/lib/activity-log";
 import { Button } from "@/components/ui/button";
@@ -12,38 +13,18 @@ import type { Organization } from "@/types/database";
 import { ActivityLogPanel } from "@/components/settings/ActivityLog";
 import { History } from "lucide-react";
 
-const TABS: { key: string; label: string; icon?: typeof History }[] = [
-  { key: "general", label: "Geral" },
-  { key: "activity", label: "Histórico de atividade", icon: History },
-];
-
 type TabKey = "general" | "activity";
-
-const sectorOptions = [
-  { value: "farmacia", label: "Farmácia" },
-  { value: "clinica", label: "Clínica" },
-  { value: "hospital", label: "Hospital" },
-  { value: "laboratorio", label: "Laboratório" },
-  { value: "consultorio", label: "Consultório" },
-  { value: "outro", label: "Outro" },
-];
-
-const WEEKDAYS = [
-  { key: "monday", label: "Segunda" },
-  { key: "tuesday", label: "Terca" },
-  { key: "wednesday", label: "Quarta" },
-  { key: "thursday", label: "Quinta" },
-  { key: "friday", label: "Sexta" },
-  { key: "saturday", label: "Sabado" },
-  { key: "sunday", label: "Domingo" },
-];
 
 type OperatingHours = Record<
   string,
   { open: string; close: string; closed: boolean }
 >;
 
+const WEEKDAY_KEYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
+
 export default function SettingsPage() {
+  const t = useTranslations("settingsPage");
+  const ts = useTranslations("settings");
   const [activeTab, setActiveTab] = useState<TabKey>("general");
   const [org, setOrg] = useState<Organization | null>(null);
   const [loading, setLoading] = useState(true);
@@ -89,12 +70,12 @@ export default function SettingsPage() {
 
       // Init operating hours with defaults
       const defaultHours: OperatingHours = {};
-      for (const day of WEEKDAYS) {
-        const existing = orgData.operating_hours?.[day.key];
-        defaultHours[day.key] = existing || {
+      for (const dayKey of WEEKDAY_KEYS) {
+        const existing = orgData.operating_hours?.[dayKey];
+        defaultHours[dayKey] = existing || {
           open: "09:00",
           close: "18:00",
-          closed: day.key === "sunday",
+          closed: dayKey === "sunday",
         };
       }
       setHours(defaultHours);
@@ -141,7 +122,7 @@ export default function SettingsPage() {
   if (loading) {
     return (
       <div className="space-y-6">
-        <h1 className="text-2xl font-bold text-stone-900">Definições</h1>
+        <h1 className="text-2xl font-bold text-stone-900">{t("title")}</h1>
         <div className="text-center py-12 text-stone-500">A carregar...</div>
       </div>
     );
@@ -150,31 +131,35 @@ export default function SettingsPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-stone-900">Definições</h1>
+        <h1 className="text-2xl font-bold text-stone-900">{t("title")}</h1>
         {success && (
-          <Badge variant="success">Guardado com sucesso</Badge>
+          <Badge variant="success">{t("savedSuccess")}</Badge>
         )}
       </div>
 
       {/* Tabs */}
       <div className="flex gap-1 border-b border-stone-200">
-        {TABS.map((tab) => {
-          const Icon = tab.icon;
-          return (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key as TabKey)}
-              className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors cursor-pointer ${
-                activeTab === tab.key
-                  ? "border-indigo-600 text-indigo-600"
-                  : "border-transparent text-stone-500 hover:text-stone-700 hover:border-stone-300"
-              }`}
-            >
-              {Icon && <Icon className="w-4 h-4" />}
-              {tab.label}
-            </button>
-          );
-        })}
+        <button
+          onClick={() => setActiveTab("general")}
+          className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors cursor-pointer ${
+            activeTab === "general"
+              ? "border-indigo-600 text-indigo-600"
+              : "border-transparent text-stone-500 hover:text-stone-700 hover:border-stone-300"
+          }`}
+        >
+          {t("tabGeneral")}
+        </button>
+        <button
+          onClick={() => setActiveTab("activity")}
+          className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors cursor-pointer ${
+            activeTab === "activity"
+              ? "border-indigo-600 text-indigo-600"
+              : "border-transparent text-stone-500 hover:text-stone-700 hover:border-stone-300"
+          }`}
+        >
+          <History className="w-4 h-4" />
+          {t("tabHistory")}
+        </button>
       </div>
 
       {/* Activity log tab */}
@@ -186,63 +171,70 @@ export default function SettingsPage() {
 
       {/* Company info */}
       <Card>
-        <CardTitle>Informação da empresa</CardTitle>
+        <CardTitle>{t("companyInfoTitle")}</CardTitle>
         <div className="mt-4 space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input
-              label="Nome"
+              label={t("nameLabel")}
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Nome da empresa"
             />
             <Select
-              label="Setor"
+              label={t("sectorLabel")}
               value={sector}
               onChange={(e) => setSector(e.target.value)}
-              options={sectorOptions}
+              options={[
+                { value: "farmacia", label: t("sectors.farmacia") },
+                { value: "clinica", label: t("sectors.clinica") },
+                { value: "hospital", label: t("sectors.hospital") },
+                { value: "laboratorio", label: t("sectors.laboratorio") },
+                { value: "consultorio", label: t("sectors.consultorio") },
+                { value: "outro", label: t("sectors.outro") },
+              ]}
             />
           </div>
           <Input
-            label="Morada"
+            label={t("addressLabel")}
             value={address}
             onChange={(e) => setAddress(e.target.value)}
             placeholder="Rua, número, código postal, cidade"
           />
           <Input
-            label="Feriado municipal"
+            label={t("municipalHolidayLabel")}
             type="date"
             value={municipalHoliday}
             onChange={(e) => setMunicipalHoliday(e.target.value)}
-            hint="Data do feriado municipal da tua localidade (ex: Santo Antonio em Lisboa a 13 de Junho)"
+            hint={t("municipalHolidayHint")}
           />
         </div>
       </Card>
 
       {/* Operating hours */}
       <Card>
-        <CardTitle>Horário de funcionamento</CardTitle>
+        <CardTitle>{t("workingHoursTitle")}</CardTitle>
         <div className="mt-4 space-y-3">
-          {WEEKDAYS.map((day) => {
-            const h = hours[day.key];
+          {WEEKDAY_KEYS.map((dayKey) => {
+            const h = hours[dayKey];
             if (!h) return null;
             return (
               <div
-                key={day.key}
+                key={dayKey}
                 className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4"
               >
                 <div className="w-24 text-sm font-medium text-stone-700">
-                  {day.label}
+                  {ts(dayKey)}
                 </div>
                 <label className="flex items-center gap-2 text-sm text-stone-600 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={h.closed}
                     onChange={(e) =>
-                      updateHours(day.key, "closed", e.target.checked)
+                      updateHours(dayKey, "closed", e.target.checked)
                     }
                     className="rounded border-stone-300 text-indigo-600 focus:ring-indigo-500"
                   />
-                  Encerrado
+                  {t("closedLabel")}
                 </label>
                 {!h.closed && (
                   <div className="flex items-center gap-2">
@@ -250,7 +242,7 @@ export default function SettingsPage() {
                       type="time"
                       value={h.open}
                       onChange={(e) =>
-                        updateHours(day.key, "open", e.target.value)
+                        updateHours(dayKey, "open", e.target.value)
                       }
                       className="rounded-lg border border-stone-300 px-3 py-1.5 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                     />
@@ -259,7 +251,7 @@ export default function SettingsPage() {
                       type="time"
                       value={h.close}
                       onChange={(e) =>
-                        updateHours(day.key, "close", e.target.value)
+                        updateHours(dayKey, "close", e.target.value)
                       }
                       className="rounded-lg border border-stone-300 px-3 py-1.5 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                     />
@@ -274,7 +266,7 @@ export default function SettingsPage() {
       {/* Subscription info */}
       {org && (
         <Card>
-          <CardTitle>Plano</CardTitle>
+          <CardTitle>{t("planTitle")}</CardTitle>
           <div className="mt-4 flex items-center gap-3">
             <Badge variant="info">
               {org.subscription_tier === "trial"
@@ -295,7 +287,7 @@ export default function SettingsPage() {
       {/* Save button */}
       <div className="flex justify-end">
         <Button onClick={handleSave} loading={saving}>
-          Guardar alterações
+          {t("saveButton")}
         </Button>
       </div>
 
