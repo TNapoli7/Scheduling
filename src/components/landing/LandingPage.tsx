@@ -1,30 +1,32 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { ChatWidget } from "@/components/chat/ChatWidget";
 import {
-  Calendar,
-  Users,
-  BarChart3,
-  Shield,
-  Clock,
   ArrowRight,
   Check,
-  Star,
-  Zap,
-  RefreshCw,
-  ChevronRight,
-  Building2,
+  ChevronDown,
 } from "lucide-react";
+
+const ORANGE_PRIMARY = "#E8850A";
+const ORANGE_GRADIENT = "#f5a623";
+const WARM_CREAM = "#F7F5F0";
 
 /* ───────── Navbar ───────── */
 function Navbar() {
+  const t = useTranslations("landing");
+
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-lg border-b border-stone-200/60">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-lg border-b border-stone-200/40">
       <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: "var(--primary)" }}>
-            <Calendar className="w-4 h-4 text-white" />
+          <div
+            className="w-8 h-8 rounded-lg flex items-center justify-center bg-gradient-to-br"
+            style={{ backgroundImage: `linear-gradient(135deg, ${ORANGE_PRIMARY}, ${ORANGE_GRADIENT})` }}
+          >
+            <span className="text-white font-bold text-sm">S</span>
           </div>
           <span className="text-lg font-bold text-stone-900">
             Shiftera
@@ -33,13 +35,13 @@ function Navbar() {
 
         <div className="hidden md:flex items-center gap-8 text-sm text-stone-600">
           <a href="#features" className="hover:text-stone-900 transition-colors">
-            Funcionalidades
+            {t("navbar.features")}
           </a>
           <a href="#pricing" className="hover:text-stone-900 transition-colors">
-            Preços
+            {t("navbar.pricing")}
           </a>
           <a href="#faq" className="hover:text-stone-900 transition-colors">
-            FAQ
+            {t("navbar.faq")}
           </a>
         </div>
 
@@ -48,14 +50,14 @@ function Navbar() {
             href="/login"
             className="text-sm font-medium text-stone-600 hover:text-stone-900 transition-colors"
           >
-            Entrar
+            {t("navbar.signIn")}
           </Link>
           <Link
             href="/register"
-            className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white rounded-lg shadow-sm transition-all hover:shadow-md"
-            style={{ backgroundColor: "var(--primary)" }}
+            className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white rounded-lg shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5"
+            style={{ backgroundColor: ORANGE_PRIMARY }}
           >
-            Começar grátis
+            {t("navbar.startFree")}
             <ArrowRight className="w-3.5 h-3.5" />
           </Link>
         </div>
@@ -66,56 +68,56 @@ function Navbar() {
 
 /* ───────── Hero ───────── */
 function Hero() {
+  const t = useTranslations("landing");
+
   return (
-    <section className="pt-32 pb-20 px-6">
+    <section className="pt-32 pb-20 px-6" style={{ background: `linear-gradient(135deg, ${WARM_CREAM}, rgba(232, 133, 10, 0.03))` }}>
       <div className="max-w-4xl mx-auto text-center">
         {/* Badge */}
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-50 text-indigo-700 text-xs font-medium mb-6">
-          <Zap className="w-3 h-3" />
-          14 dias grátis — sem cartão de crédito
+        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium mb-6" style={{ backgroundColor: "rgba(232, 133, 10, 0.08)", color: ORANGE_PRIMARY }}>
+          <span className="text-sm">⚡</span>
+          {t("hero.badge")}
         </div>
 
         <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-stone-900 tracking-tight leading-[1.1]">
-          Horários simples, justos
-          <br />
-          <span style={{ color: "var(--primary)" }}>e legais</span>
+          {t("hero.heading")}
         </h1>
 
-        <p className="mt-6 text-lg sm:text-xl text-stone-500 max-w-2xl mx-auto leading-relaxed">
-          A plataforma que simplifica a gestão de escalas para farmácias,
-          clínicas e laboratórios. Cria horários em minutos, não em horas.
+        <p className="mt-6 text-lg sm:text-xl text-stone-600 max-w-2xl mx-auto leading-relaxed">
+          {t("hero.description")}
         </p>
 
         <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
           <Link
             href="/register"
-            className="inline-flex items-center gap-2 px-6 py-3.5 text-base font-semibold text-white rounded-xl shadow-lg shadow-indigo-200 transition-all hover:shadow-xl hover:shadow-indigo-300 hover:-translate-y-0.5"
-            style={{ backgroundColor: "var(--primary)" }}
+            className="inline-flex items-center gap-2 px-6 py-3.5 text-base font-semibold text-white rounded-xl shadow-lg transition-all hover:shadow-xl hover:-translate-y-0.5"
+            style={{ backgroundColor: ORANGE_PRIMARY, boxShadow: `0 10px 25px rgba(232, 133, 10, 0.2)` }}
           >
-            Experimentar grátis
+            {t("hero.tryFree")}
             <ArrowRight className="w-4 h-4" />
           </Link>
           <a
             href="#features"
-            className="inline-flex items-center gap-2 px-6 py-3.5 text-base font-medium text-stone-600 bg-white border border-stone-200 rounded-xl shadow-sm hover:border-stone-300 hover:shadow-md transition-all"
+            className="inline-flex items-center gap-2 px-6 py-3.5 text-base font-medium text-stone-700 bg-white rounded-xl shadow-sm hover:shadow-md transition-all"
+            style={{ border: `1px solid rgba(232, 133, 10, 0.15)` }}
           >
-            Ver funcionalidades
-            <ChevronRight className="w-4 h-4" />
+            {t("hero.viewDemo")}
+            <ArrowRight className="w-4 h-4" />
           </a>
         </div>
 
         {/* Social proof */}
-        <div className="mt-14 flex flex-col sm:flex-row items-center justify-center gap-6 text-sm text-stone-500">
+        <div className="mt-14 flex flex-col sm:flex-row items-center justify-center gap-6 text-sm text-stone-600">
           <div className="flex items-center gap-1">
             {[...Array(5)].map((_, i) => (
-              <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />
+              <span key={i} className="text-lg">⭐</span>
             ))}
-            <span className="ml-1.5">Feito para o mercado português</span>
+            <span className="ml-2">{t("hero.madForPortugal")}</span>
           </div>
           <div className="hidden sm:block w-1 h-1 rounded-full bg-stone-300" />
           <div className="flex items-center gap-1.5">
-            <Shield className="w-4 h-4 text-teal-600" />
-            <span>Conforme legislação laboral PT</span>
+            <span className="text-lg">🛡️</span>
+            <span>{t("hero.compliantLaw")}</span>
           </div>
         </div>
       </div>
@@ -125,62 +127,72 @@ function Hero() {
 
 /* ───────── Screenshot / Visual ───────── */
 function AppPreview() {
+  const t = useTranslations("landing");
+
   return (
-    <section className="px-6 pb-20">
+    <section className="px-6 py-20 bg-white">
       <div className="max-w-5xl mx-auto">
-        <div className="relative rounded-2xl border border-stone-200 bg-white shadow-2xl shadow-stone-200/50 overflow-hidden">
-          {/* Mock browser bar */}
-          <div className="flex items-center gap-2 px-4 py-3 border-b border-stone-100 bg-stone-50">
-            <div className="flex gap-1.5">
-              <div className="w-3 h-3 rounded-full bg-stone-300" />
-              <div className="w-3 h-3 rounded-full bg-stone-300" />
-              <div className="w-3 h-3 rounded-full bg-stone-300" />
+        <div className="grid lg:grid-cols-2 gap-12 items-center">
+          {/* Left: Screenshot */}
+          <div className="relative rounded-2xl border overflow-hidden shadow-xl" style={{ borderColor: `rgba(232, 133, 10, 0.15)` }}>
+            <div className="flex items-center gap-2 px-4 py-3 border-b bg-stone-50" style={{ borderColor: `rgba(232, 133, 10, 0.08)` }}>
+              <div className="flex gap-1.5">
+                <div className="w-3 h-3 rounded-full bg-stone-300" />
+                <div className="w-3 h-3 rounded-full bg-stone-300" />
+                <div className="w-3 h-3 rounded-full bg-stone-300" />
+              </div>
             </div>
-            <div className="flex-1 mx-8">
-              <div className="h-6 bg-stone-100 rounded-md max-w-md mx-auto" />
-            </div>
-          </div>
-          {/* App mockup content */}
-          <div className="p-8 bg-gradient-to-br from-stone-50 to-white">
-            <div className="grid grid-cols-7 gap-2">
-              {["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"].map(
-                (day) => (
+            <div className="p-8" style={{ backgroundColor: WARM_CREAM }}>
+              <div className="grid grid-cols-7 gap-2">
+                {["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"].map((day) => (
                   <div key={day} className="text-center">
-                    <p className="text-xs font-medium text-stone-500 mb-2">
-                      {day}
-                    </p>
+                    <p className="text-xs font-medium text-stone-500 mb-2">{day}</p>
                     <div className="space-y-1.5">
                       {[...Array(day === "Dom" ? 1 : 3)].map((_, i) => (
                         <div
                           key={i}
                           className="h-8 rounded-md text-xs flex items-center justify-center font-medium"
                           style={{
-                            backgroundColor:
-                              i === 0
-                                ? "#EEF2FF"
-                                : i === 1
-                                ? "#CCFBF1"
-                                : "#FEF3C7",
-                            color:
-                              i === 0
-                                ? "#4F46E5"
-                                : i === 1
-                                ? "#0D9488"
-                                : "#D97706",
+                            backgroundColor: i === 0 ? `rgba(232, 133, 10, 0.1)` : i === 1 ? `rgba(76, 175, 80, 0.1)` : `rgba(33, 150, 243, 0.1)`,
+                            color: i === 0 ? ORANGE_PRIMARY : i === 1 ? "#4CAF50" : "#2196F3",
                           }}
                         >
-                          {i === 0
-                            ? "09-17h"
-                            : i === 1
-                            ? "14-22h"
-                            : "08-14h"}
+                          {i === 0 ? "09-17h" : i === 1 ? "14-22h" : "08-14h"}
                         </div>
                       ))}
                     </div>
                   </div>
-                ),
-              )}
+                ))}
+              </div>
             </div>
+          </div>
+
+          {/* Right: Content */}
+          <div>
+            <h2 className="text-3xl sm:text-4xl font-bold text-stone-900 mb-6">
+              {t("appPreview.heading")}
+            </h2>
+            <p className="text-lg text-stone-600 mb-8">
+              {t("appPreview.description")}
+            </p>
+
+            <ul className="space-y-4 mb-8">
+              {[t("appPreview.bullet1"), t("appPreview.bullet2"), t("appPreview.bullet3")].map((bullet, i) => (
+                <li key={i} className="flex items-start gap-3">
+                  <span className="text-2xl mt-1">✓</span>
+                  <span className="text-stone-700">{bullet}</span>
+                </li>
+              ))}
+            </ul>
+
+            <Link
+              href="/register"
+              className="inline-flex items-center gap-2 px-6 py-3.5 text-base font-semibold text-white rounded-xl transition-all hover:shadow-lg hover:-translate-y-0.5"
+              style={{ backgroundColor: ORANGE_PRIMARY, boxShadow: `0 10px 25px rgba(232, 133, 10, 0.2)` }}
+            >
+              {t("appPreview.startNow")}
+              <ArrowRight className="w-4 h-4" />
+            </Link>
           </div>
         </div>
       </div>
@@ -189,84 +201,48 @@ function AppPreview() {
 }
 
 /* ───────── Features ───────── */
-const features = [
-  {
-    icon: Calendar,
-    title: "Escalas automáticas",
-    desc: "Cria horários semanais com templates reutilizáveis. Ajusta turnos com drag-and-drop.",
-    color: "#4F46E5",
-    bg: "#EEF2FF",
-  },
-  {
-    icon: Users,
-    title: "Gestão de equipa",
-    desc: "Perfis de colaboradores, funções, disponibilidades e pedidos de troca — tudo num sítio.",
-    color: "#0D9488",
-    bg: "#CCFBF1",
-  },
-  {
-    icon: RefreshCw,
-    title: "Trocas e folgas",
-    desc: "Os colaboradores pedem trocas e folgas diretamente na app. Tu aprovas com um clique.",
-    color: "#D97706",
-    bg: "#FEF3C7",
-  },
-  {
-    icon: BarChart3,
-    title: "Fairness analytics",
-    desc: "Distribuição justa de turnos, fins-de-semana e feriados. Dashboards visuais para acompanhar.",
-    color: "#DC2626",
-    bg: "#FEF2F2",
-  },
-  {
-    icon: Shield,
-    title: "Conforme a lei",
-    desc: "Validações automáticas para o Código do Trabalho português: descansos, limites, feriados.",
-    color: "#7C3AED",
-    bg: "#F5F3FF",
-  },
-  {
-    icon: Clock,
-    title: "Exportar tudo",
-    desc: "Exporta escalas em PDF e Excel para afixar ou enviar. Relatórios prontos para a ACT.",
-    color: "#0891B2",
-    bg: "#ECFEFF",
-  },
-];
-
 function Features() {
+  const t = useTranslations("landing");
+
+  const features = [
+    { emoji: "📅", key: "automaticSchedules" },
+    { emoji: "👥", key: "teamManagement" },
+    { emoji: "🔄", key: "swapsTimeOff" },
+    { emoji: "📊", key: "fairnessAnalytics" },
+    { emoji: "⚖️", key: "compliance" },
+    { emoji: "📥", key: "export" },
+  ];
+
   return (
-    <section id="features" className="py-20 px-6 bg-white">
+    <section id="features" className="py-20 px-6" style={{ backgroundColor: WARM_CREAM }}>
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-14">
-          <p className="text-sm font-semibold uppercase tracking-wider mb-3" style={{ color: "var(--primary)" }}>
-            Funcionalidades
+          <p className="text-sm font-semibold uppercase tracking-wider mb-3" style={{ color: ORANGE_PRIMARY }}>
+            {t("features.sectionTitle")}
           </p>
           <h2 className="text-3xl sm:text-4xl font-bold text-stone-900">
-            Tudo o que precisas para gerir horários
+            {t("features.heading")}
           </h2>
-          <p className="mt-4 text-stone-500 max-w-xl mx-auto">
-            Desenhado para farmácias, clínicas e laboratórios em Portugal.
+          <p className="mt-4 text-stone-600 max-w-xl mx-auto">
+            {t("features.description")}
           </p>
         </div>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {features.map((f) => (
             <div
-              key={f.title}
-              className="group p-6 rounded-xl border border-stone-100 hover:border-stone-200 bg-white hover:shadow-lg hover:shadow-stone-100 transition-all duration-200"
+              key={f.key}
+              className="p-6 rounded-2xl bg-white transition-all duration-200"
+              style={{
+                border: `1px solid rgba(232, 133, 10, 0.08)`,
+              }}
             >
-              <div
-                className="w-10 h-10 rounded-lg flex items-center justify-center mb-4"
-                style={{ backgroundColor: f.bg }}
-              >
-                <f.icon className="w-5 h-5" style={{ color: f.color }} />
-              </div>
+              <div className="text-4xl mb-4">{f.emoji}</div>
               <h3 className="text-lg font-semibold text-stone-900 mb-2">
-                {f.title}
+                {t(`features.${f.key}`)}
               </h3>
-              <p className="text-sm text-stone-500 leading-relaxed">
-                {f.desc}
+              <p className="text-sm text-stone-600 leading-relaxed">
+                {t(`features.${f.key}Desc`)}
               </p>
             </div>
           ))}
@@ -278,33 +254,23 @@ function Features() {
 
 /* ───────── How it works ───────── */
 function HowItWorks() {
+  const t = useTranslations("landing");
+
   const steps = [
-    {
-      num: "1",
-      title: "Regista-te",
-      desc: "Cria a tua conta em 30 segundos. Sem cartão de crédito.",
-    },
-    {
-      num: "2",
-      title: "Configura a equipa",
-      desc: "Adiciona os teus colaboradores e define os turnos habituais.",
-    },
-    {
-      num: "3",
-      title: "Publica a escala",
-      desc: "Gera o horário, ajusta e publica. A equipa é notificada.",
-    },
+    { num: "1", key: "step1" },
+    { num: "2", key: "step2" },
+    { num: "3", key: "step3" },
   ];
 
   return (
-    <section className="py-20 px-6">
+    <section className="py-20 px-6 bg-white">
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-14">
-          <p className="text-sm font-semibold uppercase tracking-wider mb-3" style={{ color: "var(--accent)" }}>
-            Como funciona
+          <p className="text-sm font-semibold uppercase tracking-wider mb-3" style={{ color: ORANGE_PRIMARY }}>
+            {t("howItWorks.sectionTitle")}
           </p>
           <h2 className="text-3xl sm:text-4xl font-bold text-stone-900">
-            Pronto em 3 passos
+            {t("howItWorks.heading")}
           </h2>
         </div>
 
@@ -313,14 +279,89 @@ function HowItWorks() {
             <div key={s.num} className="text-center">
               <div
                 className="w-12 h-12 rounded-full flex items-center justify-center text-white text-lg font-bold mx-auto mb-4"
-                style={{ backgroundColor: "var(--primary)" }}
+                style={{ backgroundColor: ORANGE_PRIMARY }}
               >
                 {s.num}
               </div>
               <h3 className="text-lg font-semibold text-stone-900 mb-2">
-                {s.title}
+                {t(`howItWorks.${s.key}`)}
               </h3>
-              <p className="text-sm text-stone-500">{s.desc}</p>
+              <p className="text-sm text-stone-600">{t(`howItWorks.${s.key}Desc`)}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ───────── Testimonials ───────── */
+function Testimonials() {
+  const t = useTranslations("landing");
+
+  const testimonials = [
+    {
+      id: 1,
+      img: "https://i.pravatar.cc/150?img=32",
+      quote: t("testimonials.t1Quote"),
+      name: t("testimonials.t1Name"),
+      role: t("testimonials.t1Role"),
+      company: t("testimonials.t1Company"),
+    },
+    {
+      id: 2,
+      img: "https://i.pravatar.cc/150?img=11",
+      quote: t("testimonials.t2Quote"),
+      name: t("testimonials.t2Name"),
+      role: t("testimonials.t2Role"),
+      company: t("testimonials.t2Company"),
+    },
+    {
+      id: 3,
+      img: "https://i.pravatar.cc/150?img=23",
+      quote: t("testimonials.t3Quote"),
+      name: t("testimonials.t3Name"),
+      role: t("testimonials.t3Role"),
+      company: t("testimonials.t3Company"),
+    },
+    {
+      id: 4,
+      img: "https://i.pravatar.cc/150?img=14",
+      quote: t("testimonials.t4Quote"),
+      name: t("testimonials.t4Name"),
+      role: t("testimonials.t4Role"),
+      company: t("testimonials.t4Company"),
+    },
+  ];
+
+  return (
+    <section className="py-20 px-6" style={{ backgroundColor: WARM_CREAM }}>
+      <div className="max-w-6xl mx-auto">
+        <div className="text-center mb-14">
+          <p className="text-sm font-semibold uppercase tracking-wider mb-3" style={{ color: ORANGE_PRIMARY }}>
+            {t("testimonials.sectionTitle")}
+          </p>
+          <h2 className="text-3xl sm:text-4xl font-bold text-stone-900">
+            {t("testimonials.heading")}
+          </h2>
+        </div>
+
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {testimonials.map((testi) => (
+            <div key={testi.id} className="p-6 rounded-2xl bg-white" style={{ border: `1px solid rgba(232, 133, 10, 0.08)` }}>
+              <div className="flex gap-1 mb-4">
+                {[...Array(5)].map((_, i) => (
+                  <span key={i} style={{ color: ORANGE_PRIMARY }}>★</span>
+                ))}
+              </div>
+              <p className="text-sm text-stone-700 mb-4 leading-relaxed">"{testi.quote}"</p>
+              <div className="flex items-center gap-3">
+                <img src={testi.img} alt={testi.name} className="w-10 h-10 rounded-full" />
+                <div>
+                  <p className="text-sm font-semibold text-stone-900">{testi.name}</p>
+                  <p className="text-xs text-stone-500">{testi.role} • {testi.company}</p>
+                </div>
+              </div>
             </div>
           ))}
         </div>
@@ -331,68 +372,70 @@ function HowItWorks() {
 
 /* ───────── Pricing ───────── */
 function Pricing() {
+  const t = useTranslations("landing");
+
+  const features = [
+    "unlimitedSchedules",
+    "fullTeamManagement",
+    "swapsRequests",
+    "fairness",
+    "exportPdfExcel",
+    "legalValidation",
+    "emailSupport",
+  ];
+
   return (
     <section id="pricing" className="py-20 px-6 bg-white">
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-14">
-          <p className="text-sm font-semibold uppercase tracking-wider mb-3" style={{ color: "var(--primary)" }}>
-            Preços
+          <p className="text-sm font-semibold uppercase tracking-wider mb-3" style={{ color: ORANGE_PRIMARY }}>
+            {t("pricing.sectionTitle")}
           </p>
           <h2 className="text-3xl sm:text-4xl font-bold text-stone-900">
-            Simples e transparente
+            {t("pricing.heading")}
           </h2>
-          <p className="mt-4 text-stone-500">
-            Um plano. Sem surpresas. Paga apenas pelo que usas.
+          <p className="mt-4 text-stone-600">
+            {t("pricing.description")}
           </p>
         </div>
 
         <div className="max-w-md mx-auto">
-          <div className="relative rounded-2xl border-2 border-indigo-600 bg-white shadow-xl shadow-indigo-100 overflow-hidden">
-            {/* Badge */}
-            <div className="absolute top-0 right-0 px-3 py-1 text-xs font-semibold text-white rounded-bl-lg" style={{ backgroundColor: "var(--primary)" }}>
-              Mais popular
+          <div className="relative rounded-2xl bg-white shadow-xl overflow-hidden" style={{ border: `2px solid ${ORANGE_PRIMARY}` }}>
+            <div className="absolute top-0 right-0 px-3 py-1 text-xs font-semibold text-white rounded-bl-lg" style={{ backgroundColor: ORANGE_PRIMARY }}>
+              ⭐ {t("pricing.professional")}
             </div>
 
             <div className="p-8">
-              <h3 className="text-lg font-semibold text-stone-900">Profissional</h3>
               <div className="mt-4 flex items-baseline gap-1">
                 <span className="text-5xl font-extrabold text-stone-900">€19</span>
-                <span className="text-stone-500">/mês</span>
+                <span className="text-stone-600">{t("pricing.perMonth")}</span>
               </div>
-              <p className="mt-2 text-sm text-stone-500">
-                + €2 por utilizador/mês
+              <p className="mt-2 text-sm text-stone-600">
+                {t("pricing.perUser")}
               </p>
 
               <Link
                 href="/register"
-                className="mt-8 w-full inline-flex items-center justify-center gap-2 px-6 py-3.5 text-base font-semibold text-white rounded-xl shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5"
-                style={{ backgroundColor: "var(--primary)" }}
+                className="mt-8 w-full inline-flex items-center justify-center gap-2 px-6 py-3.5 text-base font-semibold text-white rounded-xl shadow-lg transition-all hover:shadow-xl hover:-translate-y-0.5"
+                style={{ backgroundColor: ORANGE_PRIMARY, boxShadow: `0 10px 25px rgba(232, 133, 10, 0.2)` }}
               >
-                Começar trial de 14 dias
+                {t("pricing.startTrial")}
                 <ArrowRight className="w-4 h-4" />
               </Link>
 
               <ul className="mt-8 space-y-3">
-                {[
-                  "Escalas ilimitadas",
-                  "Gestão de equipa completa",
-                  "Trocas e pedidos de folga",
-                  "Fairness analytics",
-                  "Exportação PDF e Excel",
-                  "Validação legal automática",
-                  "Suporte por email e chat",
-                ].map((item) => (
-                  <li key={item} className="flex items-center gap-3 text-sm text-stone-700">
-                    <Check className="w-4 h-4 flex-shrink-0" style={{ color: "var(--accent)" }} />
-                    {item}
+                {features.map((key) => (
+                  <li key={key} className="flex items-center gap-3 text-sm text-stone-700">
+                    <Check className="w-4 h-4 flex-shrink-0" style={{ color: ORANGE_PRIMARY }} />
+                    {t(`pricing.${key}`)}
                   </li>
                 ))}
               </ul>
             </div>
           </div>
 
-          <p className="mt-6 text-center text-xs text-stone-400">
-            Exemplo: equipa de 10 pessoas = €19 + (10 × €2) = €39/mês
+          <p className="mt-6 text-center text-xs text-stone-500">
+            {t("pricing.pricingExample")}
           </p>
         </div>
       </div>
@@ -401,53 +444,56 @@ function Pricing() {
 }
 
 /* ───────── FAQ ───────── */
+function FAQItem({ q, a }: { q: string; a: string }) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className="p-6 rounded-2xl bg-white" style={{ border: `1px solid rgba(232, 133, 10, 0.08)` }}>
+      <button
+        onClick={() => setOpen(!open)}
+        className="w-full flex items-center justify-between text-left"
+      >
+        <h3 className="font-semibold text-stone-900">{q}</h3>
+        <ChevronDown
+          className="w-5 h-5 flex-shrink-0 transition-transform"
+          style={{ color: ORANGE_PRIMARY, transform: open ? "rotate(180deg)" : "rotate(0deg)" }}
+        />
+      </button>
+      {open && (
+        <p className="mt-4 text-sm text-stone-600 leading-relaxed">
+          {a}
+        </p>
+      )}
+    </div>
+  );
+}
+
 function FAQ() {
+  const t = useTranslations("landing");
+
   const faqs = [
-    {
-      q: "Posso experimentar sem compromisso?",
-      a: "Sim! O trial dura 14 dias e não precisa de cartão de crédito. Cancelas quando quiseres.",
-    },
-    {
-      q: "Funciona para farmácias e clínicas?",
-      a: "Sim, o Shiftera foi desenhado especificamente para farmácias, clínicas, laboratórios e consultórios em Portugal.",
-    },
-    {
-      q: "Está conforme o Código do Trabalho?",
-      a: "Sim. Validamos automaticamente os períodos de descanso, limites de horas semanais e feriados obrigatórios.",
-    },
-    {
-      q: "Posso exportar as escalas?",
-      a: "Sim, podes exportar em PDF para afixar na loja ou em Excel para arquivo e relatórios.",
-    },
-    {
-      q: "Quanto custa para uma equipa de 5 pessoas?",
-      a: "€19 base + (5 × €2) = €29/mês. O trial de 14 dias é completamente gratuito.",
-    },
+    { q: t("faq.q1"), a: t("faq.a1") },
+    { q: t("faq.q2"), a: t("faq.a2") },
+    { q: t("faq.q3"), a: t("faq.a3") },
+    { q: t("faq.q4"), a: t("faq.a4") },
+    { q: t("faq.q5"), a: t("faq.a5") },
   ];
 
   return (
-    <section id="faq" className="py-20 px-6">
+    <section id="faq" className="py-20 px-6 bg-white">
       <div className="max-w-3xl mx-auto">
         <div className="text-center mb-14">
-          <p className="text-sm font-semibold uppercase tracking-wider mb-3" style={{ color: "var(--primary)" }}>
-            FAQ
+          <p className="text-sm font-semibold uppercase tracking-wider mb-3" style={{ color: ORANGE_PRIMARY }}>
+            {t("faq.sectionTitle")}
           </p>
           <h2 className="text-3xl sm:text-4xl font-bold text-stone-900">
-            Perguntas frequentes
+            {t("faq.heading")}
           </h2>
         </div>
 
         <div className="space-y-4">
-          {faqs.map((faq) => (
-            <div
-              key={faq.q}
-              className="p-5 rounded-xl border border-stone-200 bg-white"
-            >
-              <h3 className="font-semibold text-stone-900">{faq.q}</h3>
-              <p className="mt-2 text-sm text-stone-500 leading-relaxed">
-                {faq.a}
-              </p>
-            </div>
+          {faqs.map((faq, i) => (
+            <FAQItem key={i} q={faq.q} a={faq.a} />
           ))}
         </div>
       </div>
@@ -457,25 +503,27 @@ function FAQ() {
 
 /* ───────── CTA Final ───────── */
 function FinalCTA() {
+  const t = useTranslations("landing");
+
   return (
-    <section className="py-20 px-6">
+    <section className="py-20 px-6" style={{ backgroundColor: WARM_CREAM }}>
       <div className="max-w-3xl mx-auto text-center">
         <div
           className="rounded-2xl p-10 sm:p-14"
-          style={{ backgroundColor: "var(--primary)" }}
+          style={{ background: `linear-gradient(135deg, #2c2c2c, #1a1a1a)` }}
         >
           <h2 className="text-3xl sm:text-4xl font-bold text-white">
-            Começa a gerir horários hoje
+            {t("finalCta.heading")}
           </h2>
-          <p className="mt-4 text-indigo-200 text-lg max-w-lg mx-auto">
-            14 dias grátis. Sem cartão. Sem compromisso. Configura em 2 minutos.
+          <p className="mt-4 text-gray-300 text-lg max-w-lg mx-auto">
+            {t("finalCta.description")}
           </p>
           <Link
             href="/register"
-            className="mt-8 inline-flex items-center gap-2 px-8 py-4 text-base font-semibold rounded-xl bg-white shadow-lg shadow-indigo-900/20 transition-all hover:shadow-xl hover:-translate-y-0.5"
-            style={{ color: "var(--primary)" }}
+            className="mt-8 inline-flex items-center gap-2 px-8 py-4 text-base font-semibold rounded-xl bg-white shadow-lg transition-all hover:shadow-xl hover:-translate-y-0.5"
+            style={{ color: ORANGE_PRIMARY, boxShadow: `0 10px 25px rgba(0, 0, 0, 0.2)` }}
           >
-            Criar conta grátis
+            {t("finalCta.createAccount")}
             <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
@@ -486,28 +534,50 @@ function FinalCTA() {
 
 /* ───────── Footer ───────── */
 function Footer() {
+  const t = useTranslations("landing");
+
   return (
-    <footer className="py-10 px-6 border-t border-stone-200">
-      <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className="flex items-center gap-2">
-          <div
-            className="w-7 h-7 rounded-md flex items-center justify-center"
-            style={{ backgroundColor: "var(--primary)" }}
-          >
-            <Calendar className="w-3.5 h-3.5 text-white" />
+    <footer className="py-10 px-6" style={{ backgroundColor: WARM_CREAM, borderTop: `1px solid rgba(232, 133, 10, 0.08)` }}>
+      <div className="max-w-6xl mx-auto">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-8 mb-8">
+          {/* Brand */}
+          <div>
+            <div className="flex items-center gap-2 mb-4">
+              <div
+                className="w-6 h-6 rounded flex items-center justify-center bg-gradient-to-br"
+                style={{ backgroundImage: `linear-gradient(135deg, ${ORANGE_PRIMARY}, ${ORANGE_GRADIENT})` }}
+              >
+                <span className="text-white font-bold text-xs">S</span>
+              </div>
+              <span className="font-semibold text-stone-900">Shiftera</span>
+            </div>
+            <p className="text-xs text-stone-600">Horários simples, justos e legais.</p>
           </div>
-          <span className="text-sm font-semibold text-stone-700">
-            Shiftera
-          </span>
+
+          {/* Product Links */}
+          <div>
+            <h4 className="font-semibold text-stone-900 mb-3 text-sm">Produto</h4>
+            <ul className="space-y-2 text-xs text-stone-600">
+              <li><a href="#features" className="hover:text-stone-900 transition-colors">Funcionalidades</a></li>
+              <li><a href="#pricing" className="hover:text-stone-900 transition-colors">Preços</a></li>
+              <li><a href="#faq" className="hover:text-stone-900 transition-colors">FAQ</a></li>
+            </ul>
+          </div>
+
+          {/* Legal */}
+          <div>
+            <h4 className="font-semibold text-stone-900 mb-3 text-sm">Legal</h4>
+            <ul className="space-y-2 text-xs text-stone-600">
+              <li><Link href="/terms" className="hover:text-stone-900 transition-colors">{t("footer.terms")}</Link></li>
+              <li><Link href="/privacy" className="hover:text-stone-900 transition-colors">{t("footer.privacy")}</Link></li>
+            </ul>
+          </div>
         </div>
-        <div className="flex items-center gap-6 text-xs text-stone-400">
-          <span>© {new Date().getFullYear()} Shiftera</span>
-          <a href="#" className="hover:text-stone-600 transition-colors">
-            Termos
-          </a>
-          <a href="#" className="hover:text-stone-600 transition-colors">
-            Privacidade
-          </a>
+
+        <div className="pt-6 border-t" style={{ borderColor: `rgba(232, 133, 10, 0.08)` }}>
+          <p className="text-xs text-stone-500 text-center">
+            {t("footer.copyright", { year: new Date().getFullYear() })}
+          </p>
         </div>
       </div>
     </footer>
@@ -517,12 +587,13 @@ function Footer() {
 /* ───────── Main ───────── */
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-[var(--background)]">
+    <div className="min-h-screen" style={{ backgroundColor: WARM_CREAM }}>
       <Navbar />
       <Hero />
       <AppPreview />
       <Features />
       <HowItWorks />
+      <Testimonials />
       <Pricing />
       <FAQ />
       <FinalCTA />
