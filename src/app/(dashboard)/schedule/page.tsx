@@ -742,18 +742,18 @@ export default function SchedulePage() {
         </Button>
         <div className="flex items-center gap-1 ml-2 border-l border-[color:var(--border)] pl-3">
           <Button
-            variant={layoutMode === "grid" ? "primary" : "ghost"}
-            size="sm"
-            onClick={() => setLayoutMode("grid")}
-          >
-            {t("viewByEmployee")}
-          </Button>
-          <Button
             variant={layoutMode === "byDay" ? "primary" : "ghost"}
             size="sm"
             onClick={() => setLayoutMode("byDay")}
           >
             {t("viewByDay")}
+          </Button>
+          <Button
+            variant={layoutMode === "grid" ? "primary" : "ghost"}
+            size="sm"
+            onClick={() => setLayoutMode("grid")}
+          >
+            {t("viewByEmployee")}
           </Button>
         </div>
         <div className="flex items-center gap-1 border-l border-[color:var(--border)] pl-3">
@@ -817,6 +817,7 @@ export default function SchedulePage() {
         </div>
       </div>
 
+      <div className="min-h-[640px]">
       {employees.length === 0 || shifts.length === 0 ? (
         <Card>
           <div className="text-center py-8 text-[color:var(--text-muted)]">
@@ -1090,6 +1091,7 @@ export default function SchedulePage() {
           </table>
         </div>
       )}
+      </div>
 
       <Modal
         open={!!assignModal}
