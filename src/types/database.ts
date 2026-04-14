@@ -16,6 +16,8 @@ export interface Organization {
   sector: string;
   address: string | null;
   municipal_holiday: string | null;
+  /** ISO-like 2-letter country code. Resolves the legal profile (see src/lib/compliance/profiles). */
+  country_code: string;
   operating_hours: Record<string, { open: string; close: string; closed: boolean }>;
   subscription_tier: SubscriptionTier;
   subscription_status: string;

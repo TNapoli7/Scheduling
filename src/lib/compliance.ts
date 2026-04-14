@@ -1,9 +1,13 @@
 /**
- * Compliance Engine — Código do Trabalho Português
- * Validates schedule entries against Portuguese labor law rules
+ * Compliance Engine — parameterised by a LegalProfile.
+ *
+ * Default profile is Portugal (Código do Trabalho) to preserve current
+ * behaviour. Pass a different profile (e.g. retrieved via
+ * `getLegalProfile(org.country_code)`) to apply another jurisdiction.
  */
 
 import type { ScheduleEntry, ShiftTemplate, Profile } from "@/types/database";
+import { PT_PROFILE, type LegalProfile } from "@/lib/compliance/profiles";
 
 export type ComplianceViolation = {
   rule: string;
@@ -44,11 +48,12 @@ function shiftStartAbsolute(date: string, shift: ShiftTemplate): number {
 }
 
 /**
- * Art. 214 — Minimum 11h rest between shifts
+ * Minimum rest between shifts (PT: Art. 214 — 11h).
  */
 function checkRestBetweenShifts(
   entries: EntryWithShift[],
-  userId: string
+  userId: string,
+  profile: LegalProfile
 ): ComplianceViolation[] {
   const violations: ComplianceViolation[] = [];
   const userEntries = entries
@@ -70,9 +75,9 @@ function checkRestBetweenShifts(
     );
     const restHours = (currStart - prevEnd) / (1000 * 60 * 60);
 
-    if (restHours < 11) {
+    if (restHours < profile.minRestBetweenShifts) {
       violations.push({
-        rule: `Descanso de ${restHours.toFixed(1)}h entre turnos (mínimo 11h)`,
+        rule: `Descanso de ${restHours.toFixed(1)}h entre turnos (mínimo ${profile.minRestBetweenShifts}h)`,
         code: "REST_11H",
         severity: "block",
         message: `Apenas ${restHours.toFixed(1)}h de descanso entre turnos`,
@@ -86,12 +91,13 @@ function checkRestBetweenShifts(
 }
 
 /**
- * Art. 211 — Maximum 40h per week (regular), flag overtime
+ * Weekly hours vs contract (PT: Art. 211 — 40h + max 2h buffer).
  */
 function checkWeeklyHours(
   entries: EntryWithShift[],
   userId: string,
-  profile: Profile
+  userProfile: Profile,
+  legal: LegalProfile
 ): ComplianceViolation[] {
   const violations: ComplianceViolation[] = [];
   const userEntries = entries.filter((e) => e.user_id === userId);
@@ -111,11 +117,11 @@ function checkWeeklyHours(
   }
 
   for (const [weekStart, hours] of weeks) {
-    const maxHours = profile.weekly_hours || 40;
-    if (hours > maxHours + 2) {
-      // More than 2h overtime in a week
+    const maxHours = userProfile.weekly_hours || 40;
+    const buffer = legal.weeklyOvertimeBuffer;
+    if (hours > maxHours + buffer) {
       violations.push({
-        rule: `${hours.toFixed(1)}h na semana de ${weekStart} (máximo ${maxHours}h + 2h extra)`,
+        rule: `${hours.toFixed(1)}h na semana de ${weekStart} (máximo ${maxHours}h + ${buffer}h extra)`,
         code: "MAX_WEEKLY_HOURS",
         severity: "block",
         message: `Excede horas semanais permitidas`,
@@ -138,11 +144,12 @@ function checkWeeklyHours(
 }
 
 /**
- * Art. 232 — Minimum 1 rest day per 7 consecutive days
+ * Weekly rest day (PT: Art. 232 — 1 rest day per 7 consecutive).
  */
 function checkWeeklyRest(
   entries: EntryWithShift[],
-  userId: string
+  userId: string,
+  profile: LegalProfile
 ): ComplianceViolation[] {
   const violations: ComplianceViolation[] = [];
   const userDates = new Set(
@@ -153,7 +160,6 @@ function checkWeeklyRest(
   const dates = Array.from(userDates).sort();
   if (dates.length === 0) return violations;
 
-  // Check for 7 consecutive working days
   let consecutive = 1;
   for (let i = 1; i < dates.length; i++) {
     const prev = new Date(dates[i - 1]);
@@ -162,12 +168,12 @@ function checkWeeklyRest(
 
     if (diffDays === 1) {
       consecutive++;
-      if (consecutive >= 7) {
+      if (consecutive >= profile.maxConsecutiveWorkDays) {
         violations.push({
           rule: `${consecutive} dias consecutivos sem descanso`,
           code: "WEEKLY_REST",
           severity: "block",
-          message: `Obrigatorio 1 dia de descanso por cada 7 dias`,
+          message: `Obrigatório 1 dia de descanso por cada ${profile.maxConsecutiveWorkDays} dias`,
           date: dates[i],
           userId,
         });
@@ -181,24 +187,24 @@ function checkWeeklyRest(
 }
 
 /**
- * Art. 213 — Break of 30min after 6 consecutive hours
- * (This is informational — shifts > 6h should have a break built in)
+ * Break requirement (PT: Art. 213 — pausa obrigatória após 6h).
  */
 function checkLongShifts(
   entries: EntryWithShift[],
-  userId: string
+  userId: string,
+  profile: LegalProfile
 ): ComplianceViolation[] {
   const violations: ComplianceViolation[] = [];
   const userEntries = entries.filter((e) => e.user_id === userId);
 
   for (const entry of userEntries) {
     const hours = shiftDurationMinutes(entry.shift_template) / 60;
-    if (hours > 6) {
+    if (hours > profile.breakThresholdHours) {
       violations.push({
-        rule: `Turno de ${hours.toFixed(1)}h requer pausa de 30min`,
+        rule: `Turno de ${hours.toFixed(1)}h requer pausa de ${profile.breakDurationMinutes}min`,
         code: "BREAK_6H",
         severity: "warning",
-        message: `Garantir pausa de 30min (Art. 213)`,
+        message: `Garantir pausa de ${profile.breakDurationMinutes}min`,
         date: entry.date,
         userId,
       });
@@ -209,11 +215,12 @@ function checkLongShifts(
 }
 
 /**
- * Check max daily hours (8h normal, max 10h with overtime)
+ * Max daily hours — warn above normal, block at the ceiling.
  */
 function checkDailyHours(
   entries: EntryWithShift[],
-  userId: string
+  userId: string,
+  profile: LegalProfile
 ): ComplianceViolation[] {
   const violations: ComplianceViolation[] = [];
   const userEntries = entries.filter((e) => e.user_id === userId);
@@ -225,19 +232,21 @@ function checkDailyHours(
     dayHours.set(entry.date, (dayHours.get(entry.date) || 0) + hours);
   }
 
+  const { maxDailyHoursBlock: block, maxDailyHoursWarn: warn } = profile;
+
   for (const [date, hours] of dayHours) {
-    if (hours > 10) {
+    if (hours > block) {
       violations.push({
-        rule: `${hours.toFixed(1)}h num dia (máximo 10h incluindo extras)`,
+        rule: `${hours.toFixed(1)}h num dia (máximo ${block}h incluindo extras)`,
         code: "MAX_DAILY_10H",
         severity: "block",
-        message: `Excede máximo diário de 10h`,
+        message: `Excede máximo diário de ${block}h`,
         date,
         userId,
       });
-    } else if (hours > 8) {
+    } else if (hours > warn) {
       violations.push({
-        rule: `${hours.toFixed(1)}h num dia (${(hours - 8).toFixed(1)}h extra)`,
+        rule: `${hours.toFixed(1)}h num dia (${(hours - warn).toFixed(1)}h extra)`,
         code: "OVERTIME_DAILY",
         severity: "warning",
         message: `Horas extra neste dia`,
@@ -251,11 +260,19 @@ function checkDailyHours(
 }
 
 /**
- * Run all compliance checks for a set of schedule entries
+ * Run all compliance checks for a set of schedule entries.
+ *
+ * @param entries   Schedule entries to validate (with shift_template joined).
+ * @param profiles  Employee profiles (for contracted weekly hours).
+ * @param legal     Jurisdiction profile. Defaults to Portugal (PT_PROFILE)
+ *                  to preserve current behaviour. Pass a different profile
+ *                  (e.g. `getLegalProfile(org.country_code)`) to apply
+ *                  another country's rules.
  */
 export function validateCompliance(
   entries: EntryWithShift[],
-  profiles: Profile[]
+  profiles: Profile[],
+  legal: LegalProfile = PT_PROFILE
 ): ComplianceViolation[] {
   const violations: ComplianceViolation[] = [];
   const userIds = [...new Set(entries.map((e) => e.user_id))];
@@ -264,11 +281,11 @@ export function validateCompliance(
     const profile = profiles.find((p) => p.id === userId);
     if (!profile) continue;
 
-    violations.push(...checkRestBetweenShifts(entries, userId));
-    violations.push(...checkWeeklyHours(entries, userId, profile));
-    violations.push(...checkWeeklyRest(entries, userId));
-    violations.push(...checkLongShifts(entries, userId));
-    violations.push(...checkDailyHours(entries, userId));
+    violations.push(...checkRestBetweenShifts(entries, userId, legal));
+    violations.push(...checkWeeklyHours(entries, userId, profile, legal));
+    violations.push(...checkWeeklyRest(entries, userId, legal));
+    violations.push(...checkLongShifts(entries, userId, legal));
+    violations.push(...checkDailyHours(entries, userId, legal));
   }
 
   return violations;
@@ -286,15 +303,16 @@ export function getViolationsForCell(
 }
 
 /**
- * Check if a proposed assignment would create violations
+ * Check if a proposed assignment would create violations.
  */
 export function wouldViolate(
   existingEntries: EntryWithShift[],
   newEntry: EntryWithShift,
-  profiles: Profile[]
+  profiles: Profile[],
+  legal: LegalProfile = PT_PROFILE
 ): ComplianceViolation[] {
   const allEntries = [...existingEntries, newEntry];
-  return validateCompliance(allEntries, profiles).filter(
+  return validateCompliance(allEntries, profiles, legal).filter(
     (v) => v.userId === newEntry.user_id
   );
 }
