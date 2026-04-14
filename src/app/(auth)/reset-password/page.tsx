@@ -4,9 +4,15 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import { useTranslations } from "next-intl";
+import {
+  validatePasswordStrength,
+  MIN_PASSWORD_LENGTH,
+} from "@/lib/password-policy";
 
 export default function ResetPasswordPage() {
   const router = useRouter();
+  const tPwd = useTranslations("passwordPolicy");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [loading, setLoading] = useState(false);
@@ -26,12 +32,13 @@ export default function ResetPasswordPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
-    if (password.length < 8) {
-      setError("A password precisa de ter pelo menos 8 caracteres.");
+    const pwdCheck = validatePasswordStrength(password);
+    if (!pwdCheck.ok) {
+      setError(tPwd(pwdCheck.issue!, { min: MIN_PASSWORD_LENGTH }));
       return;
     }
     if (password !== confirm) {
-      setError("As passwords não coincidem.");
+      setError(tPwd("mismatch"));
       return;
     }
     setLoading(true);

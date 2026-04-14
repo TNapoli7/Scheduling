@@ -5,6 +5,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { logActivity } from "@/lib/activity-log";
+import {
+  validatePasswordStrength,
+  MIN_PASSWORD_LENGTH,
+} from "@/lib/password-policy";
+import { useTranslations } from "next-intl";
 
 type FakeLogo = { name: string; tagline: string; img: string };
 
@@ -19,6 +24,7 @@ const fakeLogos: FakeLogo[] = [
 
 export default function RegisterPage() {
   const router = useRouter();
+  const tPwd = useTranslations("passwordPolicy");
   const [fullName, setFullName] = useState("");
   const [orgName, setOrgName] = useState("");
   const [email, setEmail] = useState("");
@@ -32,8 +38,9 @@ export default function RegisterPage() {
     setLoading(true);
     setError("");
 
-    if (password.length < 8) {
-      setError("A password tem de ter pelo menos 8 caracteres.");
+    const pwdCheck = validatePasswordStrength(password);
+    if (!pwdCheck.ok) {
+      setError(tPwd(pwdCheck.issue!, { min: MIN_PASSWORD_LENGTH }));
       setLoading(false);
       return;
     }
@@ -208,8 +215,8 @@ export default function RegisterPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
-                    minLength={8}
-                    placeholder="Mínimo 8 caracteres"
+                    minLength={MIN_PASSWORD_LENGTH}
+                    placeholder={tPwd("placeholder", { min: MIN_PASSWORD_LENGTH })}
                     className="w-full h-12 px-4 rounded-xl border border-[color:var(--border)] bg-white text-[color:var(--primary)] placeholder:text-[color:var(--text-muted)] focus:outline-none focus:border-[color:var(--primary)] focus:ring-4 focus:ring-[color:var(--primary-soft)] transition-all"
                   />
                 </div>

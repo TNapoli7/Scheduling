@@ -1,4 +1,11 @@
 {
+  "passwordPolicy": {
+    "tooShort": "Password must be at least {min} characters.",
+    "needsLetter": "Password must contain at least one letter.",
+    "needsDigit": "Password must contain at least one number.",
+    "mismatch": "Passwords do not match.",
+    "placeholder": "Minimum {min} characters, letters and numbers"
+  },
   "navigation": {
     "dashboard": "Dashboard",
     "schedule": "Schedule",

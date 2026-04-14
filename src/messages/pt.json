@@ -1,4 +1,11 @@
 {
+  "passwordPolicy": {
+    "tooShort": "A password tem de ter pelo menos {min} caracteres.",
+    "needsLetter": "A password tem de incluir pelo menos uma letra.",
+    "needsDigit": "A password tem de incluir pelo menos um número.",
+    "mismatch": "As passwords não coincidem.",
+    "placeholder": "Mínimo {min} caracteres, letras e números"
+  },
   "navigation": {
     "dashboard": "Dashboard",
     "schedule": "Horário",
