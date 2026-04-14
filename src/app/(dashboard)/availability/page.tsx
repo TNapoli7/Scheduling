@@ -23,11 +23,12 @@ function getDaysInMonth(year: number, month: number): string[] {
   return days;
 }
 
-function dayOfWeekPt(dateStr: string, tDays: any): string {
+const DAY_KEYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const;
+const MONTH_KEYS = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"] as const;
+
+function dayOfWeekPt(dateStr: string, tDays: (key: string) => string): string {
   const d = new Date(dateStr + "T00:00:00");
-  const dayIndex = d.getDay();
-  const dayKeys = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
-  return tDays(dayKeys[dayIndex]);
+  return tDays(DAY_KEYS[d.getDay()]);
 }
 
 function isWeekend(dateStr: string): boolean {
@@ -203,7 +204,7 @@ export default function AvailabilityPage() {
           <h1 className="text-2xl font-bold text-stone-900">{t("title")}</h1>
           <p className="text-sm text-stone-500 mt-1">
             {isManager
-              ? t("subtitleAdmin")
+              ? t("subtitleManager")
               : t("subtitleEmployee")}
             {pendingCount > 0 && (
               <Badge variant="warning" className="ml-2">
@@ -222,7 +223,7 @@ export default function AvailabilityPage() {
           </svg>
         </Button>
         <h2 className="text-lg font-semibold text-stone-900 min-w-[180px] text-center">
-          {tMonths(String(month))} {year}
+          {tMonths(MONTH_KEYS[month - 1])} {year}
         </h2>
         <Button variant="ghost" size="sm" onClick={nextMonth}>
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -239,11 +240,11 @@ export default function AvailabilityPage() {
         </div>
         <div className="flex items-center gap-1.5">
           <div className="w-3 h-3 rounded bg-amber-100 border border-yellow-300" />
-          <span>{t("legendPendingUnavailable")}</span>
+          <span>{t("legendPending")}</span>
         </div>
         <div className="flex items-center gap-1.5">
           <div className="w-3 h-3 rounded bg-red-100 border border-red-300" />
-          <span>{t("legendApprovedUnavailable")}</span>
+          <span>{t("legendApproved")}</span>
         </div>
         <div className="flex items-center gap-1.5">
           <div className="w-3 h-3 rounded bg-stone-100 border border-stone-300 line-through" />
@@ -297,11 +298,11 @@ export default function AvailabilityPage() {
                     if (avail.approval_status === "approved") {
                       bgClass = "bg-red-100";
                       content = "X";
-                      title = t("legendApprovedUnavailable");
+                      title = t("legendApproved");
                     } else if (avail.approval_status === "pending") {
                       bgClass = "bg-amber-100";
                       content = "?";
-                      title = t("legendPendingUnavailable");
+                      title = t("legendPending");
                     } else if (avail.approval_status === "rejected") {
                       bgClass = "bg-stone-100";
                       content = "—";
@@ -342,7 +343,7 @@ export default function AvailabilityPage() {
         <Card>
           <div className="p-4">
             <h3 className="font-semibold text-stone-900 mb-3">
-              Pedidos pendentes ({pendingCount})
+              {t("pendingRequests")} ({pendingCount})
             </h3>
             <div className="space-y-2">
               {availabilities
@@ -360,7 +361,7 @@ export default function AvailabilityPage() {
                           {emp?.full_name || "—"}
                         </p>
                         <p className="text-xs text-stone-500">
-                          {parseInt(avail.date.slice(8))} {tMonths(String(parseInt(avail.date.slice(5, 7))))}
+                          {parseInt(avail.date.slice(8))} {tMonths(MONTH_KEYS[parseInt(avail.date.slice(5, 7)) - 1])}
                           {avail.reason && ` — ${avail.reason}`}
                         </p>
                       </div>

@@ -18,11 +18,11 @@ function timeAgo(dateStr: string, t: (key: string) => string): string {
   const diff = Date.now() - new Date(dateStr).getTime();
   const mins = Math.floor(diff / 60000);
   if (mins < 1) return t('timeAgo.now');
-  if (mins < 60) return `${mins}${t('timeAgo.min')}`;
+  if (mins < 60) return `${mins} ${t('timeAgo.min')}`;
   const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}${t('timeAgo.hour')}`;
+  if (hours < 24) return `${hours} ${t('timeAgo.hour')}`;
   const days = Math.floor(hours / 24);
-  return `${days}${t('timeAgo.day')}`;
+  return `${days} ${t('timeAgo.day')}`;
 }
 
 export function Header({ userName, unreadCount: initialUnread, onMenuClick }: HeaderProps) {
@@ -96,8 +96,8 @@ export function Header({ userName, unreadCount: initialUnread, onMenuClick }: He
 
   return (
     <header className="sticky top-0 z-30 h-14 bg-[color:var(--surface)]/80 backdrop-blur-md border-b border-[color:var(--border-light)]/60 px-4 lg:px-6">
-      <div className="flex items-center justify-between h-full">
-        {/* Left: mobile menu */}
+      <div className="flex items-center h-full">
+        {/* Left: mobile menu (hidden on desktop) */}
         <button
           onClick={onMenuClick}
           className="lg:hidden p-2 text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)] rounded-lg hover:bg-[color:var(--surface-sunken)]"
@@ -105,15 +105,51 @@ export function Header({ userName, unreadCount: initialUnread, onMenuClick }: He
           <Menu className="w-5 h-5" />
         </button>
 
-        <div className="lg:hidden" />
+        {/* Spacer pushes the right cluster to the end */}
+        <div className="flex-1" />
 
-        {/* Right: notifications + profile */}
+        {/* Right: profile + notifications (bell after user, so panel opens from top-right corner without overlapping the sidebar) */}
         <div className="flex items-center gap-1">
-          {/* Notifications */}
+          {/* Profile dropdown */}
+          <div className="relative" ref={dropdownRef}>
+            <button
+              onClick={() => { setShowDropdown(!showDropdown); setShowNotifications(false); }}
+              className="flex items-center gap-2 py-1.5 px-2 rounded-lg hover:bg-[color:var(--surface-sunken)] transition-colors"
+            >
+              <div className="w-7 h-7 bg-[color:var(--accent-soft)] text-[color:var(--accent)] rounded-full flex items-center justify-center text-xs font-bold">
+                {userName.charAt(0).toUpperCase()}
+              </div>
+              <span className="hidden sm:block text-sm font-medium text-[color:var(--text-primary)]">{userName}</span>
+              <ChevronDown className="hidden sm:block w-3.5 h-3.5 text-[color:var(--text-muted)]" />
+            </button>
+
+            {showDropdown && (
+              <div className="absolute right-0 mt-2 w-48 bg-[color:var(--surface)] rounded-xl shadow-xl border border-[color:var(--border-light)]/60 py-1 z-50">
+                <button
+                  onClick={() => { setShowDropdown(false); router.push("/settings"); }}
+                  className="flex items-center gap-2.5 w-full px-4 py-2.5 text-sm text-[color:var(--text-secondary)] hover:bg-[color:var(--surface-sunken)] transition-colors"
+                >
+                  <User className="w-4 h-4 text-[color:var(--text-muted)]" />
+                  {t('profile')}
+                </button>
+                <div className="border-t border-[color:var(--border-light)] my-1" />
+                <button
+                  onClick={handleSignOut}
+                  className="flex items-center gap-2.5 w-full px-4 py-2.5 text-sm text-[color:var(--danger)] hover:bg-[color:var(--danger-soft)] transition-colors"
+                >
+                  <LogOut className="w-4 h-4" />
+                  {t('signOut')}
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Notifications (rightmost, anchored so the panel opens right-aligned and stays within the main content area) */}
           <div className="relative" ref={notifRef}>
             <button
               onClick={toggleNotifications}
               className="relative p-2 text-[color:var(--text-muted)] hover:text-[color:var(--text-secondary)] rounded-lg hover:bg-[color:var(--surface-sunken)] transition-colors"
+              aria-label={t('notifications')}
             >
               <Bell className="w-[18px] h-[18px]" />
               {unreadCount > 0 && (
@@ -138,7 +174,7 @@ export function Header({ userName, unreadCount: initialUnread, onMenuClick }: He
                 </div>
                 <div className="overflow-y-auto flex-1">
                   {loadingNotifs ? (
-                    <div className="text-center py-8 text-[color:var(--text-muted)] text-sm">{t('notifications')}</div>
+                    <div className="text-center py-8 text-[color:var(--text-muted)] text-sm">{t('loadingNotifs')}</div>
                   ) : notifications.length === 0 ? (
                     <div className="text-center py-8">
                       <Bell className="w-8 h-8 text-stone-200 mx-auto mb-2" />
@@ -160,49 +196,15 @@ export function Header({ userName, unreadCount: initialUnread, onMenuClick }: He
                           {notif.body && (
                             <p className="text-xs text-[color:var(--text-muted)] mt-0.5 line-clamp-2">{notif.body}</p>
                           )}
-                          <p className="text-[10px] text-stone-300 mt-1">{timeAgo(notif.created_at, t)}</p>
+                          <p className="text-[10px] text-stone-400 mt-1">{timeAgo(notif.created_at, t)}</p>
                         </div>
                         {!notif.is_read && (
-                          <div className="w-2 h-2 bg-[color:var(--accent-soft)]0 rounded-full mt-1.5 flex-shrink-0" />
+                          <div className="w-2 h-2 bg-[color:var(--accent)] rounded-full mt-1.5 flex-shrink-0" />
                         )}
                       </div>
                     ))
                   )}
                 </div>
-              </div>
-            )}
-          </div>
-
-          {/* Profile dropdown */}
-          <div className="relative" ref={dropdownRef}>
-            <button
-              onClick={() => { setShowDropdown(!showDropdown); setShowNotifications(false); }}
-              className="flex items-center gap-2 py-1.5 px-2 rounded-lg hover:bg-[color:var(--surface-sunken)] transition-colors"
-            >
-              <div className="w-7 h-7 bg-[color:var(--accent-soft)] text-[color:var(--accent)] rounded-full flex items-center justify-center text-xs font-bold">
-                {userName.charAt(0).toUpperCase()}
-              </div>
-              <span className="hidden sm:block text-sm font-medium text-[color:var(--text-primary)]">{userName}</span>
-              <ChevronDown className="hidden sm:block w-3.5 h-3.5 text-[color:var(--text-muted)]" />
-            </button>
-
-            {showDropdown && (
-              <div className="absolute right-0 mt-2 w-48 bg-[color:var(--surface)] rounded-xl shadow-xl border border-[color:var(--border-light)]/60 py-1 z-50">
-                <button
-                  onClick={() => { setShowDropdown(false); router.push("/settings"); }}
-                  className="flex items-center gap-2.5 w-full px-4 py-2.5 text-sm text-[color:var(--text-secondary)] hover:bg-[color:var(--surface-sunken)] transition-colors"
-                >
-                  <User className="w-4 h-4 text-[color:var(--text-muted)]" />
-                  Perfil
-                </button>
-                <div className="border-t border-[color:var(--border-light)] my-1" />
-                <button
-                  onClick={handleSignOut}
-                  className="flex items-center gap-2.5 w-full px-4 py-2.5 text-sm text-[color:var(--danger)] hover:bg-[color:var(--danger-soft)] transition-colors"
-                >
-                  <LogOut className="w-4 h-4" />
-                  Sair
-                </button>
               </div>
             )}
           </div>

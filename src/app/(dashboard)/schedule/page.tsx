@@ -41,10 +41,12 @@ function getDaysInMonth(year: number, month: number): string[] {
   return days;
 }
 
+const DAY_KEYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const;
+const MONTH_KEYS = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"] as const;
+
 function dayOfWeekPt(dateStr: string, getTranslation: (key: string) => string): string {
   const d = new Date(dateStr + "T00:00:00");
-  const keys = ["sun", "mon", "tue", "wed", "qua", "thu", "fri", "sat"];
-  return getTranslation(keys[d.getDay()]);
+  return getTranslation(DAY_KEYS[d.getDay()]);
 }
 
 function isWeekend(dateStr: string): boolean {
@@ -78,7 +80,10 @@ export default function SchedulePage() {
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth() + 1);
   const [viewMode, setViewMode] = useState<"week" | "month">("month");
+  const [layoutMode, setLayoutMode] = useState<"grid" | "byDay">("grid");
   const [weekStart, setWeekStart] = useState(0);
+  const [emptyPublishModal, setEmptyPublishModal] = useState(false);
+  const [unpublishConfirm, setUnpublishConfirm] = useState(false);
   const [employees, setEmployees] = useState<Profile[]>([]);
   const [shifts, setShifts] = useState<ShiftTemplate[]>([]);
   const [schedule, setSchedule] = useState<Schedule | null>(null);
@@ -418,12 +423,17 @@ export default function SchedulePage() {
     fetchData();
   }
 
-  async function publishSchedule() {
+  async function publishSchedule(skipEmptyCheck = false) {
     if (!schedule) return;
 
     const blocks = violations.filter((v) => v.severity === "block");
     if (blocks.length > 0) {
       setViolationModal(blocks);
+      return;
+    }
+
+    if (!skipEmptyCheck && entries.length === 0) {
+      setEmptyPublishModal(true);
       return;
     }
 
@@ -437,7 +447,7 @@ export default function SchedulePage() {
       .eq("id", schedule.id);
 
     logActivity("schedule_published", "schedule", schedule.id);
-    const monthKey = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"][month - 1];
+    const monthKey = MONTH_KEYS[month - 1];
     const notifications = employees.map((emp) => ({
       user_id: emp.id,
       type: "schedule_published",
@@ -449,23 +459,24 @@ export default function SchedulePage() {
       await supabase.from("notifications").insert(notifications);
     }
 
+    setEmptyPublishModal(false);
     setSaving(false);
     fetchData();
   }
 
-  async function unpublishSchedule() {
+  function unpublishSchedule() {
+    setUnpublishConfirm(true);
+  }
+
+  async function doUnpublish() {
     if (!schedule) return;
-    if (
-      !confirm(t("confirmUnpublish"))
-    ) {
-      return;
-    }
     setSaving(true);
     await supabase
       .from("schedules")
       .update({ status: "draft", published_at: null })
       .eq("id", schedule.id);
     logActivity("schedule_unpublished", "schedule", schedule.id);
+    setUnpublishConfirm(false);
     setSaving(false);
     fetchData();
   }
@@ -501,21 +512,21 @@ export default function SchedulePage() {
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-[color:var(--text-primary)] font-display tracking-tight">{t("publishedTitle")}</h1>
+          <h1 className="text-2xl font-bold text-[color:var(--text-primary)] font-display tracking-tight">{t("title")}</h1>
           <p className="text-sm text-[color:var(--text-muted)] mt-1">
             {schedule?.status === "published" ? (
-              <Badge variant="success">{t("publishedTitle")}</Badge>
+              <Badge variant="success">{t("statusPublished")}</Badge>
             ) : (
-              <Badge variant="default">Rascunho</Badge>
+              <Badge variant="default">{t("statusDraft")}</Badge>
             )}
             {blockCount > 0 && (
               <span className="ml-2 text-[color:var(--danger)] font-medium">
-                {blockCount} violação{blockCount !== 1 ? "oes" : ""}
+                {blockCount} {blockCount !== 1 ? t("violationsPlural") : t("violation")}
               </span>
             )}
             {warnCount > 0 && (
               <span className="ml-2 text-[color:var(--warning)]">
-                {warnCount} aviso{warnCount !== 1 ? "s" : ""}
+                {warnCount} {warnCount !== 1 ? t("warningsPlural") : t("warningLabel")}
               </span>
             )}
           </p>
@@ -551,7 +562,7 @@ export default function SchedulePage() {
               loading={saving}
               className="text-[color:var(--danger)] hover:bg-[color:var(--danger-soft)]"
             >
-              {t("unavailable")}
+              {t("clearButton")}
             </Button>
           )}
           {schedule?.status === "draft" && (
@@ -576,8 +587,8 @@ export default function SchedulePage() {
             </Button>
           )}
           {schedule?.status === "draft" && (
-            <Button onClick={publishSchedule} loading={saving}>
-              {t("publishedTitle")}
+            <Button onClick={() => publishSchedule()} loading={saving}>
+              {t("publishButton")}
             </Button>
           )}
           {schedule?.status === "published" && (
@@ -588,7 +599,7 @@ export default function SchedulePage() {
               loading={saving}
               className="text-[color:var(--warning)] hover:bg-[color:var(--warning-soft)]"
             >
-              {t("confirmUnpublish")}
+              {t("unpublishButton")}
             </Button>
           )}
           {entries.length > 0 && (
@@ -621,44 +632,64 @@ export default function SchedulePage() {
           &lt;
         </Button>
         <h2 className="text-lg font-semibold text-[color:var(--text-primary)] min-w-[180px] text-center font-display tracking-tight">
-          {m(["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"][month - 1])} {year}
+          {m(MONTH_KEYS[month - 1])} {year}
         </h2>
         <Button variant="ghost" size="sm" onClick={nextMonth}>
           &gt;
         </Button>
         <div className="flex items-center gap-1 ml-2 border-l border-[color:var(--border)] pl-3">
           <Button
-            variant={viewMode === "month" ? "primary" : "ghost"}
+            variant={layoutMode === "grid" ? "primary" : "ghost"}
             size="sm"
-            onClick={() => { setViewMode("month"); setWeekStart(0); }}
+            onClick={() => setLayoutMode("grid")}
           >
-            {t("unavailable")}
+            {t("viewByEmployee")}
           </Button>
           <Button
-            variant={viewMode === "week" ? "primary" : "ghost"}
+            variant={layoutMode === "byDay" ? "primary" : "ghost"}
             size="sm"
-            onClick={() => setViewMode("week")}
+            onClick={() => setLayoutMode("byDay")}
           >
-            Semana
+            {t("viewByDay")}
           </Button>
         </div>
-        {viewMode === "week" && (
+        {layoutMode === "grid" && (
+          <div className="flex items-center gap-1 border-l border-[color:var(--border)] pl-3">
+            <Button
+              variant={viewMode === "month" ? "primary" : "ghost"}
+              size="sm"
+              onClick={() => { setViewMode("month"); setWeekStart(0); }}
+            >
+              {t("viewMonth")}
+            </Button>
+            <Button
+              variant={viewMode === "week" ? "primary" : "ghost"}
+              size="sm"
+              onClick={() => setViewMode("week")}
+            >
+              {t("viewWeek")}
+            </Button>
+          </div>
+        )}
+        {layoutMode === "grid" && viewMode === "week" && (
           <div className="flex items-center gap-1">
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setWeekStart(Math.max(0, weekStart - 7))}
               disabled={weekStart === 0}
+              title={t("prevWeek")}
             >
-              ◀ Sem
+              ◀
             </Button>
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setWeekStart(Math.min(days.length - 7, weekStart + 7))}
               disabled={weekStart + 7 >= days.length}
+              title={t("nextWeek")}
             >
-              Sem ▶
+              ▶
             </Button>
           </div>
         )}
@@ -693,13 +724,99 @@ export default function SchedulePage() {
               : t("createShiftsFirst")}
           </div>
         </Card>
+      ) : layoutMode === "byDay" ? (
+        <Card>
+          <div className="p-3 sm:p-4">
+            {entries.length === 0 ? (
+              <p className="text-center py-8 text-sm text-[color:var(--text-muted)]">
+                {t("dayViewEmptyMonth")}
+              </p>
+            ) : (
+              <div className="divide-y divide-[color:var(--border-light)]">
+                {days.map((day) => {
+                  const dayEntries = entries
+                    .filter((e) => e.date === day)
+                    .sort((a, b) =>
+                      (a.shift_template?.start_time || "").localeCompare(
+                        b.shift_template?.start_time || ""
+                      )
+                    );
+                  const weekend = isWeekend(day);
+                  const holiday = nationalHolidays[day];
+                  const dow = dayOfWeekPt(day, (key: string) => d(key));
+                  const dayNum = parseInt(day.slice(8));
+                  return (
+                    <div
+                      key={day}
+                      className={`py-2.5 flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-4 ${
+                        holiday
+                          ? "bg-[color:var(--danger-soft)]/30 -mx-3 sm:-mx-4 px-3 sm:px-4"
+                          : weekend
+                          ? "bg-[color:var(--surface-sunken)]/60 -mx-3 sm:-mx-4 px-3 sm:px-4"
+                          : ""
+                      }`}
+                    >
+                      <div className="sm:min-w-[160px] flex items-baseline gap-2">
+                        <span className="text-xs text-[color:var(--text-muted)] uppercase tracking-wide">
+                          {dow}
+                        </span>
+                        <span className="text-lg font-semibold text-[color:var(--text-primary)]">
+                          {dayNum}
+                        </span>
+                        {holiday && (
+                          <Badge variant="danger" className="ml-1">
+                            {holiday}
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="flex-1 flex flex-wrap gap-1.5">
+                        {dayEntries.length === 0 ? (
+                          <span className="text-xs italic text-[color:var(--text-muted)]">
+                            {t("noOneWorking")}
+                          </span>
+                        ) : (
+                          dayEntries.map((entry) => {
+                            const emp = employees.find((e) => e.id === entry.user_id);
+                            const start = entry.shift_template?.start_time?.slice(0, 5) || "";
+                            const end = entry.shift_template?.end_time?.slice(0, 5) || "";
+                            return (
+                              <span
+                                key={entry.id}
+                                className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-xs bg-[color:var(--surface-sunken)] border border-[color:var(--border-light)]"
+                              >
+                                <span
+                                  className="w-2 h-2 rounded-full flex-shrink-0"
+                                  style={{
+                                    backgroundColor:
+                                      entry.shift_template?.color || "#6B7280",
+                                  }}
+                                />
+                                <span className="font-medium text-[color:var(--text-primary)]">
+                                  {emp?.full_name || "—"}
+                                </span>
+                                <span className="text-[color:var(--text-muted)]">
+                                  {entry.shift_template?.name}
+                                  {start && end ? ` · ${start}–${end}` : ""}
+                                </span>
+                              </span>
+                            );
+                          })
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </Card>
       ) : (
         <div className="border border-[color:var(--border-light)] rounded-lg overflow-x-auto bg-[color:var(--surface)]">
           <table className="text-xs w-full border-collapse">
             <thead>
               <tr className="bg-[color:var(--surface-sunken)]">
                 <th className="sticky left-0 z-10 bg-[color:var(--surface-sunken)] px-3 py-2 text-left font-medium text-[color:var(--text-secondary)] border-b border-r border-[color:var(--border-light)] min-w-[140px]">
-                  Funcionário
+                  {t("employeeHeader")}
                 </th>
                 {visibleDays.map((day) => {
                   const weekend = isWeekend(day);
@@ -827,7 +944,7 @@ export default function SchedulePage() {
               <span className="font-medium">{assignModal.userName}</span>
               {" — "}
               {parseInt(assignModal.date.slice(8))}{" "}
-              {m(["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"][parseInt(assignModal.date.slice(5, 7)) - 1])}
+              {m(MONTH_KEYS[parseInt(assignModal.date.slice(5, 7)) - 1])}
               {nationalHolidays[assignModal.date] && (
                 <Badge variant="danger" className="ml-2">
                   {nationalHolidays[assignModal.date]}
@@ -872,7 +989,7 @@ export default function SchedulePage() {
                   loading={saving}
                   className="text-[color:var(--danger)] hover:text-[color:var(--danger)] hover:bg-[color:var(--danger-soft)] w-full"
                 >
-                  {t("assignShiftTitle")}
+                  {t("removeAssignment")}
                 </Button>
               </div>
             )}
@@ -1117,6 +1234,64 @@ export default function SchedulePage() {
               </div>
             </>
           )}
+        </div>
+      </Modal>
+
+      <Modal
+        open={emptyPublishModal}
+        onClose={() => setEmptyPublishModal(false)}
+        title={t("emptyScheduleTitle")}
+        size="sm"
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-[color:var(--text-secondary)]">
+            {t("emptyScheduleBody")}
+          </p>
+          <div className="flex gap-2 justify-end pt-1">
+            <Button
+              variant="ghost"
+              onClick={() => setEmptyPublishModal(false)}
+              disabled={saving}
+            >
+              {t("cancel")}
+            </Button>
+            <Button
+              onClick={() => publishSchedule(true)}
+              loading={saving}
+              className="bg-[color:var(--warning)] hover:opacity-90"
+            >
+              {t("continuePublish")}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal
+        open={!!unpublishConfirm}
+        onClose={() => setUnpublishConfirm(false)}
+        title={t("unpublishButton")}
+        size="sm"
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-[color:var(--text-secondary)]">
+            {t("confirmUnpublish")}
+          </p>
+          <div className="flex gap-2 justify-end pt-1">
+            <Button
+              variant="ghost"
+              onClick={() => setUnpublishConfirm(false)}
+              disabled={saving}
+            >
+              {t("cancel")}
+            </Button>
+            <Button
+              onClick={doUnpublish}
+              loading={saving}
+              className="text-[color:var(--warning)]"
+            >
+              {t("unpublishButton")}
+            </Button>
+          </div>
         </div>
       </Modal>
     </div>
