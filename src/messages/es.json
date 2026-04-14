@@ -417,7 +417,11 @@
     "municipalHolidayLabel": "Festivo municipal",
     "closedDayLabel": "Cerrado",
     "multipleShiftsHint": "Puedes seleccionar varios turnos para el mismo día.",
-    "confirmAssign": "Asignar"
+    "confirmAssign": "Asignar",
+    "dndConflictTitle": "Confirmar cambio",
+    "dndConflictIntro": "¿Mover \"{shift}\" de {employee} al {date}?",
+    "dndConflictDuplicate": "Este empleado ya tiene este turno en el día destino.",
+    "dndConflictConfirm": "Confirmar igualmente"
   },
   "months": {
     "jan": "Enero",

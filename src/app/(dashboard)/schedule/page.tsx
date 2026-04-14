@@ -13,6 +13,18 @@ import {
   getViolationsForCell,
   type ComplianceViolation,
 } from "@/lib/compliance";
+import {
+  DndContext,
+  PointerSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+  useDraggable,
+  useDroppable,
+  DragOverlay,
+  type DragEndEvent,
+  type DragStartEvent,
+} from "@dnd-kit/core";
 import { getPortugueseHolidaysRange } from "@/lib/holidays";
 import { exportSchedulePDF, exportScheduleExcel } from "@/lib/export";
 import { SkeletonTable } from "@/components/ui/skeleton";
@@ -98,6 +110,88 @@ interface PreviewResult {
   }[];
 }
 
+// D&D drag data shapes
+type DragData =
+  | { kind: "grid-shift"; entryId: string; userId: string; fromDate: string }
+  | { kind: "byday-shift"; entryId: string; userId: string; fromDate: string };
+
+type DropData =
+  | { kind: "grid-cell"; userId: string; date: string }
+  | { kind: "byday-row"; date: string };
+
+function DraggableChip({
+  id,
+  data,
+  disabled,
+  children,
+  className,
+  style,
+}: {
+  id: string;
+  data: DragData;
+  disabled?: boolean;
+  children: React.ReactNode;
+  className?: string;
+  style?: React.CSSProperties;
+}) {
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+    id,
+    data,
+    disabled,
+  });
+  return (
+    <div
+      ref={setNodeRef}
+      {...attributes}
+      {...listeners}
+      className={`${className || ""} ${
+        disabled ? "" : "cursor-grab active:cursor-grabbing"
+      } ${isDragging ? "opacity-40" : ""}`}
+      style={{ touchAction: "none", ...style }}
+    >
+      {children}
+    </div>
+  );
+}
+
+function DroppableArea({
+  id,
+  data,
+  disabled,
+  children,
+  as: Tag = "div",
+  className,
+  style,
+  onClick,
+  title,
+}: {
+  id: string;
+  data: DropData;
+  disabled?: boolean;
+  children: React.ReactNode;
+  as?: React.ElementType;
+  className?: string;
+  style?: React.CSSProperties;
+  onClick?: () => void;
+  title?: string;
+}) {
+  const { setNodeRef, isOver } = useDroppable({ id, data, disabled });
+  const overRing = isOver
+    ? " outline outline-2 outline-offset-[-2px] outline-[color:var(--accent)]"
+    : "";
+  return (
+    <Tag
+      ref={setNodeRef}
+      className={(className || "") + overRing}
+      style={style}
+      onClick={onClick}
+      title={title}
+    >
+      {children}
+    </Tag>
+  );
+}
+
 export default function SchedulePage() {
   const t = useTranslations("schedulePage");
   const m = useTranslations("months");
@@ -128,6 +222,20 @@ export default function SchedulePage() {
     userName: string;
   } | null>(null);
   const [assignSelection, setAssignSelection] = useState<Set<string>>(new Set());
+
+  const [dndConfirm, setDndConfirm] = useState<{
+    entryId: string;
+    toUserId: string;
+    toDate: string;
+    fromDate: string;
+    issues: ComplianceViolation[];
+    duplicate: boolean;
+  } | null>(null);
+  const [activeDrag, setActiveDrag] = useState<{
+    entryId: string;
+    label: string;
+    color: string;
+  } | null>(null);
 
   const [violationModal, setViolationModal] =
     useState<ComplianceViolation[] | null>(null);
@@ -438,6 +546,121 @@ export default function SchedulePage() {
     setAssignSelection(new Set());
     setSaving(false);
     fetchData();
+  }
+
+  const dndSensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: 150, tolerance: 5 },
+    }),
+  );
+
+  async function applyMove(
+    entryId: string,
+    toUserId: string,
+    toDate: string,
+  ) {
+    if (!schedule) return;
+    setSaving(true);
+    await supabase
+      .from("schedule_entries")
+      .update({
+        user_id: toUserId,
+        date: toDate,
+        is_holiday: !!nationalHolidays[toDate],
+      })
+      .eq("id", entryId);
+    logActivity("shift_assigned", "schedule", schedule.id, {
+      moved_entry: entryId,
+      to_user: toUserId,
+      to_date: toDate,
+    });
+    setSaving(false);
+    fetchData();
+  }
+
+  function computeMoveIssues(
+    entry: EntryWithShift,
+    toUserId: string,
+    toDate: string,
+  ): { issues: ComplianceViolation[]; duplicate: boolean } {
+    const duplicate = entries.some(
+      (e) =>
+        e.id !== entry.id &&
+        e.user_id === toUserId &&
+        e.date === toDate &&
+        e.shift_template_id === entry.shift_template_id,
+    );
+    const projected = entries.map((e) =>
+      e.id === entry.id ? { ...e, user_id: toUserId, date: toDate } : e,
+    );
+    const allViolations = validateCompliance(projected, employees);
+    const issues = allViolations.filter(
+      (v) =>
+        v.userId === toUserId &&
+        (v.date === toDate || v.date === entry.date),
+    );
+    return { issues, duplicate };
+  }
+
+  function handleDragStart(ev: DragStartEvent) {
+    const data = ev.active.data.current as DragData | undefined;
+    if (!data) return;
+    const entry = entries.find((e) => e.id === data.entryId);
+    if (!entry) return;
+    const emp = employees.find((e) => e.id === entry.user_id);
+    const shiftName = entry.shift_template?.name || "";
+    const label =
+      data.kind === "byday-shift"
+        ? `${emp?.full_name || "—"} · ${shiftName}`
+        : shiftName;
+    setActiveDrag({
+      entryId: entry.id,
+      label,
+      color: entry.shift_template?.color || "#6B7280",
+    });
+  }
+
+  function handleDragEnd(ev: DragEndEvent) {
+    setActiveDrag(null);
+    const { active, over } = ev;
+    if (!over) return;
+    const activeData = active.data.current as DragData | undefined;
+    const overData = over.data.current as DropData | undefined;
+    if (!activeData || !overData) return;
+
+    const entry = entries.find((e) => e.id === activeData.entryId);
+    if (!entry) return;
+
+    const toUserId =
+      overData.kind === "grid-cell" ? overData.userId : entry.user_id;
+    const toDate = overData.date;
+
+    // Constraints by origin
+    if (activeData.kind === "grid-shift") {
+      // Grid: only same employee allowed
+      if (toUserId !== entry.user_id) return;
+    }
+    // byday-shift: same user, different date (row is per-day)
+    if (activeData.kind === "byday-shift") {
+      if (toUserId !== entry.user_id) return;
+    }
+
+    if (toUserId === entry.user_id && toDate === entry.date) return;
+
+    const { issues, duplicate } = computeMoveIssues(entry, toUserId, toDate);
+    if (duplicate || issues.length > 0) {
+      setDndConfirm({
+        entryId: entry.id,
+        toUserId,
+        toDate,
+        fromDate: entry.date,
+        issues,
+        duplicate,
+      });
+    } else {
+      applyMove(entry.id, toUserId, toDate);
+    }
   }
 
   async function removeAllAssignments() {
@@ -817,6 +1040,12 @@ export default function SchedulePage() {
         </div>
       </div>
 
+      <DndContext
+        sensors={dndSensors}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+        onDragCancel={() => setActiveDrag(null)}
+      >
       <div className="min-h-[640px]">
       {employees.length === 0 || shifts.length === 0 ? (
         <Card>
@@ -867,7 +1096,14 @@ export default function SchedulePage() {
                     : undefined;
 
                   return (
-                    <div key={day} className={rowClass} style={rowStyle}>
+                    <DroppableArea
+                      key={day}
+                      id={`byday-row:${day}`}
+                      data={{ kind: "byday-row", date: day }}
+                      disabled={schedule?.status !== "draft"}
+                      className={rowClass}
+                      style={rowStyle}
+                    >
                       <div className="sm:min-w-[160px] flex items-baseline gap-2 flex-wrap">
                         <span className="text-xs text-[color:var(--text-muted)] uppercase tracking-wide">
                           {dow}
@@ -902,8 +1138,16 @@ export default function SchedulePage() {
                             const start = entry.shift_template?.start_time?.slice(0, 5) || "";
                             const end = entry.shift_template?.end_time?.slice(0, 5) || "";
                             return (
-                              <span
+                              <DraggableChip
                                 key={entry.id}
+                                id={`byday-chip:${entry.id}`}
+                                data={{
+                                  kind: "byday-shift",
+                                  entryId: entry.id,
+                                  userId: entry.user_id,
+                                  fromDate: day,
+                                }}
+                                disabled={schedule?.status !== "draft"}
                                 className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-xs bg-[color:var(--surface)] border border-[color:var(--border-light)]"
                               >
                                 <span
@@ -920,12 +1164,12 @@ export default function SchedulePage() {
                                   {entry.shift_template?.name}
                                   {start && end ? ` · ${start}–${end}` : ""}
                                 </span>
-                              </span>
+                              </DraggableChip>
                             );
                           })
                         )}
                       </div>
-                    </div>
+                    </DroppableArea>
                   );
                 })}
               </div>
@@ -1044,9 +1288,14 @@ export default function SchedulePage() {
                         ? cellViolations.map((v) => v.rule).join("\n")
                         : undefined;
 
+                    const dndDisabled = schedule?.status !== "draft";
                     return (
-                      <td
+                      <DroppableArea
                         key={day}
+                        as="td"
+                        id={`grid-cell:${emp.id}:${day}`}
+                        data={{ kind: "grid-cell", userId: emp.id, date: day }}
+                        disabled={dndDisabled}
                         className={tdClass}
                         style={tdStyle}
                         onClick={() =>
@@ -1058,8 +1307,16 @@ export default function SchedulePage() {
                         {hasEntry ? (
                           <div className="flex flex-col gap-[1px]">
                             {cellEntries.slice(0, 2).map((entry) => (
-                              <div
+                              <DraggableChip
                                 key={entry.id}
+                                id={`grid-chip:${entry.id}`}
+                                data={{
+                                  kind: "grid-shift",
+                                  entryId: entry.id,
+                                  userId: emp.id,
+                                  fromDate: day,
+                                }}
+                                disabled={dndDisabled}
                                 className="rounded px-0.5 py-0.5 text-white font-medium text-[10px] leading-tight"
                                 style={{
                                   backgroundColor:
@@ -1067,7 +1324,7 @@ export default function SchedulePage() {
                                 }}
                               >
                                 {entry.shift_template?.name?.slice(0, 3) || "?"}
-                              </div>
+                              </DraggableChip>
                             ))}
                             {cellEntries.length > 2 && (
                               <div className="text-[9px] text-[color:var(--text-muted)] font-medium">
@@ -1082,7 +1339,7 @@ export default function SchedulePage() {
                         ) : (
                           <div className="py-1 text-stone-300">—</div>
                         )}
-                      </td>
+                      </DroppableArea>
                     );
                   })}
                 </tr>
@@ -1092,6 +1349,17 @@ export default function SchedulePage() {
         </div>
       )}
       </div>
+      <DragOverlay dropAnimation={null}>
+        {activeDrag ? (
+          <div
+            className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-xs font-medium text-white shadow-lg"
+            style={{ backgroundColor: activeDrag.color }}
+          >
+            {activeDrag.label}
+          </div>
+        ) : null}
+      </DragOverlay>
+      </DndContext>
 
       <Modal
         open={!!assignModal}
@@ -1547,6 +1815,72 @@ export default function SchedulePage() {
             </Button>
           </div>
         </div>
+      </Modal>
+
+      <Modal
+        open={!!dndConfirm}
+        onClose={() => setDndConfirm(null)}
+        title={t("dndConflictTitle")}
+        size="sm"
+      >
+        {dndConfirm && (() => {
+          const entry = entries.find((e) => e.id === dndConfirm.entryId);
+          const toEmp = employees.find((e) => e.id === dndConfirm.toUserId);
+          return (
+            <div className="space-y-4">
+              <div className="text-sm text-[color:var(--text-secondary)]">
+                {t("dndConflictIntro", {
+                  shift: entry?.shift_template?.name || "",
+                  employee: toEmp?.full_name || "—",
+                  date: dndConfirm.toDate,
+                })}
+              </div>
+              {dndConfirm.duplicate && (
+                <div className="text-sm rounded-md border border-[color:var(--danger)] bg-[color:var(--danger-soft)] px-3 py-2 text-[color:var(--danger)]">
+                  {t("dndConflictDuplicate")}
+                </div>
+              )}
+              {dndConfirm.issues.length > 0 && (
+                <ul className="text-xs space-y-1.5">
+                  {dndConfirm.issues.map((v, i) => (
+                    <li
+                      key={i}
+                      className={
+                        "rounded-md px-2 py-1.5 border " +
+                        (v.severity === "block"
+                          ? "border-[color:var(--danger)] bg-[color:var(--danger-soft)] text-[color:var(--danger)]"
+                          : "border-amber-300 bg-amber-50 text-amber-700")
+                      }
+                    >
+                      <span className="font-medium">{v.rule}</span>
+                      {v.message ? ` — ${v.message}` : ""}
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <div className="flex justify-end gap-2 pt-2">
+                <Button
+                  variant="ghost"
+                  onClick={() => setDndConfirm(null)}
+                  disabled={saving}
+                >
+                  {t("cancel")}
+                </Button>
+                <Button
+                  variant="primary"
+                  onClick={async () => {
+                    const c = dndConfirm;
+                    setDndConfirm(null);
+                    await applyMove(c.entryId, c.toUserId, c.toDate);
+                  }}
+                  disabled={saving}
+                >
+                  {t("dndConflictConfirm")}
+                </Button>
+              </div>
+            </div>
+          );
+        })()}
       </Modal>
     </div>
   );

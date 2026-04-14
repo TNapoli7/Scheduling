@@ -417,7 +417,11 @@
     "municipalHolidayLabel": "Municipal holiday",
     "closedDayLabel": "Closed",
     "multipleShiftsHint": "You can select multiple shifts for the same day.",
-    "confirmAssign": "Assign"
+    "confirmAssign": "Assign",
+    "dndConflictTitle": "Confirm change",
+    "dndConflictIntro": "Move \"{shift}\" for {employee} to {date}?",
+    "dndConflictDuplicate": "This employee already has this shift on the target day.",
+    "dndConflictConfirm": "Confirm anyway"
   },
   "months": {
     "jan": "January",
