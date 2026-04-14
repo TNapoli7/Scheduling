@@ -1,4 +1,23 @@
 {
+  "cookieConsent": {
+    "title": "Respeitamos a tua privacidade",
+    "body": "Usamos cookies essenciais para o site funcionar e, com o teu consentimento, outros para analisar o uso e melhorar o produto.",
+    "learnMore": "Saber mais",
+    "acceptAll": "Aceitar tudo",
+    "rejectAll": "Rejeitar tudo",
+    "customise": "Personalizar",
+    "customiseTitle": "Preferências de cookies",
+    "saveChoices": "Guardar escolhas",
+    "close": "Fechar",
+    "catEssentialTitle": "Essenciais (sempre ativos)",
+    "catEssentialBody": "Necessários para o login, sessão e preferências básicas. Sem estes o site não funciona.",
+    "catFunctionalTitle": "Funcionais",
+    "catFunctionalBody": "Guardam preferências da interface entre sessões (ex: modo de vista preferido).",
+    "catAnalyticsTitle": "Analíticos",
+    "catAnalyticsBody": "Ajudam-nos a perceber como o produto é usado, de forma agregada e anónima.",
+    "catPerformanceTitle": "Desempenho e erros",
+    "catPerformanceBody": "Registam erros técnicos para nós resolvermos mais depressa. Sem identificação pessoal."
+  },
   "passwordPolicy": {
     "tooShort": "A password tem de ter pelo menos {min} caracteres.",
     "needsLetter": "A password tem de incluir pelo menos uma letra.",
@@ -343,6 +362,7 @@
       "privacyLink": "Privacidade",
       "cookiesLink": "Cookies",
       "dpaLink": "DPA",
+      "manageCookiesLink": "Gerir cookies",
       "madeIn": "Feito com ☕ em Portugal"
     }
   },

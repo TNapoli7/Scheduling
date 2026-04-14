@@ -7,6 +7,7 @@
 
 import Link from "next/link";
 import { useTranslations } from "next-intl";
+import { openConsentBanner } from "@/lib/cookie-consent";
 
 const ORANGE_PRIMARY = "#E8850A";
 const ORANGE_GRADIENT = "#f5a623";
@@ -120,6 +121,15 @@ export function LpFooter() {
               <Link href="/dpa" className="hover:text-stone-900">
                 {tFooter("dpaLink")}
               </Link>
+            </li>
+            <li>
+              <button
+                type="button"
+                onClick={openConsentBanner}
+                className="hover:text-stone-900 text-left"
+              >
+                {tFooter("manageCookiesLink")}
+              </button>
             </li>
           </ul>
         </div>

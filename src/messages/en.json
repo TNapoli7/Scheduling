@@ -1,4 +1,23 @@
 {
+  "cookieConsent": {
+    "title": "We respect your privacy",
+    "body": "We use essential cookies for the site to work, and with your consent, others to analyse usage and improve the product.",
+    "learnMore": "Learn more",
+    "acceptAll": "Accept all",
+    "rejectAll": "Reject all",
+    "customise": "Customise",
+    "customiseTitle": "Cookie preferences",
+    "saveChoices": "Save choices",
+    "close": "Close",
+    "catEssentialTitle": "Essential (always on)",
+    "catEssentialBody": "Needed for login, session and basic preferences. The site does not work without these.",
+    "catFunctionalTitle": "Functional",
+    "catFunctionalBody": "Remember UI preferences across sessions (e.g. your preferred view mode).",
+    "catAnalyticsTitle": "Analytics",
+    "catAnalyticsBody": "Help us understand how the product is used, in aggregate and anonymously.",
+    "catPerformanceTitle": "Performance & errors",
+    "catPerformanceBody": "Capture technical errors so we can fix them faster. No personal identification."
+  },
   "passwordPolicy": {
     "tooShort": "Password must be at least {min} characters.",
     "needsLetter": "Password must contain at least one letter.",
@@ -343,6 +362,7 @@
       "privacyLink": "Privacy",
       "cookiesLink": "Cookies",
       "dpaLink": "DPA",
+      "manageCookiesLink": "Manage cookies",
       "madeIn": "Made with ☕ in Portugal"
     }
   },
