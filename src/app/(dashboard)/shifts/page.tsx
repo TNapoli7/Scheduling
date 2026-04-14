@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Modal } from "@/components/ui/modal";
+import { SkeletonCard } from "@/components/ui/skeleton";
 import type { ShiftTemplate } from "@/types/database";
 
 type ShiftForm = {
@@ -221,7 +222,11 @@ export default function ShiftsPage() {
 
       {/* Shift cards */}
       {loading ? (
-        <div className="text-center py-12 text-stone-500">{t("subtitle")}</div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <SkeletonCard />
+          <SkeletonCard />
+          <SkeletonCard />
+        </div>
       ) : shifts.length === 0 ? (
         <Card>
           <div className="text-center py-8">

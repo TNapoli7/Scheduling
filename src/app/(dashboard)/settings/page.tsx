@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Card, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { SkeletonCard } from "@/components/ui/skeleton";
 import type { Organization } from "@/types/database";
 import { ActivityLogPanel } from "@/components/settings/ActivityLog";
 import { History, Settings as SettingsIcon, CreditCard, Bell } from "lucide-react";
@@ -123,7 +124,8 @@ export default function SettingsPage() {
     return (
       <div className="space-y-6">
         <h1 className="text-2xl font-bold text-stone-900">{t("title")}</h1>
-        <div className="text-center py-12 text-stone-500">A carregar...</div>
+        <SkeletonCard />
+        <SkeletonCard />
       </div>
     );
   }

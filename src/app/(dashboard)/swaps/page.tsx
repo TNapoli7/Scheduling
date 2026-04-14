@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Modal } from "@/components/ui/modal";
+import { SkeletonList } from "@/components/ui/skeleton";
 import type { Profile, ScheduleEntry, ShiftTemplate } from "@/types/database";
 import { formatDate } from "@/lib/dates";
 
@@ -238,7 +239,7 @@ export default function SwapsPage() {
     return (
       <div className="space-y-6">
         <h1 className="text-2xl font-bold text-stone-900">{t("title")}</h1>
-        <div className="text-center py-12 text-stone-500">A carregar...</div>
+        <SkeletonList count={4} />
       </div>
     );
   }

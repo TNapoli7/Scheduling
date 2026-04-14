@@ -4,9 +4,30 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import { Menu, Bell, LogOut, User, ChevronDown } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { logActivity } from "@/lib/activity-log";
 import type { Notification } from "@/types/database";
+
+/**
+ * Map a pathname segment to a navigation i18n key.
+ * Keeps the header title in sync with the sidebar active item.
+ */
+function pathnameToNavKey(pathname: string): string | null {
+  // Strip trailing slashes and query, take the first path segment
+  const seg = pathname.replace(/^\/+/, "").split("/")[0];
+  const map: Record<string, string> = {
+    dashboard: "dashboard",
+    schedule: "schedule",
+    employees: "employees",
+    shifts: "shifts",
+    availability: "availability",
+    "time-off": "timeOff",
+    swaps: "swaps",
+    fairness: "fairness",
+    settings: "settings",
+  };
+  return map[seg] || null;
+}
 
 interface HeaderProps {
   userName: string;
@@ -27,6 +48,10 @@ function timeAgo(dateStr: string, t: (key: string) => string): string {
 
 export function Header({ userName, unreadCount: initialUnread, onMenuClick }: HeaderProps) {
   const t = useTranslations('header');
+  const tNav = useTranslations('navigation');
+  const pathname = usePathname();
+  const navKey = pathnameToNavKey(pathname);
+  const pageTitle = navKey ? tNav(navKey) : "";
   const [showDropdown, setShowDropdown] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -96,7 +121,7 @@ export function Header({ userName, unreadCount: initialUnread, onMenuClick }: He
 
   return (
     <header className="sticky top-0 z-30 h-14 bg-[color:var(--surface)]/80 backdrop-blur-md border-b border-[color:var(--border-light)]/60 px-4 lg:px-6">
-      <div className="flex items-center h-full">
+      <div className="flex items-center h-full gap-3">
         {/* Left: mobile menu (hidden on desktop) */}
         <button
           onClick={onMenuClick}
@@ -104,6 +129,13 @@ export function Header({ userName, unreadCount: initialUnread, onMenuClick }: He
         >
           <Menu className="w-5 h-5" />
         </button>
+
+        {/* Page title — synced with the active sidebar item */}
+        {pageTitle && (
+          <h1 className="text-sm font-semibold text-[color:var(--text-primary)] tracking-tight truncate">
+            {pageTitle}
+          </h1>
+        )}
 
         {/* Spacer pushes the right cluster to the end */}
         <div className="flex-1" />

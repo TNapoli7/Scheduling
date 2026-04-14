@@ -10,6 +10,7 @@ import { Select } from "@/components/ui/select";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Modal } from "@/components/ui/modal";
+import { SkeletonTable } from "@/components/ui/skeleton";
 import type { Profile } from "@/types/database";
 
 type EmployeeForm = {
@@ -262,7 +263,7 @@ export default function EmployeesPage() {
       {/* Table */}
       <Card padding="sm">
         {loading ? (
-          <div className="text-center py-12 text-[color:var(--text-muted)]">{t("loading")}</div>
+          <SkeletonTable rows={6} cols={6} />
         ) : filtered.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-[color:var(--text-muted)]">
