@@ -9,6 +9,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Modal } from "@/components/ui/modal";
 import type { Profile, ScheduleEntry, ShiftTemplate } from "@/types/database";
+import { formatDate } from "@/lib/dates";
 
 interface SwapWithDetails {
   id: string;
@@ -336,7 +337,7 @@ export default function SwapsPage() {
                           }}
                         />
                         <span>
-                          {swap.entry.date} —{" "}
+                          {formatDate(swap.entry.date)} —{" "}
                           {swap.entry.shift_template.name}
                         </span>
                       </div>
@@ -354,7 +355,7 @@ export default function SwapsPage() {
                             }}
                           />
                           <span>
-                            {swap.target_entry.date} —{" "}
+                            {formatDate(swap.target_entry.date)} —{" "}
                             {swap.target_entry.shift_template.name}
                           </span>
                         </div>
@@ -434,7 +435,7 @@ export default function SwapsPage() {
                     />
                     <div>
                       <p className="font-medium text-stone-900">
-                        {entry.date} — {entry.shift_template?.name}
+                        {formatDate(entry.date)} — {entry.shift_template?.name}
                       </p>
                       <p className="text-xs text-stone-500">
                         {entry.shift_template?.start_time?.slice(0, 5)} -{" "}

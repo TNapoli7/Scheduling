@@ -282,7 +282,12 @@ export default function DashboardPage() {
     <div className="space-y-6">
       {/* Welcome */}
       <div>
-        <h1 className="text-2xl font-bold text-[color:var(--text-primary)] font-display tracking-tight">{t("helloPrefix")} {firstName}</h1>
+        <h1 className="text-2xl font-bold text-[color:var(--text-primary)] font-display tracking-tight">{(() => {
+          const h = now.getHours();
+          if (h < 12) return t("goodMorning");
+          if (h < 19) return t("goodAfternoon");
+          return t("goodEvening");
+        })()}, {firstName}</h1>
         <p className="text-[color:var(--text-muted)] mt-1">
           {m(["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"][currentMonth - 1])} {currentYear}
         </p>

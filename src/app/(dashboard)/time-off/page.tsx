@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input, Select, Textarea } from "@/components/ui/input";
+import { formatDate } from "@/lib/dates";
 import { Modal } from "@/components/ui/modal";
 import { Palmtree } from "lucide-react";
 import { SkeletonCard, SkeletonList } from "@/components/ui/skeleton";
@@ -160,8 +161,8 @@ export default function TimeOffPage() {
         await supabase.from("notifications").insert({
           user_id: mgr.id,
           type: "time_off_request",
-          title: "Novo pedido de ferias",
-          body: `${me?.full_name || "Funcionário"} pediu ${TYPE_LABELS[newType]?.toLowerCase()}${newPeriod !== "full_day" ? ` (${PERIOD_LABELS[newPeriod]?.toLowerCase()})` : ""} de ${newStart}${newPeriod === "full_day" ? ` a ${effectiveEnd}` : ""}.`,
+          title: "Novo pedido de férias",
+          body: `${me?.full_name || "Funcionário"} pediu ${TYPE_LABELS[newType]?.toLowerCase()}${newPeriod !== "full_day" ? ` (${PERIOD_LABELS[newPeriod]?.toLowerCase()})` : ""} de ${formatDate(newStart)}${newPeriod === "full_day" ? ` a ${formatDate(effectiveEnd)}` : ""}.`,
           metadata: { requester_id: myId, type: newType, period: newPeriod, start_date: newStart, end_date: effectiveEnd },
         });
       }
@@ -202,8 +203,8 @@ export default function TimeOffPage() {
       await supabase.from("notifications").insert({
         user_id: req.user_id,
         type: status === "approved" ? "time_off_approved" : "time_off_rejected",
-        title: status === "approved" ? "Pedido de ferias aprovado" : "Pedido de ferias rejeitado",
-        body: `O seu pedido de ${TYPE_LABELS[req.type]?.toLowerCase()} para ${req.start_date} a ${req.end_date} foi ${status === "approved" ? "aprovado" : "rejeitado"}.`,
+        title: status === "approved" ? "Pedido de férias aprovado" : "Pedido de férias rejeitado",
+        body: `O seu pedido de ${TYPE_LABELS[req.type]?.toLowerCase()} para ${formatDate(req.start_date)} a ${formatDate(req.end_date)} foi ${status === "approved" ? "aprovado" : "rejeitado"}.`,
         metadata: { request_id: requestId },
       });
     }
@@ -379,8 +380,8 @@ export default function TimeOffPage() {
                     </div>
                     <p className="text-sm text-stone-700">
                       {req.period && req.period !== "full_day"
-                        ? req.start_date
-                        : `${req.start_date} a ${req.end_date}`}
+                        ? formatDate(req.start_date)
+                        : `${formatDate(req.start_date)} a ${formatDate(req.end_date)}`}
                       <span className="text-stone-400 ml-2">({formatDays(dayCount)})</span>
                     </p>
                     {req.reason && (

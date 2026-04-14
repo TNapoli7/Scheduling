@@ -57,6 +57,7 @@ export default function ShiftsPage() {
   const [form, setForm] = useState<ShiftForm>(emptyForm);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [confirmDeactivate, setConfirmDeactivate] = useState<ShiftTemplate | null>(null);
 
   const supabase = createClient();
 
@@ -271,7 +272,15 @@ export default function ShiftsPage() {
                   <Button variant="ghost" size="sm" onClick={() => openEdit(shift)}>
                     {t("editButton")}
                   </Button>
-                  <Button variant="ghost" size="sm" onClick={() => toggleActive(shift)}>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() =>
+                      shift.is_active
+                        ? setConfirmDeactivate(shift)
+                        : toggleActive(shift)
+                    }
+                  >
                     {shift.is_active ? t("deactivateButton") : t("activateButton")}
                   </Button>
                 </div>
@@ -361,6 +370,40 @@ export default function ShiftsPage() {
             </Button>
           </div>
         </div>
+      </Modal>
+
+      {/* Confirm deactivate shift modal */}
+      <Modal
+        open={!!confirmDeactivate}
+        onClose={() => setConfirmDeactivate(null)}
+        title={t("confirmDeactivateTitle")}
+        size="sm"
+      >
+        {confirmDeactivate && (
+          <div className="space-y-4">
+            <p className="text-sm text-[color:var(--text-secondary)]">
+              {t("confirmDeactivateBody", { name: confirmDeactivate.name })}
+            </p>
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="secondary"
+                onClick={() => setConfirmDeactivate(null)}
+              >
+                {t("cancel")}
+              </Button>
+              <Button
+                variant="danger"
+                onClick={async () => {
+                  const sh = confirmDeactivate;
+                  setConfirmDeactivate(null);
+                  await toggleActive(sh);
+                }}
+              >
+                {t("deactivateButton")}
+              </Button>
+            </div>
+          </div>
+        )}
       </Modal>
     </div>
   );

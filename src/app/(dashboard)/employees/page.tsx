@@ -46,6 +46,7 @@ export default function EmployeesPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
+  const [confirmDeactivate, setConfirmDeactivate] = useState<Profile | null>(null);
 
   const supabase = createClient();
 
@@ -281,7 +282,11 @@ export default function EmployeesPage() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => toggleActive(emp)}
+                          onClick={() =>
+                            emp.is_active
+                              ? setConfirmDeactivate(emp)
+                              : toggleActive(emp)
+                          }
                         >
                           {emp.is_active ? t("deactivateButton") : t("activateButton")}
                         </Button>
@@ -372,6 +377,40 @@ export default function EmployeesPage() {
             </Button>
           </div>
         </div>
+      </Modal>
+
+      {/* Confirm deactivate modal */}
+      <Modal
+        open={!!confirmDeactivate}
+        onClose={() => setConfirmDeactivate(null)}
+        title={t("confirmDeactivateTitle")}
+        size="sm"
+      >
+        {confirmDeactivate && (
+          <div className="space-y-4">
+            <p className="text-sm text-[color:var(--text-secondary)]">
+              {t("confirmDeactivateBody", { name: confirmDeactivate.full_name })}
+            </p>
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="secondary"
+                onClick={() => setConfirmDeactivate(null)}
+              >
+                {t("cancel")}
+              </Button>
+              <Button
+                variant="danger"
+                onClick={async () => {
+                  const emp = confirmDeactivate;
+                  setConfirmDeactivate(null);
+                  await toggleActive(emp);
+                }}
+              >
+                {t("deactivateButton")}
+              </Button>
+            </div>
+          </div>
+        )}
       </Modal>
     </div>
   );

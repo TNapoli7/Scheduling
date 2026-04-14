@@ -23,10 +23,13 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       "inline-flex items-center justify-center gap-2 font-medium rounded-[var(--radius-md)] transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[color:var(--background)] disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] whitespace-nowrap";
 
     const variantStyles = {
+      // Primary now uses the Shiftera brand accent (coral/orange) — main CTAs.
       primary:
-        "bg-[color:var(--primary)] text-[color:var(--primary-foreground)] hover:bg-[color:var(--primary-hover)] active:bg-[color:var(--primary-active)] shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-md)]",
+        "bg-[color:var(--accent)] text-[color:var(--accent-foreground)] hover:bg-[color:var(--accent-hover)] active:bg-[color:var(--accent-active)] shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-md)]",
+      // Accent kept as alias of primary for backwards-compat — same style.
       accent:
         "bg-[color:var(--accent)] text-[color:var(--accent-foreground)] hover:bg-[color:var(--accent-hover)] active:bg-[color:var(--accent-active)] shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-md)]",
+      // Secondary: soft outlined button for cancel/back-style actions.
       secondary:
         "bg-[color:var(--surface)] text-[color:var(--text-primary)] border border-[color:var(--border)] hover:bg-[color:var(--surface-sunken)] hover:border-[color:var(--border-strong)]",
       ghost:
