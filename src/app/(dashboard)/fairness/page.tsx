@@ -274,7 +274,7 @@ export default function FairnessPage() {
           </svg>
         </Button>
         <h2 className="text-lg font-semibold text-stone-900 min-w-[180px] text-center">
-          {tMonths(String(month))} {year}
+          {tMonths(["jan","feb","mar","apr","may","jun","jul","aug","sep","oct","nov","dec"][month - 1])} {year}
         </h2>
         <Button variant="ghost" size="sm" onClick={nextMonth}>
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { ChatWidget } from "@/components/chat/ChatWidget";
+import { LpNavbar } from "@/components/lp/LpNavbar";
 import {
   ArrowRight,
   Check,
@@ -588,7 +589,7 @@ function Footer() {
 export default function LandingPage() {
   return (
     <div className="min-h-screen" style={{ backgroundColor: WARM_CREAM }}>
-      <Navbar />
+      <LpNavbar />
       <Hero />
       <AppPreview />
       <Features />
