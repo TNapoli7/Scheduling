@@ -496,6 +496,10 @@
     "cancel": "Cancel",
     "reject": "Reject",
     "approve": "Approve",
+    "errorMissingStart": "Please set a start date.",
+    "errorMissingEnd": "Please set an end date.",
+    "errorAuth": "Invalid session. Reload the page.",
+    "errorGeneric": "Could not create request. Please try again.",
     "types": {
       "ferias": "Vacation",
       "baixa": "Sick leave",

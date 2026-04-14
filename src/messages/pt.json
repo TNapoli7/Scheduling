@@ -496,6 +496,10 @@
     "cancel": "Cancelar",
     "reject": "Rejeitar",
     "approve": "Aprovar",
+    "errorMissingStart": "Indica a data de início.",
+    "errorMissingEnd": "Indica a data de fim.",
+    "errorAuth": "Sessão inválida. Recarrega a página.",
+    "errorGeneric": "Não foi possível criar o pedido. Tenta novamente.",
     "types": {
       "ferias": "Férias",
       "baixa": "Baixa médica",

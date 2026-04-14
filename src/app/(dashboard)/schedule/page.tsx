@@ -79,6 +79,14 @@ function isWeekend(dateStr: string): boolean {
   return d.getDay() === 0 || d.getDay() === 6;
 }
 
+function shiftHours(start: string, end: string): number {
+  const [sh, sm] = start.split(":").map(Number);
+  const [eh, em] = end.split(":").map(Number);
+  let diff = (eh * 60 + (em || 0)) - (sh * 60 + (sm || 0));
+  if (diff <= 0) diff += 24 * 60; // overnight
+  return diff / 60;
+}
+
 type OperatingHours = Record<string, { open?: string; close?: string; closed?: boolean }>;
 
 function isCompanyClosedDay(
@@ -271,6 +279,22 @@ export default function SchedulePage() {
     const start = Math.max(0, Math.min(weekStart, days.length - 1));
     return days.slice(start, start + 7);
   }, [viewMode, weekStart, days]);
+
+  // Assigned hours per employee across visible days (respects week/month view).
+  const assignedHoursByUser = useMemo(() => {
+    const visibleSet = new Set(visibleDays);
+    const map: Record<string, number> = {};
+    for (const entry of entries) {
+      if (!visibleSet.has(entry.date)) continue;
+      if (!entry.shift_template) continue;
+      const h = shiftHours(
+        entry.shift_template.start_time,
+        entry.shift_template.end_time,
+      );
+      map[entry.user_id] = (map[entry.user_id] || 0) + h;
+    }
+    return map;
+  }, [entries, visibleDays]);
 
   const generateIssues = useMemo(() => {
     const issues: string[] = [];
@@ -1299,9 +1323,17 @@ export default function SchedulePage() {
                       {emp.full_name}
                     </div>
                     <div className="text-[10px] text-[color:var(--text-muted)] font-normal">
-                      {emp.contract_type === "full_time"
-                        ? emp.weekly_hours + "h"
-                        : "PT " + emp.weekly_hours + "h"}
+                      {(() => {
+                        const assigned = assignedHoursByUser[emp.id] || 0;
+                        const target =
+                          (emp.weekly_hours || 0) * (visibleDays.length / 7);
+                        const fmt = (n: number) =>
+                          Number.isInteger(n)
+                            ? `${n}h`
+                            : `${n.toFixed(1).replace(".", ",")}h`;
+                        const prefix = emp.contract_type === "full_time" ? "" : "PT ";
+                        return `${prefix}${fmt(assigned)} / ${fmt(target)}`;
+                      })()}
                     </div>
                   </td>
                   {visibleDays.map((day) => {

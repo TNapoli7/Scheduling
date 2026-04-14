@@ -57,6 +57,7 @@ export default function TimeOffPage() {
   const [newStart, setNewStart] = useState("");
   const [newEnd, setNewEnd] = useState("");
   const [newReason, setNewReason] = useState("");
+  const [formError, setFormError] = useState<string | null>(null);
 
   const supabase = createClient();
   const isManager = myRole === "admin" || myRole === "manager";
@@ -107,8 +108,19 @@ export default function TimeOffPage() {
 
   // Create new request
   async function createRequest() {
-    if (!newStart) return;
-    if (newPeriod === "full_day" && !newEnd) return;
+    setFormError(null);
+    if (!newStart) {
+      setFormError(t("errorMissingStart"));
+      return;
+    }
+    if (newPeriod === "full_day" && !newEnd) {
+      setFormError(t("errorMissingEnd"));
+      return;
+    }
+    if (!myId || !orgId) {
+      setFormError(t("errorAuth"));
+      return;
+    }
     // Defensive: if end before start on full_day, align end to start
     const effectiveEnd =
       newPeriod !== "full_day"
@@ -118,16 +130,25 @@ export default function TimeOffPage() {
         : newEnd;
     setSaving(true);
 
-    await supabase.from("time_off_requests").insert({
-      user_id: myId,
-      org_id: orgId,
-      start_date: newStart,
-      end_date: effectiveEnd,
-      type: newType,
-      period: newPeriod,
-      reason: newReason || null,
-      status: "pending",
-    });
+    const { error: insertError } = await supabase
+      .from("time_off_requests")
+      .insert({
+        user_id: myId,
+        org_id: orgId,
+        start_date: newStart,
+        end_date: effectiveEnd,
+        type: newType,
+        period: newPeriod,
+        reason: newReason || null,
+        status: "pending",
+      });
+
+    if (insertError) {
+      console.error("time_off insert failed:", insertError);
+      setFormError(insertError.message || t("errorGeneric"));
+      setSaving(false);
+      return;
+    }
 
     logActivity("timeoff_requested", "timeoff", null, { type: newType, start_date: newStart, end_date: effectiveEnd });
 
@@ -255,7 +276,7 @@ export default function TimeOffPage() {
               : t("subtitleEmployee")}
           </p>
         </div>
-        <Button onClick={() => setShowNew(true)}>{t("newRequest")}</Button>
+        <Button onClick={() => { setShowNew(true); setFormError(null); }}>{t("newRequest")}</Button>
       </div>
 
       {/* Vacation balance */}
@@ -325,7 +346,7 @@ export default function TimeOffPage() {
               {tab === "pending" ? t("noPendingRequests") : tab === "approved" ? t("noApprovedRequests") : tab === "rejected" ? t("noRejectedRequests") : t("noRequestsFound")}
             </p>
             {!isManager && (
-              <Button size="sm" onClick={() => setShowNew(true)}>{t("newRequest")}</Button>
+              <Button size="sm" onClick={() => { setShowNew(true); setFormError(null); }}>{t("newRequest")}</Button>
             )}
           </div>
         </Card>
@@ -456,8 +477,13 @@ export default function TimeOffPage() {
             rows={2}
             placeholder={t("reasonPlaceholder")}
           />
+          {formError && (
+            <div className="text-sm rounded-md border border-[color:var(--danger)] bg-[color:var(--danger-soft)] px-3 py-2 text-[color:var(--danger)]">
+              {formError}
+            </div>
+          )}
           <div className="flex gap-2 justify-end">
-            <Button variant="ghost" onClick={() => setShowNew(false)}>{t("cancel")}</Button>
+            <Button variant="ghost" onClick={() => { setShowNew(false); setFormError(null); }}>{t("cancel")}</Button>
             <Button onClick={createRequest} loading={saving} disabled={!newStart || (newPeriod === "full_day" && !newEnd)}>
               {t("submitRequest")}
             </Button>
