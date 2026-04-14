@@ -288,20 +288,20 @@ export default function TimeOffPage() {
           { key: "approved", label: t("tabApproved") },
           { key: "rejected", label: t("tabRejected") },
           { key: "all", label: t("tabAll") },
-        ] as const).map((tab) => (
+        ] as const).map((item) => (
           <button
-            key={tab.key}
-            onClick={() => setTab(tab.key)}
+            key={item.key}
+            onClick={() => setTab(item.key)}
             className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-              tab === tab.key
+              tab === item.key
                 ? "bg-white text-stone-900 shadow-sm"
                 : "text-stone-600 hover:text-stone-900"
             }`}
           >
-            {tab.label}
-            {"count" in tab && tab.count ? (
+            {item.label}
+            {"count" in item && item.count ? (
               <span className="ml-1.5 bg-amber-100 text-amber-700 text-xs px-1.5 py-0.5 rounded-full">
-                {tab.count}
+                {item.count}
               </span>
             ) : null}
           </button>
