@@ -62,7 +62,12 @@ export async function updateSession(request: NextRequest) {
     pathname.startsWith("/reset-password") ||
     pathname.startsWith("/callback") ||
     pathname.startsWith("/auth/confirm") ||
-    pathname.startsWith("/api/");
+    pathname.startsWith("/api/") ||
+    pathname.startsWith("/industrias") ||
+    pathname.startsWith("/terms") ||
+    pathname.startsWith("/privacy") ||
+    pathname.startsWith("/cookies") ||
+    pathname.startsWith("/dpa");
 
   // Redirect unauthenticated users to login (but not from public paths)
   if (!user && !isPublicPath) {
