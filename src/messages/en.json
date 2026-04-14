@@ -410,7 +410,14 @@
     "continuePublish": "Publish anyway",
     "workingOnDay": "working",
     "noOneWorking": "No one scheduled",
-    "dayViewEmptyMonth": "No assignments for this month yet."
+    "dayViewEmptyMonth": "No assignments for this month yet.",
+    "complianceFilterAll": "All",
+    "complianceFilterWarnings": "Warnings",
+    "complianceFilterViolations": "Violations",
+    "municipalHolidayLabel": "Municipal holiday",
+    "closedDayLabel": "Closed",
+    "multipleShiftsHint": "You can select multiple shifts for the same day.",
+    "confirmAssign": "Assign"
   },
   "months": {
     "jan": "January",

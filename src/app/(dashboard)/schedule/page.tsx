@@ -43,6 +43,19 @@ function getDaysInMonth(year: number, month: number): string[] {
 
 const DAY_KEYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const;
 const MONTH_KEYS = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"] as const;
+// Indexed by Date.getDay() (0 = Sunday ... 6 = Saturday) to match organizations.operating_hours keys
+const WEEKDAY_LONG_KEYS = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"] as const;
+
+// Diagonal stripes overlay for closures (national holidays, company-closed days, municipal holidays).
+// Applied on top of a base background color (red-soft for holidays, gray-sunken for closures).
+const CLOSURE_STRIPES: React.CSSProperties = {
+  backgroundImage:
+    "repeating-linear-gradient(135deg, rgba(0,0,0,0.10) 0px, rgba(0,0,0,0.10) 3px, transparent 3px, transparent 9px)",
+};
+const HOLIDAY_STRIPES: React.CSSProperties = {
+  backgroundImage:
+    "repeating-linear-gradient(135deg, rgba(220,38,38,0.22) 0px, rgba(220,38,38,0.22) 3px, transparent 3px, transparent 9px)",
+};
 
 function dayOfWeekPt(dateStr: string, getTranslation: (key: string) => string): string {
   const d = new Date(dateStr + "T00:00:00");
@@ -52,6 +65,20 @@ function dayOfWeekPt(dateStr: string, getTranslation: (key: string) => string): 
 function isWeekend(dateStr: string): boolean {
   const d = new Date(dateStr + "T00:00:00");
   return d.getDay() === 0 || d.getDay() === 6;
+}
+
+type OperatingHours = Record<string, { open?: string; close?: string; closed?: boolean }>;
+
+function isCompanyClosedDay(
+  dateStr: string,
+  operatingHours: OperatingHours | null,
+  municipalHoliday: string | null,
+): boolean {
+  if (municipalHoliday && municipalHoliday === dateStr) return true;
+  if (!operatingHours) return false;
+  const d = new Date(dateStr + "T00:00:00");
+  const key = WEEKDAY_LONG_KEYS[d.getDay()];
+  return operatingHours[key]?.closed === true;
 }
 
 interface PreviewResult {
@@ -80,7 +107,7 @@ export default function SchedulePage() {
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth() + 1);
   const [viewMode, setViewMode] = useState<"week" | "month">("month");
-  const [layoutMode, setLayoutMode] = useState<"grid" | "byDay">("grid");
+  const [layoutMode, setLayoutMode] = useState<"grid" | "byDay">("byDay");
   const [weekStart, setWeekStart] = useState(0);
   const [emptyPublishModal, setEmptyPublishModal] = useState(false);
   const [unpublishConfirm, setUnpublishConfirm] = useState(false);
@@ -92,14 +119,19 @@ export default function SchedulePage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
+  const [operatingHours, setOperatingHours] = useState<OperatingHours | null>(null);
+  const [municipalHoliday, setMunicipalHoliday] = useState<string | null>(null);
+
   const [assignModal, setAssignModal] = useState<{
     userId: string;
     date: string;
     userName: string;
   } | null>(null);
+  const [assignSelection, setAssignSelection] = useState<Set<string>>(new Set());
 
   const [violationModal, setViolationModal] =
     useState<ComplianceViolation[] | null>(null);
+  const [violationFilter, setViolationFilter] = useState<"all" | "block" | "warning">("all");
 
   const [showGenerateModal, setShowGenerateModal] = useState(false);
   const [staffOverrides, setStaffOverrides] = useState<Record<string, number>>(
@@ -178,10 +210,14 @@ export default function SchedulePage() {
         if (profile?.org_id) {
           const { data: org } = await supabase
             .from("organizations")
-            .select("name")
+            .select("name, operating_hours, municipal_holiday")
             .eq("id", profile.org_id)
             .single();
-          if (org) setOrgName(org.name);
+          if (org) {
+            setOrgName(org.name);
+            setOperatingHours((org.operating_hours as OperatingHours) || null);
+            setMunicipalHoliday(org.municipal_holiday || null);
+          }
 
           const { data: newSched } = await supabase
             .from("schedules")
@@ -213,10 +249,14 @@ export default function SchedulePage() {
         if (profile?.org_id) {
           const { data: org } = await supabase
             .from("organizations")
-            .select("name")
+            .select("name, operating_hours, municipal_holiday")
             .eq("id", profile.org_id)
             .single();
-          if (org) setOrgName(org.name);
+          if (org) {
+            setOrgName(org.name);
+            setOperatingHours((org.operating_hours as OperatingHours) || null);
+            setMunicipalHoliday(org.municipal_holiday || null);
+          }
         }
       }
     }
@@ -291,6 +331,24 @@ export default function SchedulePage() {
     fetchData();
   }, [fetchData]);
 
+  // Persist layoutMode preference across sessions
+  useEffect(() => {
+    try {
+      const saved = typeof window !== "undefined" ? window.localStorage.getItem("shiftera.schedule.layoutMode") : null;
+      if (saved === "grid" || saved === "byDay") {
+        setLayoutMode(saved);
+      }
+    } catch {}
+  }, []);
+
+  useEffect(() => {
+    try {
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem("shiftera.schedule.layoutMode", layoutMode);
+      }
+    } catch {}
+  }, [layoutMode]);
+
   function prevMonth() {
     if (month === 1) {
       setMonth(12);
@@ -305,8 +363,12 @@ export default function SchedulePage() {
     } else setMonth(month + 1);
   }
 
-  function getEntry(userId: string, date: string): EntryWithShift | undefined {
-    return entries.find((e) => e.user_id === userId && e.date === date);
+  function getEntries(userId: string, date: string): EntryWithShift[] {
+    return entries
+      .filter((e) => e.user_id === userId && e.date === date)
+      .sort((a, b) =>
+        (a.shift_template?.start_time || "").localeCompare(b.shift_template?.start_time || ""),
+      );
   }
 
   function getCellViolations(userId: string, date: string) {
@@ -317,41 +379,82 @@ export default function SchedulePage() {
     return unavailableDays[userId]?.has(date) || false;
   }
 
-  async function assignShift(shiftId: string) {
+  function openAssignModal(userId: string, date: string, userName: string) {
+    const existing = getEntries(userId, date).map((e) => e.shift_template_id);
+    setAssignSelection(new Set(existing));
+    setAssignModal({ userId, date, userName });
+  }
+
+  function toggleSelectedShift(shiftId: string) {
+    setAssignSelection((prev) => {
+      const next = new Set(prev);
+      if (next.has(shiftId)) next.delete(shiftId);
+      else next.add(shiftId);
+      return next;
+    });
+  }
+
+  async function saveAssignedShifts() {
     if (!assignModal || !schedule) return;
     setSaving(true);
 
-    const existing = getEntry(assignModal.userId, assignModal.date);
+    const existingEntries = getEntries(assignModal.userId, assignModal.date);
+    const existingIds = new Set(existingEntries.map((e) => e.shift_template_id));
+    const desiredIds = assignSelection;
 
-    if (existing) {
+    // Delete shifts that were removed
+    const toDelete = existingEntries.filter((e) => !desiredIds.has(e.shift_template_id));
+    if (toDelete.length > 0) {
       await supabase
         .from("schedule_entries")
-        .update({ shift_template_id: shiftId })
-        .eq("id", existing.id);
-    } else {
-      await supabase.from("schedule_entries").insert({
-        schedule_id: schedule.id,
-        user_id: assignModal.userId,
+        .delete()
+        .in("id", toDelete.map((e) => e.id));
+    }
+
+    // Insert new shifts
+    const toInsert = Array.from(desiredIds).filter((id) => !existingIds.has(id));
+    if (toInsert.length > 0) {
+      await supabase.from("schedule_entries").insert(
+        toInsert.map((shiftId) => ({
+          schedule_id: schedule.id,
+          user_id: assignModal.userId,
+          date: assignModal.date,
+          shift_template_id: shiftId,
+          is_holiday: !!nationalHolidays[assignModal.date],
+        })),
+      );
+    }
+
+    if (toInsert.length > 0 || toDelete.length > 0) {
+      logActivity("shift_assigned", "schedule", schedule?.id, {
+        employee_id: assignModal.userId,
         date: assignModal.date,
-        shift_template_id: shiftId,
-        is_holiday: !!nationalHolidays[assignModal.date],
+        added: toInsert,
+        removed: toDelete.map((e) => e.shift_template_id),
       });
     }
 
-    logActivity("shift_assigned", "schedule", schedule?.id, { employee_id: assignModal.userId, date: assignModal.date, shift_id: shiftId });
     setAssignModal(null);
+    setAssignSelection(new Set());
     setSaving(false);
     fetchData();
   }
 
-  async function removeAssignment() {
+  async function removeAllAssignments() {
     if (!assignModal) return;
-    const existing = getEntry(assignModal.userId, assignModal.date);
-    if (existing) {
+    const existing = getEntries(assignModal.userId, assignModal.date);
+    if (existing.length > 0) {
       setSaving(true);
-      await supabase.from("schedule_entries").delete().eq("id", existing.id);
-      logActivity("shift_removed", "schedule", schedule?.id, { employee_id: assignModal.userId, date: assignModal.date });
+      await supabase
+        .from("schedule_entries")
+        .delete()
+        .in("id", existing.map((e) => e.id));
+      logActivity("shift_removed", "schedule", schedule?.id, {
+        employee_id: assignModal.userId,
+        date: assignModal.date,
+      });
       setAssignModal(null);
+      setAssignSelection(new Set());
       setSaving(false);
       fetchData();
     }
@@ -653,25 +756,23 @@ export default function SchedulePage() {
             {t("viewByDay")}
           </Button>
         </div>
-        {layoutMode === "grid" && (
-          <div className="flex items-center gap-1 border-l border-[color:var(--border)] pl-3">
-            <Button
-              variant={viewMode === "month" ? "primary" : "ghost"}
-              size="sm"
-              onClick={() => { setViewMode("month"); setWeekStart(0); }}
-            >
-              {t("viewMonth")}
-            </Button>
-            <Button
-              variant={viewMode === "week" ? "primary" : "ghost"}
-              size="sm"
-              onClick={() => setViewMode("week")}
-            >
-              {t("viewWeek")}
-            </Button>
-          </div>
-        )}
-        {layoutMode === "grid" && viewMode === "week" && (
+        <div className="flex items-center gap-1 border-l border-[color:var(--border)] pl-3">
+          <Button
+            variant={viewMode === "month" ? "primary" : "ghost"}
+            size="sm"
+            onClick={() => { setViewMode("month"); setWeekStart(0); }}
+          >
+            {t("viewMonth")}
+          </Button>
+          <Button
+            variant={viewMode === "week" ? "primary" : "ghost"}
+            size="sm"
+            onClick={() => setViewMode("week")}
+          >
+            {t("viewWeek")}
+          </Button>
+        </div>
+        {viewMode === "week" && (
           <div className="flex items-center gap-1">
             <Button
               variant="ghost"
@@ -727,13 +828,13 @@ export default function SchedulePage() {
       ) : layoutMode === "byDay" ? (
         <Card>
           <div className="p-3 sm:p-4">
-            {entries.length === 0 ? (
+            {visibleDays.length === 0 ? (
               <p className="text-center py-8 text-sm text-[color:var(--text-muted)]">
                 {t("dayViewEmptyMonth")}
               </p>
             ) : (
               <div className="divide-y divide-[color:var(--border-light)]">
-                {days.map((day) => {
+                {visibleDays.map((day) => {
                   const dayEntries = entries
                     .filter((e) => e.date === day)
                     .sort((a, b) =>
@@ -742,30 +843,50 @@ export default function SchedulePage() {
                       )
                     );
                   const weekend = isWeekend(day);
-                  const holiday = nationalHolidays[day];
+                  const nationalHol = nationalHolidays[day];
+                  const isMunicipal = municipalHoliday === day;
+                  const isHoliday = !!nationalHol || isMunicipal;
+                  const isClosure = !isHoliday && isCompanyClosedDay(day, operatingHours, null);
                   const dow = dayOfWeekPt(day, (key: string) => d(key));
                   const dayNum = parseInt(day.slice(8));
+
+                  const rowClass = `py-2.5 flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-4 -mx-3 sm:-mx-4 px-3 sm:px-4 ${
+                    isHoliday
+                      ? "bg-[color:var(--danger-soft)]/40"
+                      : isClosure
+                      ? "bg-[color:var(--surface-sunken)]"
+                      : weekend
+                      ? "bg-[color:var(--surface-sunken)]/60"
+                      : ""
+                  }`;
+                  const rowStyle = isHoliday
+                    ? HOLIDAY_STRIPES
+                    : isClosure
+                    ? CLOSURE_STRIPES
+                    : undefined;
+
                   return (
-                    <div
-                      key={day}
-                      className={`py-2.5 flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-4 ${
-                        holiday
-                          ? "bg-[color:var(--danger-soft)]/30 -mx-3 sm:-mx-4 px-3 sm:px-4"
-                          : weekend
-                          ? "bg-[color:var(--surface-sunken)]/60 -mx-3 sm:-mx-4 px-3 sm:px-4"
-                          : ""
-                      }`}
-                    >
-                      <div className="sm:min-w-[160px] flex items-baseline gap-2">
+                    <div key={day} className={rowClass} style={rowStyle}>
+                      <div className="sm:min-w-[160px] flex items-baseline gap-2 flex-wrap">
                         <span className="text-xs text-[color:var(--text-muted)] uppercase tracking-wide">
                           {dow}
                         </span>
                         <span className="text-lg font-semibold text-[color:var(--text-primary)]">
                           {dayNum}
                         </span>
-                        {holiday && (
+                        {nationalHol && (
                           <Badge variant="danger" className="ml-1">
-                            {holiday}
+                            {nationalHol}
+                          </Badge>
+                        )}
+                        {isMunicipal && !nationalHol && (
+                          <Badge variant="danger" className="ml-1">
+                            {t("municipalHolidayLabel")}
+                          </Badge>
+                        )}
+                        {isClosure && (
+                          <Badge variant="default" className="ml-1">
+                            {t("closedDayLabel")}
                           </Badge>
                         )}
                       </div>
@@ -782,7 +903,7 @@ export default function SchedulePage() {
                             return (
                               <span
                                 key={entry.id}
-                                className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-xs bg-[color:var(--surface-sunken)] border border-[color:var(--border-light)]"
+                                className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-xs bg-[color:var(--surface)] border border-[color:var(--border-light)]"
                               >
                                 <span
                                   className="w-2 h-2 rounded-full flex-shrink-0"
@@ -820,21 +941,39 @@ export default function SchedulePage() {
                 </th>
                 {visibleDays.map((day) => {
                   const weekend = isWeekend(day);
-                  const holiday = nationalHolidays[day];
+                  const nationalHol = nationalHolidays[day];
+                  const isMunicipal = municipalHoliday === day;
+                  const isHoliday = !!nationalHol || isMunicipal;
+                  const isClosure = !isHoliday && isCompanyClosedDay(day, operatingHours, null);
                   const dayNum = day.slice(8);
                   const dow = dayOfWeekPt(day, (key: string) => d(key));
                   const thClass =
                     "px-1 py-2 text-center font-medium border-b border-[color:var(--border-light)] min-w-[44px] " +
-                    (holiday
+                    (isHoliday
                       ? "bg-[color:var(--danger-soft)] text-[color:var(--danger)]"
+                      : isClosure
+                      ? "bg-[color:var(--surface-sunken)] text-[color:var(--text-muted)]"
                       : weekend
                       ? "bg-[color:var(--surface-sunken)] text-[color:var(--text-muted)]"
                       : "text-[color:var(--text-secondary)]");
+                  const thStyle = isHoliday
+                    ? HOLIDAY_STRIPES
+                    : isClosure
+                    ? CLOSURE_STRIPES
+                    : undefined;
+                  const thTitle = nationalHol
+                    ? nationalHol
+                    : isMunicipal
+                    ? t("municipalHolidayLabel")
+                    : isClosure
+                    ? t("closedDayLabel")
+                    : undefined;
                   return (
                     <th
                       key={day}
                       className={thClass}
-                      title={holiday || undefined}
+                      style={thStyle}
+                      title={thTitle}
                     >
                       <div>{dow}</div>
                       <div className="font-bold">{parseInt(dayNum)}</div>
@@ -857,7 +996,7 @@ export default function SchedulePage() {
                     </div>
                   </td>
                   {visibleDays.map((day) => {
-                    const entry = getEntry(emp.id, day);
+                    const cellEntries = getEntries(emp.id, day);
                     const cellViolations = getCellViolations(emp.id, day);
                     const hasBlock = cellViolations.some(
                       (v) => v.severity === "block"
@@ -866,15 +1005,21 @@ export default function SchedulePage() {
                       (v) => v.severity === "warning"
                     );
                     const weekend = isWeekend(day);
-                    const holiday = !!nationalHolidays[day];
+                    const nationalHol = !!nationalHolidays[day];
+                    const isMunicipal = municipalHoliday === day;
+                    const isHoliday = nationalHol || isMunicipal;
+                    const isClosure = !isHoliday && isCompanyClosedDay(day, operatingHours, null);
                     const unavailable = isUnavailable(emp.id, day);
+                    const hasEntry = cellEntries.length > 0;
 
                     const tdClass =
                       "border-b border-[color:var(--border-light)] text-center cursor-pointer transition-colors p-0.5 " +
-                      (unavailable && !entry
+                      (unavailable && !hasEntry
                         ? "bg-[color:var(--border-light)] "
-                        : holiday
+                        : isHoliday
                         ? "bg-[color:var(--danger-soft)]/50 "
+                        : isClosure
+                        ? "bg-[color:var(--surface-sunken)] "
                         : weekend
                         ? "bg-[color:var(--surface-sunken)] "
                         : "") +
@@ -884,8 +1029,15 @@ export default function SchedulePage() {
                         : "") +
                       "hover:bg-[color:var(--accent-soft)]";
 
+                    const tdStyle =
+                      !hasEntry && isHoliday
+                        ? HOLIDAY_STRIPES
+                        : !hasEntry && isClosure
+                        ? CLOSURE_STRIPES
+                        : undefined;
+
                     const tdTitle =
-                      unavailable && !entry
+                      unavailable && !hasEntry
                         ? t("unavailable")
                         : cellViolations.length > 0
                         ? cellViolations.map((v) => v.rule).join("\n")
@@ -895,25 +1047,32 @@ export default function SchedulePage() {
                       <td
                         key={day}
                         className={tdClass}
+                        style={tdStyle}
                         onClick={() =>
                           schedule?.status === "draft" &&
-                          setAssignModal({
-                            userId: emp.id,
-                            date: day,
-                            userName: emp.full_name,
-                          })
+                          openAssignModal(emp.id, day, emp.full_name)
                         }
                         title={tdTitle}
                       >
-                        {entry ? (
-                          <div
-                            className="rounded px-0.5 py-1 text-white font-medium text-[10px] leading-tight"
-                            style={{
-                              backgroundColor:
-                                entry.shift_template?.color || "#6B7280",
-                            }}
-                          >
-                            {entry.shift_template?.name?.slice(0, 3) || "?"}
+                        {hasEntry ? (
+                          <div className="flex flex-col gap-[1px]">
+                            {cellEntries.slice(0, 2).map((entry) => (
+                              <div
+                                key={entry.id}
+                                className="rounded px-0.5 py-0.5 text-white font-medium text-[10px] leading-tight"
+                                style={{
+                                  backgroundColor:
+                                    entry.shift_template?.color || "#6B7280",
+                                }}
+                              >
+                                {entry.shift_template?.name?.slice(0, 3) || "?"}
+                              </div>
+                            ))}
+                            {cellEntries.length > 2 && (
+                              <div className="text-[9px] text-[color:var(--text-muted)] font-medium">
+                                +{cellEntries.length - 2}
+                              </div>
+                            )}
                           </div>
                         ) : unavailable ? (
                           <div className="py-1 text-[color:var(--text-muted)] text-[10px] font-medium">
@@ -934,7 +1093,10 @@ export default function SchedulePage() {
 
       <Modal
         open={!!assignModal}
-        onClose={() => setAssignModal(null)}
+        onClose={() => {
+          setAssignModal(null);
+          setAssignSelection(new Set());
+        }}
         title={t("assignShiftTitle")}
         size="sm"
       >
@@ -956,85 +1118,175 @@ export default function SchedulePage() {
                 </Badge>
               )}
             </p>
+            <p className="text-xs text-[color:var(--text-muted)]">
+              {t("multipleShiftsHint")}
+            </p>
             <div className="space-y-2">
-              {shifts.map((shift) => (
-                <button
-                  key={shift.id}
-                  onClick={() => assignShift(shift.id)}
-                  disabled={saving}
-                  className="w-full flex items-center gap-3 p-3 rounded-lg border border-[color:var(--border-light)] hover:border-blue-300 hover:bg-[color:var(--accent-soft)] transition-colors text-left disabled:opacity-50"
-                >
-                  <div
-                    className="w-4 h-4 rounded-full flex-shrink-0"
-                    style={{ backgroundColor: shift.color }}
-                  />
-                  <div>
-                    <p className="font-medium text-[color:var(--text-primary)] text-sm">
-                      {shift.name}
-                    </p>
-                    <p className="text-xs text-[color:var(--text-muted)]">
-                      {shift.start_time.slice(0, 5)} -{" "}
-                      {shift.end_time.slice(0, 5)}
-                    </p>
-                  </div>
-                </button>
-              ))}
+              {shifts.map((shift) => {
+                const checked = assignSelection.has(shift.id);
+                return (
+                  <label
+                    key={shift.id}
+                    className={`w-full flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
+                      checked
+                        ? "border-[color:var(--accent)] bg-[color:var(--accent-soft)]"
+                        : "border-[color:var(--border-light)] hover:border-[color:var(--accent)] hover:bg-[color:var(--accent-soft)]/50"
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={() => toggleSelectedShift(shift.id)}
+                      disabled={saving}
+                      className="w-4 h-4 accent-[color:var(--accent)] flex-shrink-0"
+                    />
+                    <div
+                      className="w-4 h-4 rounded-full flex-shrink-0"
+                      style={{ backgroundColor: shift.color }}
+                    />
+                    <div className="flex-1">
+                      <p className="font-medium text-[color:var(--text-primary)] text-sm">
+                        {shift.name}
+                      </p>
+                      <p className="text-xs text-[color:var(--text-muted)]">
+                        {shift.start_time.slice(0, 5)} - {shift.end_time.slice(0, 5)}
+                      </p>
+                    </div>
+                  </label>
+                );
+              })}
             </div>
-            {getEntry(assignModal.userId, assignModal.date) && (
-              <div className="pt-3 border-t border-[color:var(--border-light)]">
+            <div className="flex items-center justify-between gap-2 pt-3 border-t border-[color:var(--border-light)]">
+              {getEntries(assignModal.userId, assignModal.date).length > 0 ? (
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={removeAssignment}
+                  onClick={removeAllAssignments}
                   loading={saving}
-                  className="text-[color:var(--danger)] hover:text-[color:var(--danger)] hover:bg-[color:var(--danger-soft)] w-full"
+                  className="text-[color:var(--danger)] hover:text-[color:var(--danger)] hover:bg-[color:var(--danger-soft)]"
                 >
                   {t("removeAssignment")}
                 </Button>
+              ) : <span />}
+              <div className="flex gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setAssignModal(null);
+                    setAssignSelection(new Set());
+                  }}
+                  disabled={saving}
+                >
+                  {t("cancel")}
+                </Button>
+                <Button size="sm" onClick={saveAssignedShifts} loading={saving}>
+                  {t("confirmAssign")}
+                </Button>
               </div>
-            )}
+            </div>
           </div>
         )}
       </Modal>
 
       <Modal
         open={!!violationModal}
-        onClose={() => setViolationModal(null)}
+        onClose={() => {
+          setViolationModal(null);
+          setViolationFilter("all");
+        }}
         title={t("complianceIssuesTitle")}
         size="lg"
       >
-        {violationModal && (
-          <div className="space-y-3 max-h-[60vh] overflow-y-auto">
-            {violationModal.length === 0 ? (
-              <p className="text-sm text-[color:var(--text-muted)]">
-                {t("noIssuesFound")}
-              </p>
-            ) : (
-              violationModal.map((v, i) => {
-                const cardClass =
-                  "p-3 rounded-lg border text-sm " +
-                  (v.severity === "block"
-                    ? "bg-[color:var(--danger-soft)] border-[color:var(--danger-soft)] text-[color:var(--danger)]"
-                    : "bg-[color:var(--warning-soft)] border-[color:var(--warning-soft)] text-[color:var(--warning)]");
-                return (
-                  <div key={i} className={cardClass}>
-                    <div className="flex items-center gap-2 mb-1">
-                      <Badge
-                        variant={v.severity === "block" ? "danger" : "warning"}
-                      >
-                        {v.code}
-                      </Badge>
-                      <span className="font-medium">{v.message}</span>
-                    </div>
-                    <p className="text-xs opacity-80">
-                      {v.date} — {v.rule}
-                    </p>
-                  </div>
-                );
-              })
-            )}
-          </div>
-        )}
+        {violationModal && (() => {
+          const totalBlock = violationModal.filter((v) => v.severity === "block").length;
+          const totalWarn = violationModal.filter((v) => v.severity === "warning").length;
+          const filtered = violationModal
+            .filter((v) => violationFilter === "all" || v.severity === violationFilter)
+            .slice()
+            .sort((a, b) => {
+              if (a.date !== b.date) return a.date.localeCompare(b.date);
+              // Within same date, blocks first then warnings
+              if (a.severity !== b.severity) return a.severity === "block" ? -1 : 1;
+              return a.rule.localeCompare(b.rule);
+            });
+
+          const pillBase =
+            "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors";
+          const pillActive = (variant: "all" | "warning" | "block") => {
+            if (violationFilter !== variant) return "";
+            if (variant === "block")
+              return " bg-[color:var(--danger-soft)] border-[color:var(--danger)] text-[color:var(--danger)]";
+            if (variant === "warning")
+              return " bg-[color:var(--warning-soft)] border-[color:var(--warning)] text-[color:var(--warning)]";
+            return " bg-[color:var(--accent-soft)] border-[color:var(--accent)] text-[color:var(--accent)]";
+          };
+          const pillInactive =
+            " bg-[color:var(--surface)] border-[color:var(--border-light)] text-[color:var(--text-secondary)] hover:bg-[color:var(--surface-sunken)]";
+
+          return (
+            <div className="space-y-3">
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  className={pillBase + (violationFilter === "all" ? pillActive("all") : pillInactive)}
+                  onClick={() => setViolationFilter("all")}
+                >
+                  {t("complianceFilterAll")} · {violationModal.length}
+                </button>
+                <button
+                  type="button"
+                  className={pillBase + (violationFilter === "block" ? pillActive("block") : pillInactive)}
+                  onClick={() => setViolationFilter("block")}
+                  disabled={totalBlock === 0}
+                >
+                  <span className="w-2 h-2 rounded-full bg-[color:var(--danger)]" />
+                  {t("complianceFilterViolations")} · {totalBlock}
+                </button>
+                <button
+                  type="button"
+                  className={pillBase + (violationFilter === "warning" ? pillActive("warning") : pillInactive)}
+                  onClick={() => setViolationFilter("warning")}
+                  disabled={totalWarn === 0}
+                >
+                  <span className="w-2 h-2 rounded-full bg-[color:var(--warning)]" />
+                  {t("complianceFilterWarnings")} · {totalWarn}
+                </button>
+              </div>
+
+              <div className="space-y-2 max-h-[60vh] overflow-y-auto pr-1">
+                {filtered.length === 0 ? (
+                  <p className="text-sm text-[color:var(--text-muted)] py-4 text-center">
+                    {t("noIssuesFound")}
+                  </p>
+                ) : (
+                  filtered.map((v, i) => {
+                    const cardClass =
+                      "p-3 rounded-lg border text-sm " +
+                      (v.severity === "block"
+                        ? "bg-[color:var(--danger-soft)] border-[color:var(--danger-soft)] text-[color:var(--danger)]"
+                        : "bg-[color:var(--warning-soft)] border-[color:var(--warning-soft)] text-[color:var(--warning)]");
+                    const dayNum = parseInt(v.date.slice(8));
+                    const monthName = m(MONTH_KEYS[parseInt(v.date.slice(5, 7)) - 1]);
+                    return (
+                      <div key={i} className={cardClass}>
+                        <div className="flex items-center gap-2 mb-1 flex-wrap">
+                          <Badge variant={v.severity === "block" ? "danger" : "warning"}>
+                            {v.code}
+                          </Badge>
+                          <span className="font-medium">{v.message}</span>
+                        </div>
+                        <p className="text-xs opacity-80">
+                          {dayNum} {monthName} — {v.rule}
+                        </p>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+          );
+        })()}
       </Modal>
 
       <Modal

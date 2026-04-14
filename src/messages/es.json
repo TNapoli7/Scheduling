@@ -410,7 +410,14 @@
     "continuePublish": "Publicar igualmente",
     "workingOnDay": "trabajando",
     "noOneWorking": "Nadie asignado",
-    "dayViewEmptyMonth": "Aún no hay asignaciones en este mes."
+    "dayViewEmptyMonth": "Aún no hay asignaciones en este mes.",
+    "complianceFilterAll": "Todos",
+    "complianceFilterWarnings": "Avisos",
+    "complianceFilterViolations": "Violaciones",
+    "municipalHolidayLabel": "Festivo municipal",
+    "closedDayLabel": "Cerrado",
+    "multipleShiftsHint": "Puedes seleccionar varios turnos para el mismo día.",
+    "confirmAssign": "Asignar"
   },
   "months": {
     "jan": "Enero",
