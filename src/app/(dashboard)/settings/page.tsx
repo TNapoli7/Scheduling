@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { logActivity } from "@/lib/activity-log";
@@ -38,6 +38,10 @@ export default function SettingsPage() {
   const [address, setAddress] = useState("");
   const [municipalHoliday, setMunicipalHoliday] = useState("");
   const [hours, setHours] = useState<OperatingHours>({});
+
+  // Track whether the form has unsaved changes so we can warn before leaving
+  // (browser beforeunload) and before switching tab inside the page.
+  const initialRef = useRef<string>("");
 
   const supabase = createClient();
 
@@ -80,10 +84,36 @@ export default function SettingsPage() {
         };
       }
       setHours(defaultHours);
+
+      // Snapshot the loaded state so we can diff on every render to detect
+      // unsaved edits. JSON.stringify is cheap for this small object.
+      initialRef.current = JSON.stringify({
+        name: orgData.name || "",
+        sector: orgData.sector || "",
+        address: orgData.address || "",
+        municipalHoliday: orgData.municipal_holiday || "",
+        hours: defaultHours,
+      });
     }
 
     setLoading(false);
   }, [supabase]);
+
+  const isDirty =
+    initialRef.current !== "" &&
+    initialRef.current !==
+      JSON.stringify({ name, sector, address, municipalHoliday, hours });
+
+  // Warn on tab/window close if there are unsaved changes.
+  useEffect(() => {
+    if (!isDirty) return;
+    function onBeforeUnload(e: BeforeUnloadEvent) {
+      e.preventDefault();
+      e.returnValue = "";
+    }
+    window.addEventListener("beforeunload", onBeforeUnload);
+    return () => window.removeEventListener("beforeunload", onBeforeUnload);
+  }, [isDirty]);
 
   useEffect(() => {
     fetchOrg();
@@ -108,9 +138,27 @@ export default function SettingsPage() {
 
     logActivity("settings_updated", "settings", org?.id);
 
+    // Reset the baseline so the form is no longer "dirty" right after save.
+    initialRef.current = JSON.stringify({
+      name,
+      sector,
+      address,
+      municipalHoliday,
+      hours,
+    });
+
     setSaving(false);
     setSuccess(true);
     setTimeout(() => setSuccess(false), 3000);
+  }
+
+  // Tab-switch gate: ask before abandoning unsaved edits in the General tab.
+  function trySwitchTab(next: TabKey) {
+    if (activeTab === "general" && isDirty) {
+      const proceed = window.confirm(t("unsavedPrompt"));
+      if (!proceed) return;
+    }
+    setActiveTab(next);
   }
 
   function updateHours(day: string, field: string, value: string | boolean) {
@@ -152,7 +200,7 @@ export default function SettingsPage() {
           return (
             <button
               key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
+              onClick={() => trySwitchTab(tab.key)}
               className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors cursor-pointer whitespace-nowrap ${
                 active
                   ? "border-[color:var(--accent)] text-[color:var(--accent)]"
@@ -194,6 +242,11 @@ export default function SettingsPage() {
                 { value: "hospital", label: t("sectors.hospital") },
                 { value: "laboratorio", label: t("sectors.laboratorio") },
                 { value: "consultorio", label: t("sectors.consultorio") },
+                { value: "posto_saude", label: t("sectors.posto_saude") },
+                { value: "residencia_senior", label: t("sectors.residencia_senior") },
+                { value: "fisioterapia", label: t("sectors.fisioterapia") },
+                { value: "restaurante", label: t("sectors.restaurante") },
+                { value: "hotel", label: t("sectors.hotel") },
                 { value: "outro", label: t("sectors.outro") },
               ]}
             />
@@ -268,8 +321,13 @@ export default function SettingsPage() {
       </Card>
 
       {/* Save button */}
-      <div className="flex justify-end">
-        <Button onClick={handleSave} loading={saving}>
+      <div className="flex justify-end items-center gap-3">
+        {isDirty && (
+          <span className="text-xs text-[color:var(--warning)] font-medium">
+            {t("unsavedChanges")}
+          </span>
+        )}
+        <Button onClick={handleSave} loading={saving} disabled={!isDirty}>
           {t("saveButton")}
         </Button>
       </div>

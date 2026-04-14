@@ -8,6 +8,7 @@
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { openConsentBanner } from "@/lib/cookie-consent";
+import { ShifteraLogo } from "./ShifteraLogo";
 
 const ORANGE_PRIMARY = "#E8850A";
 const ORANGE_GRADIENT = "#f5a623";
@@ -21,14 +22,7 @@ export function LpFooter() {
       <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 text-sm">
         <div>
           <Link href="/" className="flex items-center gap-2 mb-4">
-            <div
-              className="w-7 h-7 rounded-md flex items-center justify-center"
-              style={{
-                backgroundImage: `linear-gradient(135deg, ${ORANGE_PRIMARY}, ${ORANGE_GRADIENT})`,
-              }}
-            >
-              <span className="text-white font-bold text-xs">S</span>
-            </div>
+            <ShifteraLogo size={26} />
             <span className="font-bold text-stone-900">Shiftera</span>
           </Link>
           <p className="text-xs text-stone-500 leading-relaxed mb-3">

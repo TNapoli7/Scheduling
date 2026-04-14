@@ -10,6 +10,7 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { ArrowRight, ChevronDown } from "lucide-react";
 import { LpLanguageSelector } from "./LpLanguageSelector";
+import { ShifteraLogo } from "./ShifteraLogo";
 
 const ORANGE_PRIMARY = "#E8850A";
 const ORANGE_GRADIENT = "#f5a623";
@@ -30,14 +31,7 @@ export function LpNavbar() {
     <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-lg border-b border-stone-200/40">
       <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2">
-          <div
-            className="w-8 h-8 rounded-lg flex items-center justify-center bg-gradient-to-br"
-            style={{
-              backgroundImage: `linear-gradient(135deg, ${ORANGE_PRIMARY}, ${ORANGE_GRADIENT})`,
-            }}
-          >
-            <span className="text-white font-bold text-sm">S</span>
-          </div>
+          <ShifteraLogo size={28} />
           <span className="text-lg font-bold text-stone-900">Shiftera</span>
         </Link>
 

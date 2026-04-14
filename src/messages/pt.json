@@ -712,6 +712,8 @@
     "notificationsIntro": "Controla quando e como recebes avisos da Shiftera.",
     "notificationsComingSoon": "Em desenvolvimento",
     "notificationsComingSoonBody": "Em breve vais poder escolher canais (email, in-app) e eventos para cada tipo de notificação.",
+    "unsavedChanges": "Alterações por guardar",
+    "unsavedPrompt": "Tens alterações por guardar. Queres continuar e perder essas alterações?",
     "companyInfoTitle": "Informação da empresa",
     "nameLabel": "Nome",
     "namePlaceholder": "Nome da empresa",
@@ -732,6 +734,11 @@
       "hospital": "Hospital",
       "laboratorio": "Laboratório",
       "consultorio": "Consultório",
+      "posto_saude": "Posto de saúde",
+      "residencia_senior": "Residência sénior",
+      "fisioterapia": "Fisioterapia",
+      "restaurante": "Restaurante",
+      "hotel": "Hotel",
       "outro": "Outro"
     }
   },
