@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { SkeletonTable } from "@/components/ui/skeleton";
-import type { Profile, Availability } from "@/types/database";
+import type { Profile, Availability, TimeOffRequest } from "@/types/database";
 
 function getDaysInMonth(year: number, month: number): string[] {
   const days: string[] = [];
@@ -47,6 +47,13 @@ export default function AvailabilityPage() {
   const [myId, setMyId] = useState<string>("");
   const [employees, setEmployees] = useState<Profile[]>([]);
   const [availabilities, setAvailabilities] = useState<(Availability & { profile?: Profile })[]>([]);
+  // Per-user set of dates covered by an approved time-off (férias/baixa/etc.).
+  // Used to overlay vacation blocks on top of the availability grid, so that
+  // approved férias automatically read as "indisponível" here without needing
+  // a separate availability record.
+  const [timeOffByUser, setTimeOffByUser] = useState<
+    Record<string, Record<string, { type: string; period: string }>>
+  >({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -99,6 +106,38 @@ export default function AvailabilityPage() {
 
     const { data: avail } = await query;
     setAvailabilities((avail || []) as (Availability & { profile?: Profile })[]);
+
+    // Fetch approved time-off requests overlapping the visible month and
+    // expand each into a per-user day map. These will be overlaid on the grid.
+    let timeOffQuery = supabase
+      .from("time_off_requests")
+      .select("*")
+      .eq("status", "approved")
+      .lte("start_date", endDate)
+      .gte("end_date", startDate);
+    if (profile.role === "employee") {
+      timeOffQuery = timeOffQuery.eq("user_id", user.id);
+    }
+    const { data: offs } = await timeOffQuery;
+
+    const map: Record<string, Record<string, { type: string; period: string }>> = {};
+    for (const r of (offs || []) as TimeOffRequest[]) {
+      const s = new Date(r.start_date + "T00:00:00");
+      const e = new Date(r.end_date + "T00:00:00");
+      for (let d = new Date(s); d <= e; d.setDate(d.getDate() + 1)) {
+        const y = d.getFullYear();
+        const mm = String(d.getMonth() + 1).padStart(2, "0");
+        const dd = String(d.getDate()).padStart(2, "0");
+        const key = `${y}-${mm}-${dd}`;
+        if (!map[r.user_id]) map[r.user_id] = {};
+        // Don't overwrite an existing entry — first match wins (rare overlap).
+        if (!map[r.user_id][key]) {
+          map[r.user_id][key] = { type: r.type, period: r.period || "full_day" };
+        }
+      }
+    }
+    setTimeOffByUser(map);
+
     setLoading(false);
   }, [supabase, year, month]);
 
@@ -140,6 +179,49 @@ export default function AvailabilityPage() {
       logActivity("availability_submitted", "availability");
     }
 
+    setSaving(false);
+    fetchData();
+  }
+
+  // Approve/reject all pending (manager only) for the current month view.
+  async function reviewAllPending(status: "approved" | "rejected") {
+    const pending = availabilities.filter((a) => a.approval_status === "pending");
+    if (pending.length === 0) return;
+    setSaving(true);
+    const ids = pending.map((a) => a.id);
+    await supabase
+      .from("availability")
+      .update({
+        approval_status: status,
+        reviewed_by: myId,
+        reviewed_at: new Date().toISOString(),
+      })
+      .in("id", ids);
+    logActivity(
+      status === "approved" ? "availability_bulk_approved" : "availability_bulk_rejected",
+      "availability",
+      null,
+      { count: ids.length },
+    );
+    // Fire notifications per user (grouped).
+    const byUser: Record<string, typeof pending> = {};
+    for (const a of pending) {
+      if (!byUser[a.user_id]) byUser[a.user_id] = [];
+      byUser[a.user_id].push(a);
+    }
+    for (const uid of Object.keys(byUser)) {
+      const list = byUser[uid];
+      await supabase.from("notifications").insert({
+        user_id: uid,
+        type: status === "approved" ? "availability_approved" : "availability_rejected",
+        title:
+          status === "approved"
+            ? `${list.length} indisponibilidade${list.length !== 1 ? "s" : ""} aprovada${list.length !== 1 ? "s" : ""}`
+            : `${list.length} indisponibilidade${list.length !== 1 ? "s" : ""} rejeitada${list.length !== 1 ? "s" : ""}`,
+        body: list.map((a) => a.date).join(", "),
+        metadata: { bulk: true, count: list.length },
+      });
+    }
     setSaving(false);
     fetchData();
   }
@@ -215,6 +297,33 @@ export default function AvailabilityPage() {
         </div>
       </div>
 
+      {/* Bulk-review bar (manager only, when there are pending items) */}
+      {isManager && pendingCount > 0 && (
+        <div className="flex items-center justify-between gap-3 rounded-[var(--radius-md)] border border-amber-200 bg-amber-50 px-4 py-3">
+          <p className="text-sm text-amber-900">
+            {t("bulkReviewPrompt", { count: pendingCount })}
+          </p>
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={() => reviewAllPending("rejected")}
+              disabled={saving}
+              className="!text-[color:var(--danger)] !border-[color:var(--danger-soft)] hover:!bg-[color:var(--danger-soft)]"
+            >
+              {t("rejectAll")}
+            </Button>
+            <Button
+              size="sm"
+              onClick={() => reviewAllPending("approved")}
+              loading={saving}
+            >
+              {t("approveAll")}
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Month navigation */}
       <div className="flex items-center justify-center gap-4">
         <Button variant="ghost" size="sm" onClick={prevMonth}>
@@ -249,6 +358,12 @@ export default function AvailabilityPage() {
         <div className="flex items-center gap-1.5">
           <div className="w-3 h-3 rounded bg-stone-100 border border-stone-300 line-through" />
           <span>{t("legendRejected")}</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <div className="w-3 h-3 rounded bg-red-100 border border-red-300 flex items-center justify-center text-[7px] font-bold text-red-700">
+            F
+          </div>
+          <span>{t("legendVacation")}</span>
         </div>
       </div>
 
@@ -286,27 +401,52 @@ export default function AvailabilityPage() {
                 </td>
                 {days.map((day) => {
                   const avail = getAvail(emp.id, day);
+                  const timeOff = timeOffByUser[emp.id]?.[day];
                   const weekend = isWeekend(day);
                   const isPast = new Date(day + "T23:59:59") < new Date();
-                  const canClick = !isPast && (emp.id === myId || (!isManager));
+                  // Can't edit a cell that is already covered by an approved time-off.
+                  const canClick =
+                    !isPast && !timeOff && (emp.id === myId || (!isManager));
 
                   let bgClass = weekend ? "bg-stone-50" : "";
                   let content = "";
                   let title = t("legendAvailable");
+                  let textClass = "text-transparent";
 
-                  if (avail) {
+                  if (timeOff) {
+                    // Time-off takes precedence over availability entries.
+                    bgClass = "bg-red-100";
+                    content =
+                      timeOff.type === "ferias"
+                        ? "F"
+                        : timeOff.type === "baixa"
+                        ? "B"
+                        : timeOff.type === "pessoal"
+                        ? "P"
+                        : "A";
+                    title =
+                      timeOff.type === "ferias"
+                        ? t("legendVacation")
+                        : timeOff.type === "baixa"
+                        ? t("legendSickLeave")
+                        : t("legendAbsence");
+                    textClass = "text-red-700";
+                  } else if (avail) {
                     if (avail.approval_status === "approved") {
                       bgClass = "bg-red-100";
                       content = "X";
                       title = t("legendApproved");
+                      textClass = "text-red-600";
                     } else if (avail.approval_status === "pending") {
                       bgClass = "bg-amber-100";
                       content = "?";
                       title = t("legendPending");
+                      textClass = "text-amber-600";
                     } else if (avail.approval_status === "rejected") {
                       bgClass = "bg-stone-100";
                       content = "—";
                       title = t("legendRejected");
+                      textClass = "text-stone-400 line-through";
                     }
                   }
 
@@ -315,18 +455,15 @@ export default function AvailabilityPage() {
                       key={day}
                       className={`border-b border-stone-100 text-center p-0.5 transition-colors ${bgClass} ${
                         canClick ? "cursor-pointer hover:bg-indigo-50" : ""
-                      } ${isPast ? "opacity-50" : ""}`}
+                      } ${isPast ? "opacity-50" : ""} ${
+                        timeOff ? "cursor-not-allowed" : ""
+                      }`}
                       title={title}
                       onClick={() => {
                         if (canClick && !saving) toggleUnavailable(emp.id, day);
                       }}
                     >
-                      <div className={`py-1 text-[10px] font-bold ${
-                        avail?.approval_status === "approved" ? "text-red-600" :
-                        avail?.approval_status === "pending" ? "text-amber-600" :
-                        avail?.approval_status === "rejected" ? "text-stone-400 line-through" :
-                        "text-transparent"
-                      }`}>
+                      <div className={`py-1 text-[10px] font-bold ${textClass}`}>
                         {content || "·"}
                       </div>
                     </td>

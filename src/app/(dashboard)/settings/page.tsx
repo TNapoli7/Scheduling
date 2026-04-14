@@ -11,9 +11,9 @@ import { Card, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import type { Organization } from "@/types/database";
 import { ActivityLogPanel } from "@/components/settings/ActivityLog";
-import { History } from "lucide-react";
+import { History, Settings as SettingsIcon, CreditCard, Bell } from "lucide-react";
 
-type TabKey = "general" | "activity";
+type TabKey = "general" | "plan" | "notifications" | "activity";
 
 type OperatingHours = Record<
   string,
@@ -138,28 +138,30 @@ export default function SettingsPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 border-b border-stone-200">
-        <button
-          onClick={() => setActiveTab("general")}
-          className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors cursor-pointer ${
-            activeTab === "general"
-              ? "border-indigo-600 text-indigo-600"
-              : "border-transparent text-stone-500 hover:text-stone-700 hover:border-stone-300"
-          }`}
-        >
-          {t("tabGeneral")}
-        </button>
-        <button
-          onClick={() => setActiveTab("activity")}
-          className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors cursor-pointer ${
-            activeTab === "activity"
-              ? "border-indigo-600 text-indigo-600"
-              : "border-transparent text-stone-500 hover:text-stone-700 hover:border-stone-300"
-          }`}
-        >
-          <History className="w-4 h-4" />
-          {t("tabHistory")}
-        </button>
+      <div className="flex gap-1 border-b border-[color:var(--border-light)] overflow-x-auto">
+        {([
+          { key: "general" as const, label: t("tabGeneral"), icon: SettingsIcon },
+          { key: "plan" as const, label: t("tabPlan"), icon: CreditCard },
+          { key: "notifications" as const, label: t("tabNotifications"), icon: Bell },
+          { key: "activity" as const, label: t("tabHistory"), icon: History },
+        ]).map((tab) => {
+          const Icon = tab.icon;
+          const active = activeTab === tab.key;
+          return (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors cursor-pointer whitespace-nowrap ${
+                active
+                  ? "border-[color:var(--accent)] text-[color:var(--accent)]"
+                  : "border-transparent text-[color:var(--text-secondary)] hover:text-[color:var(--text-primary)] hover:border-[color:var(--border)]"
+              }`}
+            >
+              <Icon className="w-4 h-4" />
+              {tab.label}
+            </button>
+          );
+        })}
       </div>
 
       {/* Activity log tab */}
@@ -263,27 +265,6 @@ export default function SettingsPage() {
         </div>
       </Card>
 
-      {/* Subscription info */}
-      {org && (
-        <Card>
-          <CardTitle>{t("planTitle")}</CardTitle>
-          <div className="mt-4 flex items-center gap-3">
-            <Badge variant="info">
-              {org.subscription_tier === "trial"
-                ? "Trial"
-                : org.subscription_tier.charAt(0).toUpperCase() +
-                  org.subscription_tier.slice(1)}
-            </Badge>
-            {org.trial_ends_at && (
-              <span className="text-sm text-stone-500">
-                Trial termina a{" "}
-                {new Date(org.trial_ends_at).toLocaleDateString("pt-PT")}
-              </span>
-            )}
-          </div>
-        </Card>
-      )}
-
       {/* Save button */}
       <div className="flex justify-end">
         <Button onClick={handleSave} loading={saving}>
@@ -292,6 +273,63 @@ export default function SettingsPage() {
       </div>
 
         </>
+      )}
+
+      {/* Plan tab */}
+      {activeTab === "plan" && (
+        <div className="space-y-4">
+          <Card>
+            <CardTitle>{t("planTitle")}</CardTitle>
+            {org ? (
+              <div className="mt-4 space-y-3">
+                <div className="flex items-center gap-3">
+                  <Badge variant="accent">
+                    {org.subscription_tier === "trial"
+                      ? "Trial"
+                      : org.subscription_tier.charAt(0).toUpperCase() +
+                        org.subscription_tier.slice(1)}
+                  </Badge>
+                  {org.trial_ends_at && (
+                    <span className="text-sm text-[color:var(--text-secondary)]">
+                      {t("trialEndsOn")}{" "}
+                      {new Date(org.trial_ends_at).toLocaleDateString("pt-PT")}
+                    </span>
+                  )}
+                </div>
+                <p className="text-sm text-[color:var(--text-muted)]">
+                  {t("planBillingComingSoon")}
+                </p>
+              </div>
+            ) : (
+              <p className="mt-4 text-sm text-[color:var(--text-muted)]">
+                {t("planLoading")}
+              </p>
+            )}
+          </Card>
+        </div>
+      )}
+
+      {/* Notifications tab */}
+      {activeTab === "notifications" && (
+        <div className="space-y-4">
+          <Card>
+            <CardTitle>{t("notificationsTitle")}</CardTitle>
+            <div className="mt-4 space-y-2">
+              <p className="text-sm text-[color:var(--text-secondary)]">
+                {t("notificationsIntro")}
+              </p>
+              <div className="rounded-[var(--radius-md)] border border-dashed border-[color:var(--border)] bg-[color:var(--surface-sunken)] px-4 py-6 text-center">
+                <Bell className="w-6 h-6 text-[color:var(--text-muted)] mx-auto mb-2" />
+                <p className="text-sm text-[color:var(--text-secondary)] font-medium">
+                  {t("notificationsComingSoon")}
+                </p>
+                <p className="text-xs text-[color:var(--text-muted)] mt-1">
+                  {t("notificationsComingSoonBody")}
+                </p>
+              </div>
+            </div>
+          </Card>
+        </div>
       )}
     </div>
   );

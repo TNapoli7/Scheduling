@@ -48,6 +48,8 @@ export default function EmployeesPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
+  const [roleFilter, setRoleFilter] = useState<"all" | "admin" | "manager" | "employee">("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("active");
   const [confirmDeactivate, setConfirmDeactivate] = useState<Profile | null>(null);
 
   const supabase = createClient();
@@ -190,11 +192,19 @@ export default function EmployeesPage() {
     fetchEmployees();
   }
 
-  const filtered = employees.filter((e) =>
-    e.full_name.toLowerCase().includes(search.toLowerCase()) ||
-    e.email.toLowerCase().includes(search.toLowerCase()) ||
-    (e.credential || "").toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = employees.filter((e) => {
+    const q = search.toLowerCase();
+    const matchesSearch =
+      !q ||
+      e.full_name.toLowerCase().includes(q) ||
+      e.email.toLowerCase().includes(q) ||
+      (e.credential || "").toLowerCase().includes(q);
+    const matchesRole = roleFilter === "all" || e.role === roleFilter;
+    const matchesStatus =
+      statusFilter === "all" ||
+      (statusFilter === "active" ? e.is_active : !e.is_active);
+    return matchesSearch && matchesRole && matchesStatus;
+  });
 
   const activeCount = employees.filter((e) => e.is_active).length;
 
@@ -216,12 +226,38 @@ export default function EmployeesPage() {
         </Button>
       </div>
 
-      {/* Search */}
-      <Input
-        placeholder={t("searchPlaceholder")}
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-      />
+      {/* Search + filters */}
+      <div className="flex flex-col lg:flex-row gap-2">
+        <Input
+          placeholder={t("searchPlaceholder")}
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="flex-1"
+        />
+        <div className="flex gap-2">
+          <Select
+            value={roleFilter}
+            onChange={(e) => setRoleFilter(e.target.value as typeof roleFilter)}
+            className="lg:w-44"
+            options={[
+              { value: "all", label: t("filterRoleAll") },
+              { value: "admin", label: t("roles.admin") },
+              { value: "manager", label: t("roles.manager") },
+              { value: "employee", label: t("roles.employee") },
+            ]}
+          />
+          <Select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}
+            className="lg:w-40"
+            options={[
+              { value: "active", label: t("activeStatus") },
+              { value: "inactive", label: t("inactiveStatus") },
+              { value: "all", label: t("filterStatusAll") },
+            ]}
+          />
+        </div>
+      </div>
 
       {/* Table */}
       <Card padding="sm">
