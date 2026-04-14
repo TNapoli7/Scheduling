@@ -54,24 +54,17 @@ export function LpLanguageSelector() {
     }
   }
 
-  const currentLanguage = languages.find((l) => l.code === currentLocale);
-
   return (
     <div className="relative" ref={containerRef}>
       <button
         onClick={() => setOpen((o) => !o)}
-        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm font-medium text-stone-600 hover:text-stone-900 hover:bg-stone-100 transition-colors"
+        className="flex items-center justify-center p-2 rounded-lg text-stone-600 hover:text-stone-900 hover:bg-stone-100 transition-colors"
         title="Select language"
         aria-label="Select language"
         aria-expanded={open}
         aria-haspopup="listbox"
       >
-        <Globe className="w-4 h-4" strokeWidth={2} />
-        {currentLanguage && (
-          <span className="hidden sm:inline text-base leading-none">
-            {currentLanguage.flag}
-          </span>
-        )}
+        <Globe className="w-[18px] h-[18px]" strokeWidth={2} />
       </button>
 
       {open && (
