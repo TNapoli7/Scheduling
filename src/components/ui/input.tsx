@@ -1,7 +1,7 @@
 import { type InputHTMLAttributes, type SelectHTMLAttributes, type TextareaHTMLAttributes, forwardRef } from "react";
 
 const baseField =
-  "w-full rounded-[var(--radius-md)] bg-[color:var(--surface)] px-3.5 text-sm text-[color:var(--text-primary)] placeholder:text-[color:var(--text-muted)] border border-[color:var(--border)] transition-colors hover:border-[color:var(--border-strong)] focus:outline-none focus:border-[color:var(--primary)] focus:ring-2 focus:ring-[color:var(--primary-soft)] disabled:bg-[color:var(--surface-sunken)] disabled:cursor-not-allowed disabled:text-[color:var(--text-muted)]";
+  "w-full rounded-[var(--radius-md)] bg-[color:var(--surface)] px-3.5 text-sm text-[color:var(--text-primary)] placeholder:text-[color:var(--text-muted)] border border-[color:var(--border)] transition-colors hover:border-[color:var(--border-strong)] focus:outline-none focus-visible:outline-none focus:border-[color:var(--primary)] focus:ring-2 focus:ring-[color:var(--primary-soft)] disabled:bg-[color:var(--surface-sunken)] disabled:cursor-not-allowed disabled:text-[color:var(--text-muted)]";
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string;

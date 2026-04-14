@@ -7,7 +7,7 @@ import { logActivity } from "@/lib/activity-log";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
+import { Input, Select, Textarea } from "@/components/ui/input";
 import { Modal } from "@/components/ui/modal";
 import { Palmtree } from "lucide-react";
 import { SkeletonCard, SkeletonList } from "@/components/ui/skeleton";
@@ -107,21 +107,29 @@ export default function TimeOffPage() {
 
   // Create new request
   async function createRequest() {
-    if (!newStart || !newEnd) return;
+    if (!newStart) return;
+    if (newPeriod === "full_day" && !newEnd) return;
+    // Defensive: if end before start on full_day, align end to start
+    const effectiveEnd =
+      newPeriod !== "full_day"
+        ? newStart
+        : newEnd < newStart
+        ? newStart
+        : newEnd;
     setSaving(true);
 
     await supabase.from("time_off_requests").insert({
       user_id: myId,
       org_id: orgId,
       start_date: newStart,
-      end_date: newPeriod !== "full_day" ? newStart : newEnd,
+      end_date: effectiveEnd,
       type: newType,
       period: newPeriod,
       reason: newReason || null,
       status: "pending",
     });
 
-    logActivity("timeoff_requested", "timeoff", null, { type: newType, start_date: newStart, end_date: newPeriod !== "full_day" ? newStart : newEnd });
+    logActivity("timeoff_requested", "timeoff", null, { type: newType, start_date: newStart, end_date: effectiveEnd });
 
     // Notify managers
     const managers = employees.filter((e) => e.role === "admin" || e.role === "manager");
@@ -132,8 +140,8 @@ export default function TimeOffPage() {
           user_id: mgr.id,
           type: "time_off_request",
           title: "Novo pedido de ferias",
-          body: `${me?.full_name || "Funcionário"} pediu ${TYPE_LABELS[newType]?.toLowerCase()}${newPeriod !== "full_day" ? ` (${PERIOD_LABELS[newPeriod]?.toLowerCase()})` : ""} de ${newStart}${newPeriod === "full_day" ? ` a ${newEnd}` : ""}.`,
-          metadata: { requester_id: myId, type: newType, period: newPeriod, start_date: newStart, end_date: newPeriod !== "full_day" ? newStart : newEnd },
+          body: `${me?.full_name || "Funcionário"} pediu ${TYPE_LABELS[newType]?.toLowerCase()}${newPeriod !== "full_day" ? ` (${PERIOD_LABELS[newPeriod]?.toLowerCase()})` : ""} de ${newStart}${newPeriod === "full_day" ? ` a ${effectiveEnd}` : ""}.`,
+          metadata: { requester_id: myId, type: newType, period: newPeriod, start_date: newStart, end_date: effectiveEnd },
         });
       }
     }
@@ -389,58 +397,67 @@ export default function TimeOffPage() {
       <Modal open={showNew} onClose={() => setShowNew(false)} title={t("modalTitle")} size="sm">
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-sm font-medium text-stone-700 mb-1">{t("typeLabel")}</label>
-              <select
-                value={newType}
-                onChange={(e) => setNewType(e.target.value)}
-                className="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm text-stone-900 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-              >
-                <option value="ferias">{t("types.ferias")}</option>
-                <option value="baixa">{t("types.baixa")}</option>
-                <option value="pessoal">{t("types.pessoal")}</option>
-                <option value="outro">{t("types.outro")}</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-stone-700 mb-1">{t("periodLabel")}</label>
-              <select
-                value={newPeriod}
-                onChange={(e) => setNewPeriod(e.target.value)}
-                className="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm text-stone-900 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-              >
-                <option value="full_day">{t("fullDay")}</option>
-                <option value="morning">{t("morning")} (0,5 dia)</option>
-                <option value="afternoon">{t("afternoon")} (0,5 dia)</option>
-              </select>
-            </div>
+            <Select
+              label={t("typeLabel")}
+              value={newType}
+              onChange={(e) => setNewType(e.target.value)}
+            >
+              <option value="ferias">{t("types.ferias")}</option>
+              <option value="baixa">{t("types.baixa")}</option>
+              <option value="pessoal">{t("types.pessoal")}</option>
+              <option value="outro">{t("types.outro")}</option>
+            </Select>
+            <Select
+              label={t("periodLabel")}
+              value={newPeriod}
+              onChange={(e) => setNewPeriod(e.target.value)}
+            >
+              <option value="full_day">{t("fullDay")}</option>
+              <option value="morning">{t("morning")} (0,5 dia)</option>
+              <option value="afternoon">{t("afternoon")} (0,5 dia)</option>
+            </Select>
           </div>
           <div className={`grid gap-3 ${newPeriod === "full_day" ? "grid-cols-2" : "grid-cols-1"}`}>
-            <div>
-              <label className="block text-sm font-medium text-stone-700 mb-1">
-                {newPeriod === "full_day" ? t("startDateLabel") : t("dateLabel")}
-              </label>
-              <Input type="date" value={newStart} onChange={(e) => setNewStart(e.target.value)} />
-            </div>
+            <Input
+              type="date"
+              label={newPeriod === "full_day" ? t("startDateLabel") : t("dateLabel")}
+              value={newStart}
+              onChange={(e) => {
+                const v = e.target.value;
+                setNewStart(v);
+                // Auto-correct: if end date is before new start, align end to start
+                if (newPeriod === "full_day" && newEnd && v && newEnd < v) {
+                  setNewEnd(v);
+                }
+              }}
+            />
             {newPeriod === "full_day" && (
-              <div>
-                <label className="block text-sm font-medium text-stone-700 mb-1">{t("endDateLabel")}</label>
-                <Input type="date" value={newEnd} onChange={(e) => setNewEnd(e.target.value)} />
-              </div>
+              <Input
+                type="date"
+                label={t("endDateLabel")}
+                value={newEnd}
+                min={newStart || undefined}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  // Auto-correct: never allow end before start
+                  if (newStart && v && v < newStart) {
+                    setNewEnd(newStart);
+                  } else {
+                    setNewEnd(v);
+                  }
+                }}
+              />
             )}
           </div>
-          <div>
-            <label className="block text-sm font-medium text-stone-700 mb-1">{t("reasonLabel")}</label>
-            <textarea
-              value={newReason}
-              onChange={(e) => setNewReason(e.target.value)}
-              rows={2}
-              className="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm text-stone-900 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-              placeholder={t("reasonPlaceholder")}
-            />
-          </div>
+          <Textarea
+            label={t("reasonLabel")}
+            value={newReason}
+            onChange={(e) => setNewReason(e.target.value)}
+            rows={2}
+            placeholder={t("reasonPlaceholder")}
+          />
           <div className="flex gap-2 justify-end">
-            <Button variant="ghost" onClick={() => setShowNew(false)}>Cancelar</Button>
+            <Button variant="ghost" onClick={() => setShowNew(false)}>{t("cancel")}</Button>
             <Button onClick={createRequest} loading={saving} disabled={!newStart || (newPeriod === "full_day" && !newEnd)}>
               {t("submitRequest")}
             </Button>

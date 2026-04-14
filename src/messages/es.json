@@ -356,7 +356,12 @@
     "dia_pendente": "día pendiente",
     "dias_pendentes": "días pendientes",
     "hoje": "Hoy",
-    "dias": "días"
+    "dias": "días",
+    "publicado": "Publicado",
+    "rascunho": "Borrador",
+    "nao_criado": "No creado",
+    "pendente": "Pendiente",
+    "ferias": "Vacaciones"
   },
   "schedulePage": {
     "title": "Horario",
@@ -419,7 +424,8 @@
     "multipleShiftsHint": "Puedes seleccionar varios turnos para el mismo día.",
     "confirmAssign": "Asignar",
     "dndConflictTitle": "Confirmar cambio",
-    "dndConflictIntro": "¿Mover \"{shift}\" de {employee} al {date}?",
+    "dndConflictIntro": "¿Mover \"{shift}\" a {employee} el {date}?",
+    "dndSwapIntro": "¿Intercambiar \"{shiftA}\" de {empA} con \"{shiftB}\" de {empB}?",
     "dndConflictDuplicate": "Este empleado ya tiene este turno en el día destino.",
     "dndConflictConfirm": "Confirmar igualmente"
   },
@@ -487,6 +493,7 @@
     "reasonLabel": "Motivo (opcional)",
     "reasonPlaceholder": "Ej: Vacaciones de verano...",
     "submitRequest": "Enviar solicitud",
+    "cancel": "Cancelar",
     "reject": "Rechazar",
     "approve": "Aprobar",
     "types": {
@@ -666,8 +673,8 @@
   "settingsPage": {
     "title": "Configuración",
     "savedSuccess": "Guardado correctamente",
-    "generalTab": "General",
-    "activityTab": "Registro de actividad",
+    "tabGeneral": "General",
+    "tabHistory": "Registro de actividad",
     "companyInfoTitle": "Información de la empresa",
     "nameLabel": "Nombre",
     "namePlaceholder": "Nombre de la empresa",
@@ -676,8 +683,8 @@
     "addressPlaceholder": "Calle, número, código postal, ciudad",
     "municipalHolidayLabel": "Festivo municipal",
     "municipalHolidayHint": "Fecha del festivo municipal de tu localidad (ej: San Antonio en Madrid el 13 de junio)",
-    "operatingHoursTitle": "Horario de funcionamiento",
-    "closedCheckbox": "Cerrado",
+    "workingHoursTitle": "Horario de funcionamiento",
+    "closedLabel": "Cerrado",
     "planTitle": "Plan",
     "trialLabel": "Prueba",
     "trialEndsLabel": "La prueba termina",

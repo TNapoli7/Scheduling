@@ -230,6 +230,7 @@ export default function SchedulePage() {
     fromDate: string;
     issues: ComplianceViolation[];
     duplicate: boolean;
+    swapWithId: string | null;
   } | null>(null);
   const [activeDrag, setActiveDrag] = useState<{
     entryId: string;
@@ -579,27 +580,64 @@ export default function SchedulePage() {
     fetchData();
   }
 
+  async function applySwap(a: EntryWithShift, b: EntryWithShift) {
+    if (!schedule) return;
+    setSaving(true);
+    // Move A to B's slot, B to A's slot
+    await supabase
+      .from("schedule_entries")
+      .update({
+        user_id: b.user_id,
+        date: b.date,
+        is_holiday: !!nationalHolidays[b.date],
+      })
+      .eq("id", a.id);
+    await supabase
+      .from("schedule_entries")
+      .update({
+        user_id: a.user_id,
+        date: a.date,
+        is_holiday: !!nationalHolidays[a.date],
+      })
+      .eq("id", b.id);
+    logActivity("shift_assigned", "schedule", schedule.id, {
+      swapped_entries: [a.id, b.id],
+    });
+    setSaving(false);
+    fetchData();
+  }
+
   function computeMoveIssues(
     entry: EntryWithShift,
     toUserId: string,
     toDate: string,
+    swapWith: EntryWithShift | null,
   ): { issues: ComplianceViolation[]; duplicate: boolean } {
     const duplicate = entries.some(
       (e) =>
         e.id !== entry.id &&
+        (!swapWith || e.id !== swapWith.id) &&
         e.user_id === toUserId &&
         e.date === toDate &&
         e.shift_template_id === entry.shift_template_id,
     );
-    const projected = entries.map((e) =>
-      e.id === entry.id ? { ...e, user_id: toUserId, date: toDate } : e,
-    );
+    const projected = entries.map((e) => {
+      if (e.id === entry.id) return { ...e, user_id: toUserId, date: toDate };
+      if (swapWith && e.id === swapWith.id)
+        return { ...e, user_id: entry.user_id, date: entry.date };
+      return e;
+    });
     const allViolations = validateCompliance(projected, employees);
-    const issues = allViolations.filter(
-      (v) =>
+    const issues = allViolations.filter((v) => {
+      const affectsTarget =
         v.userId === toUserId &&
-        (v.date === toDate || v.date === entry.date),
-    );
+        (v.date === toDate || v.date === entry.date);
+      const affectsSwapSource =
+        swapWith &&
+        v.userId === swapWith.user_id &&
+        (v.date === entry.date || v.date === toDate);
+      return affectsTarget || !!affectsSwapSource;
+    });
     return { issues, duplicate };
   }
 
@@ -636,19 +674,42 @@ export default function SchedulePage() {
       overData.kind === "grid-cell" ? overData.userId : entry.user_id;
     const toDate = overData.date;
 
-    // Constraints by origin
-    if (activeData.kind === "grid-shift") {
-      // Grid: only same employee allowed
-      if (toUserId !== entry.user_id) return;
-    }
-    // byday-shift: same user, different date (row is per-day)
-    if (activeData.kind === "byday-shift") {
-      if (toUserId !== entry.user_id) return;
+    // ByDay: row doesn't encode user, so keep current employee
+    if (activeData.kind === "byday-shift" && toUserId !== entry.user_id) {
+      return;
     }
 
     if (toUserId === entry.user_id && toDate === entry.date) return;
 
-    const { issues, duplicate } = computeMoveIssues(entry, toUserId, toDate);
+    // Shifts already at destination (same user + same date, excluding the dragged entry itself)
+    const destShifts = entries
+      .filter(
+        (e) =>
+          e.id !== entry.id &&
+          e.user_id === toUserId &&
+          e.date === toDate,
+      )
+      .sort((a, b) =>
+        (a.shift_template?.start_time || "").localeCompare(
+          b.shift_template?.start_time || "",
+        ),
+      );
+
+    // True duplicate = same user + same date + same shift_template
+    const hasDuplicate = destShifts.some(
+      (e) => e.shift_template_id === entry.shift_template_id,
+    );
+
+    // Swap candidate: first shift at destination, but only if not a duplicate
+    const swapWith = !hasDuplicate && destShifts.length > 0 ? destShifts[0] : null;
+
+    const { issues, duplicate } = computeMoveIssues(
+      entry,
+      toUserId,
+      toDate,
+      swapWith,
+    );
+
     if (duplicate || issues.length > 0) {
       setDndConfirm({
         entryId: entry.id,
@@ -657,7 +718,10 @@ export default function SchedulePage() {
         fromDate: entry.date,
         issues,
         duplicate,
+        swapWithId: swapWith?.id ?? null,
       });
+    } else if (swapWith) {
+      applySwap(entry, swapWith);
     } else {
       applyMove(entry.id, toUserId, toDate);
     }
@@ -1826,14 +1890,27 @@ export default function SchedulePage() {
         {dndConfirm && (() => {
           const entry = entries.find((e) => e.id === dndConfirm.entryId);
           const toEmp = employees.find((e) => e.id === dndConfirm.toUserId);
+          const swapWith = dndConfirm.swapWithId
+            ? entries.find((e) => e.id === dndConfirm.swapWithId)
+            : null;
+          const swapEmp = swapWith
+            ? employees.find((e) => e.id === swapWith.user_id)
+            : null;
           return (
             <div className="space-y-4">
               <div className="text-sm text-[color:var(--text-secondary)]">
-                {t("dndConflictIntro", {
-                  shift: entry?.shift_template?.name || "",
-                  employee: toEmp?.full_name || "—",
-                  date: dndConfirm.toDate,
-                })}
+                {swapWith
+                  ? t("dndSwapIntro", {
+                      shiftA: entry?.shift_template?.name || "",
+                      empA: (employees.find((e) => e.id === entry?.user_id))?.full_name || "—",
+                      shiftB: swapWith.shift_template?.name || "",
+                      empB: swapEmp?.full_name || "—",
+                    })
+                  : t("dndConflictIntro", {
+                      shift: entry?.shift_template?.name || "",
+                      employee: toEmp?.full_name || "—",
+                      date: dndConfirm.toDate,
+                    })}
               </div>
               {dndConfirm.duplicate && (
                 <div className="text-sm rounded-md border border-[color:var(--danger)] bg-[color:var(--danger-soft)] px-3 py-2 text-[color:var(--danger)]">
@@ -1871,7 +1948,11 @@ export default function SchedulePage() {
                   onClick={async () => {
                     const c = dndConfirm;
                     setDndConfirm(null);
-                    await applyMove(c.entryId, c.toUserId, c.toDate);
+                    if (swapWith && entry) {
+                      await applySwap(entry, swapWith);
+                    } else {
+                      await applyMove(c.entryId, c.toUserId, c.toDate);
+                    }
                   }}
                   disabled={saving}
                 >

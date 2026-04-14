@@ -356,7 +356,12 @@
     "dia_pendente": "pending day",
     "dias_pendentes": "pending days",
     "hoje": "Today",
-    "dias": "days"
+    "dias": "days",
+    "publicado": "Published",
+    "rascunho": "Draft",
+    "nao_criado": "Not created",
+    "pendente": "Pending",
+    "ferias": "Vacation"
   },
   "schedulePage": {
     "title": "Schedule",
@@ -419,7 +424,8 @@
     "multipleShiftsHint": "You can select multiple shifts for the same day.",
     "confirmAssign": "Assign",
     "dndConflictTitle": "Confirm change",
-    "dndConflictIntro": "Move \"{shift}\" for {employee} to {date}?",
+    "dndConflictIntro": "Move \"{shift}\" to {employee} on {date}?",
+    "dndSwapIntro": "Swap \"{shiftA}\" of {empA} with \"{shiftB}\" of {empB}?",
     "dndConflictDuplicate": "This employee already has this shift on the target day.",
     "dndConflictConfirm": "Confirm anyway"
   },
@@ -487,6 +493,7 @@
     "reasonLabel": "Reason (optional)",
     "reasonPlaceholder": "E.g., Summer vacation...",
     "submitRequest": "Submit request",
+    "cancel": "Cancel",
     "reject": "Reject",
     "approve": "Approve",
     "types": {
@@ -666,8 +673,8 @@
   "settingsPage": {
     "title": "Settings",
     "savedSuccess": "Saved successfully",
-    "generalTab": "General",
-    "activityTab": "Activity log",
+    "tabGeneral": "General",
+    "tabHistory": "Activity log",
     "companyInfoTitle": "Company information",
     "nameLabel": "Name",
     "namePlaceholder": "Company name",
@@ -676,8 +683,8 @@
     "addressPlaceholder": "Street, number, postal code, city",
     "municipalHolidayLabel": "Municipal holiday",
     "municipalHolidayHint": "Date of your municipality's holiday (e.g., Santo António in Lisbon on June 13)",
-    "operatingHoursTitle": "Operating hours",
-    "closedCheckbox": "Closed",
+    "workingHoursTitle": "Operating hours",
+    "closedLabel": "Closed",
     "planTitle": "Plan",
     "trialLabel": "Trial",
     "trialEndsLabel": "Trial ends",

@@ -356,7 +356,12 @@
     "dia_pendente": "dia pendente",
     "dias_pendentes": "dias pendentes",
     "hoje": "Hoje",
-    "dias": "dias"
+    "dias": "dias",
+    "publicado": "Publicado",
+    "rascunho": "Rascunho",
+    "nao_criado": "Não criado",
+    "pendente": "Pendente",
+    "ferias": "Férias"
   },
   "schedulePage": {
     "title": "Horário",
@@ -419,7 +424,8 @@
     "multipleShiftsHint": "Podes selecionar vários turnos para o mesmo dia.",
     "confirmAssign": "Atribuir",
     "dndConflictTitle": "Confirmar alteração",
-    "dndConflictIntro": "Mover \"{shift}\" de {employee} para {date}?",
+    "dndConflictIntro": "Mover \"{shift}\" para {employee} em {date}?",
+    "dndSwapIntro": "Trocar \"{shiftA}\" de {empA} com \"{shiftB}\" de {empB}?",
     "dndConflictDuplicate": "Este funcionário já tem este turno no dia de destino.",
     "dndConflictConfirm": "Confirmar mesmo assim"
   },
@@ -487,6 +493,7 @@
     "reasonLabel": "Motivo (opcional)",
     "reasonPlaceholder": "Ex: Férias de verão...",
     "submitRequest": "Submeter pedido",
+    "cancel": "Cancelar",
     "reject": "Rejeitar",
     "approve": "Aprovar",
     "types": {
@@ -666,8 +673,8 @@
   "settingsPage": {
     "title": "Definições",
     "savedSuccess": "Guardado com sucesso",
-    "generalTab": "Geral",
-    "activityTab": "Histórico de atividade",
+    "tabGeneral": "Geral",
+    "tabHistory": "Histórico de atividade",
     "companyInfoTitle": "Informação da empresa",
     "nameLabel": "Nome",
     "namePlaceholder": "Nome da empresa",
@@ -676,8 +683,8 @@
     "addressPlaceholder": "Rua, número, código postal, cidade",
     "municipalHolidayLabel": "Feriado municipal",
     "municipalHolidayHint": "Data do feriado municipal da tua localidade (ex: Santo Antonio em Lisboa a 13 de Junho)",
-    "operatingHoursTitle": "Horário de funcionamento",
-    "closedCheckbox": "Encerrado",
+    "workingHoursTitle": "Horário de funcionamento",
+    "closedLabel": "Encerrado",
     "planTitle": "Plano",
     "trialLabel": "Trial",
     "trialEndsLabel": "Trial termina a",
