@@ -30,8 +30,13 @@ export function LpFooter() {
             </div>
             <span className="font-bold text-stone-900">Shiftera</span>
           </Link>
-          <p className="text-xs text-stone-500 leading-relaxed">
+          <p className="text-xs text-stone-500 leading-relaxed mb-3">
             {tFooter("tagline")}
+          </p>
+          <p className="text-[11px] text-stone-400 leading-snug">
+            © {new Date().getFullYear()} Shiftera · {tFooter("copyright")}
+            <br />
+            {tFooter("madeIn")}
           </p>
         </div>
 
@@ -120,10 +125,6 @@ export function LpFooter() {
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto mt-10 pt-6 border-t border-stone-200 text-xs text-stone-500 flex flex-col sm:flex-row justify-between gap-2">
-        <p>© {new Date().getFullYear()} Shiftera. {tFooter("copyright")}</p>
-        <p>{tFooter("madeIn")}</p>
-      </div>
     </footer>
   );
 }

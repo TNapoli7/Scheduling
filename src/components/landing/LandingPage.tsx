@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { ChatWidget } from "@/components/chat/ChatWidget";
 import { LpNavbar } from "@/components/lp/LpNavbar";
+import { LpFooter } from "@/components/lp/LpFooter";
 import {
   ArrowRight,
   Check,
@@ -598,7 +599,7 @@ export default function LandingPage() {
       <Pricing />
       <FAQ />
       <FinalCTA />
-      <Footer />
+      <LpFooter />
       <ChatWidget />
     </div>
   );

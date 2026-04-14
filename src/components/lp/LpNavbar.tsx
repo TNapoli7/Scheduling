@@ -9,6 +9,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { ArrowRight, ChevronDown } from "lucide-react";
+import { LpLanguageSelector } from "./LpLanguageSelector";
 
 const ORANGE_PRIMARY = "#E8850A";
 const ORANGE_GRADIENT = "#f5a623";
@@ -95,10 +96,11 @@ export function LpNavbar() {
           </a>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
+          <LpLanguageSelector />
           <Link
             href="/login"
-            className="text-sm font-medium text-stone-600 hover:text-stone-900 transition-colors"
+            className="text-sm font-medium text-stone-600 hover:text-stone-900 transition-colors px-2"
           >
             {t("navbar.signIn")}
           </Link>
