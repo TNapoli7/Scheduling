@@ -148,7 +148,8 @@ export function ChatWidget() {
         onClick={() => setIsOpen(!isOpen)}
         className="chat-widget-button"
         style={{ backgroundColor: SHIFTERA_ORANGE }}
-        title="Chat with support"
+        title={isOpen ? t("closeChat") : t("openChat")}
+        aria-label={isOpen ? t("closeChat") : t("openChat")}
       >
         {isOpen ? <X size={24} /> : <MessageCircle size={24} />}
       </button>

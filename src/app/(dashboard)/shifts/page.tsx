@@ -266,7 +266,7 @@ export default function ShiftsPage() {
 
               <div className="mt-3 flex items-center justify-between">
                 <p className="text-sm text-stone-500">
-                  Min. {shift.min_staff} {t("minStaffLabel")}
+                  {t("minStaffInline", { count: shift.min_staff })}
                 </p>
                 <div className="flex gap-1">
                   <Button variant="ghost" size="sm" onClick={() => openEdit(shift)}>

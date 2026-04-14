@@ -337,8 +337,14 @@ export default function SwapsPage() {
                           }}
                         />
                         <span>
-                          {formatDate(swap.entry.date)} —{" "}
-                          {swap.entry.shift_template.name}
+                          {formatDate(swap.entry.date)} ·{" "}
+                          <span className="font-medium">
+                            {swap.entry.shift_template.name}
+                          </span>{" "}
+                          <span className="text-stone-400">
+                            {swap.entry.shift_template.start_time?.slice(0, 5)}–
+                            {swap.entry.shift_template.end_time?.slice(0, 5)}
+                          </span>
                         </span>
                       </div>
                     )}
@@ -355,8 +361,21 @@ export default function SwapsPage() {
                             }}
                           />
                           <span>
-                            {formatDate(swap.target_entry.date)} —{" "}
-                            {swap.target_entry.shift_template.name}
+                            {formatDate(swap.target_entry.date)} ·{" "}
+                            <span className="font-medium">
+                              {swap.target_entry.shift_template.name}
+                            </span>{" "}
+                            <span className="text-stone-400">
+                              {swap.target_entry.shift_template.start_time?.slice(
+                                0,
+                                5,
+                              )}
+                              –
+                              {swap.target_entry.shift_template.end_time?.slice(
+                                0,
+                                5,
+                              )}
+                            </span>
                           </span>
                         </div>
                       </>
@@ -381,11 +400,11 @@ export default function SwapsPage() {
                       {t("approveButton")}
                     </Button>
                     <Button
-                      variant="ghost"
+                      variant="secondary"
                       size="sm"
                       onClick={() => handleAction(swap.id, "rejected")}
                       loading={processing === swap.id}
-                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                      className="!text-[color:var(--danger)] !border-[color:var(--danger-soft)] hover:!bg-[color:var(--danger-soft)]"
                     >
                       {t("rejectButton")}
                     </Button>

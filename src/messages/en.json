@@ -503,6 +503,8 @@
     "errorMissingEnd": "Please set an end date.",
     "errorAuth": "Invalid session. Reload the page.",
     "errorGeneric": "Could not create request. Please try again.",
+    "balancePreview": "Will use {days} · {remaining} remaining",
+    "balanceOver": "This request uses {days} but you only have {available} available.",
     "types": {
       "ferias": "Vacation",
       "baixa": "Sick leave",
@@ -591,6 +593,7 @@
     "endTimeLabel": "End time",
     "durationLabel": "Duration",
     "minStaffLabel": "Minimum staff",
+    "minStaffInline": "Minimum {count} {count, plural, one {person} other {people}}",
     "minStaffHint": "Minimum number of people per shift",
     "colorLabel": "Color",
     "createButton": "Create shift",
@@ -791,6 +794,8 @@
     }
   },
   "chatWidget": {
+    "openChat": "Open support chat",
+    "closeChat": "Close chat",
     "welcomePt": "Hi there! How can I help you with Shiftera?",
     "canHelpMore": "Can I help you with anything else?",
     "noAnswer": "Sorry, I couldn't find an answer to that question. Would you like to contact support?",

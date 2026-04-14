@@ -312,31 +312,50 @@ export default function TimeOffPage() {
       </Card>
 
       {/* Tabs */}
-      <div className="flex gap-1 bg-stone-100 rounded-lg p-1 w-fit">
-        {([
-          { key: "pending", label: t("tabPending"), count: pendingCount },
-          { key: "approved", label: t("tabApproved") },
-          { key: "rejected", label: t("tabRejected") },
-          { key: "all", label: t("tabAll") },
-        ] as const).map((item) => (
-          <button
-            key={item.key}
-            onClick={() => setTab(item.key)}
-            className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-              tab === item.key
-                ? "bg-white text-stone-900 shadow-sm"
-                : "text-stone-600 hover:text-stone-900"
-            }`}
-          >
-            {item.label}
-            {"count" in item && item.count ? (
-              <span className="ml-1.5 bg-amber-100 text-amber-700 text-xs px-1.5 py-0.5 rounded-full">
-                {item.count}
-              </span>
-            ) : null}
-          </button>
-        ))}
-      </div>
+      {(() => {
+        const approvedCount = requests.filter((r) => r.status === "approved").length;
+        const rejectedCount = requests.filter((r) => r.status === "rejected").length;
+        const allCount = requests.length;
+        const tabs = [
+          { key: "pending" as const, label: t("tabPending"), count: pendingCount, variant: "pending" as const },
+          { key: "approved" as const, label: t("tabApproved"), count: approvedCount, variant: "neutral" as const },
+          { key: "rejected" as const, label: t("tabRejected"), count: rejectedCount, variant: "neutral" as const },
+          { key: "all" as const, label: t("tabAll"), count: allCount, variant: "neutral" as const },
+        ];
+        return (
+          <div className="flex gap-1 bg-stone-100 rounded-lg p-1 w-fit">
+            {tabs.map((item) => {
+              const isActive = tab === item.key;
+              return (
+                <button
+                  key={item.key}
+                  onClick={() => setTab(item.key)}
+                  className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors flex items-center gap-1.5 ${
+                    isActive
+                      ? "bg-white text-stone-900 shadow-sm"
+                      : "text-stone-600 hover:text-stone-900"
+                  }`}
+                >
+                  {item.label}
+                  {item.count > 0 && (
+                    <span
+                      className={`text-[11px] px-1.5 py-0.5 rounded-full leading-none ${
+                        item.variant === "pending"
+                          ? "bg-amber-100 text-amber-700"
+                          : isActive
+                          ? "bg-stone-200 text-stone-600"
+                          : "bg-stone-200 text-stone-500"
+                      }`}
+                    >
+                      {item.count}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        );
+      })()}
 
       {/* Request list */}
       {filtered.length === 0 ? (
@@ -478,6 +497,31 @@ export default function TimeOffPage() {
             rows={2}
             placeholder={t("reasonPlaceholder")}
           />
+          {newType === "ferias" && newStart && (newPeriod !== "full_day" || newEnd) && (() => {
+            const days = countDays({
+              start_date: newStart,
+              end_date: newPeriod !== "full_day" ? newStart : newEnd,
+              period: newPeriod,
+            } as TimeOffRequest & { profile?: Profile });
+            const afterRemaining = remainingDays - days;
+            const overBudget = afterRemaining < 0;
+            return (
+              <div
+                className={`text-xs rounded-md px-3 py-2 border ${
+                  overBudget
+                    ? "border-[color:var(--danger)] bg-[color:var(--danger-soft)] text-[color:var(--danger)]"
+                    : "border-[color:var(--border-light)] bg-[color:var(--surface-sunken)] text-[color:var(--text-secondary)]"
+                }`}
+              >
+                {overBudget
+                  ? t("balanceOver", { days: formatDays(days), available: formatDays(remainingDays) })
+                  : t("balancePreview", {
+                      days: formatDays(days),
+                      remaining: formatDays(afterRemaining),
+                    })}
+              </div>
+            );
+          })()}
           {formError && (
             <div className="text-sm rounded-md border border-[color:var(--danger)] bg-[color:var(--danger-soft)] px-3 py-2 text-[color:var(--danger)]">
               {formError}

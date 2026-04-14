@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { Card, CardTitle } from "@/components/ui/card";
@@ -315,7 +316,7 @@ export default function DashboardPage() {
                   <Calendar className="w-6 h-6 text-teal-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-[color:var(--text-muted)]">{t("horarioMonth")} {m(["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"][currentMonth - 1])}</p>
+                  <p className="text-sm text-[color:var(--text-muted)]">{t("horarioMonth")} · {m(["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"][currentMonth - 1])} {currentYear}</p>
                   {currentScheduleStatus ? (
                     <Badge variant={currentScheduleStatus === "published" ? "success" : "warning"}>
                       {currentScheduleStatus === "published" ? t("publicado") : t("rascunho")}
@@ -327,17 +328,19 @@ export default function DashboardPage() {
               </div>
             </Card>
 
-            <Card>
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-[color:var(--warning-soft)] rounded-xl flex items-center justify-center">
-                  <AlertTriangle className="w-6 h-6 text-[color:var(--warning)]" />
+            <Link href="/swaps" className="block group">
+              <Card className="transition-shadow group-hover:shadow-[var(--shadow-md)]">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-[color:var(--warning-soft)] rounded-xl flex items-center justify-center">
+                    <AlertTriangle className="w-6 h-6 text-[color:var(--warning)]" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-[color:var(--text-muted)]">{t("trocasPendentes")}</p>
+                    <p className="text-2xl font-bold text-[color:var(--text-primary)]">{pendingSwaps}</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm text-[color:var(--text-muted)]">{t("trocasPendentes")}</p>
-                  <p className="text-2xl font-bold text-[color:var(--text-primary)]">{pendingSwaps}</p>
-                </div>
-              </div>
-            </Card>
+              </Card>
+            </Link>
           </>
         )}
 

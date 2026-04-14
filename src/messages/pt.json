@@ -503,6 +503,8 @@
     "errorMissingEnd": "Indica a data de fim.",
     "errorAuth": "Sessão inválida. Recarrega a página.",
     "errorGeneric": "Não foi possível criar o pedido. Tenta novamente.",
+    "balancePreview": "Vais usar {days} · ficam {remaining} disponíveis",
+    "balanceOver": "Este pedido usa {days} mas só tens {available} disponíveis.",
     "types": {
       "ferias": "Férias",
       "baixa": "Baixa médica",
@@ -591,6 +593,7 @@
     "endTimeLabel": "Hora fim",
     "durationLabel": "Duração",
     "minStaffLabel": "Staff mínimo",
+    "minStaffInline": "Mínimo {count} pessoa{count, plural, one {} other {s}}",
     "minStaffHint": "Número mínimo de pessoas por turno",
     "colorLabel": "Cor",
     "createButton": "Criar turno",
@@ -791,6 +794,8 @@
     }
   },
   "chatWidget": {
+    "openChat": "Abrir chat de suporte",
+    "closeChat": "Fechar chat",
     "welcomePt": "Olá! Como posso ajudá-lo com o Shiftera?",
     "canHelpMore": "Posso ajudá-lo com mais alguma coisa?",
     "noAnswer": "Desculpe, não encontrei uma resposta para essa pergunta. Você pode entrar em contato com o suporte?",

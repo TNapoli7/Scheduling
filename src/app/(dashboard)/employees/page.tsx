@@ -30,10 +30,12 @@ const emptyForm: EmployeeForm = {
   weekly_hours: 40,
 };
 
-const roleBadge: Record<string, "info" | "success" | "default"> = {
-  admin: "info",
-  manager: "success",
-  employee: "default",
+// Role badges use distinct families from the status (success/danger) colours
+// so "Gestor" never clashes visually with "Ativo".
+const roleBadge: Record<string, "accent" | "navy" | "default"> = {
+  admin: "accent",  // orange — highest authority
+  manager: "navy",  // dark — management
+  employee: "default", // neutral
 };
 
 export default function EmployeesPage() {
