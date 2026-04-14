@@ -92,7 +92,7 @@ export default function TimeOffPage() {
     // Fetch requests
     let query = supabase
       .from("time_off_requests")
-      .select("*, profile:profiles(*)")
+      .select("*, profile:profiles!time_off_requests_user_id_fkey(*)")
       .order("created_at", { ascending: false });
 
     if (profile.role === "employee") {

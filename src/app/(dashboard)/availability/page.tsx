@@ -88,7 +88,7 @@ export default function AvailabilityPage() {
 
     let query = supabase
       .from("availability")
-      .select("*, profile:profiles(*)")
+      .select("*, profile:profiles!availability_user_id_fkey(*)")
       .gte("date", startDate)
       .lte("date", endDate)
       .eq("available", false); // Only indisponibilidades
