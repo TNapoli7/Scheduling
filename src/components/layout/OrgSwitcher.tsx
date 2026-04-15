@@ -12,10 +12,10 @@
  */
 
 import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Check, ChevronsUpDown, Plus } from "lucide-react";
 import { ShifteraLogo } from "@/components/lp/ShifteraLogo";
+import { CreateOrgModal } from "./CreateOrgModal";
 
 export interface OrgSwitcherItem {
   org_id: string;
@@ -35,9 +35,9 @@ interface OrgSwitcherProps {
 }
 
 export function OrgSwitcher({ memberships, activeOrgId, collapsed }: OrgSwitcherProps) {
-  const router = useRouter();
   const t = useTranslations("orgSwitcher");
   const [open, setOpen] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
   const [switching, setSwitching] = useState<string | null>(null);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -84,15 +84,19 @@ export function OrgSwitcher({ memberships, activeOrgId, collapsed }: OrgSwitcher
   }
 
   function createNew() {
-    // The onboarding flow creates a new org for an existing authenticated user.
-    // After it finishes, the user will land back on the dashboard with the new
-    // org as active.
-    router.push("/onboarding?mode=new-org");
+    // Open the CreateOrgModal inline instead of navigating to the onboarding
+    // wizard. Authenticated admins don't need a multi-step flow — a single
+    // compact form with sensible hour defaults is enough. The /onboarding
+    // route remains dedicated to first-run users.
+    setOpen(false);
+    setCreateOpen(true);
   }
 
   if (!active) return null;
 
   return (
+    <>
+    <CreateOrgModal open={createOpen} onClose={() => setCreateOpen(false)} />
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen((v) => !v)}
@@ -176,5 +180,6 @@ export function OrgSwitcher({ memberships, activeOrgId, collapsed }: OrgSwitcher
         </div>
       )}
     </div>
+    </>
   );
 }

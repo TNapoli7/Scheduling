@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { logActivity } from "@/lib/activity-log";
 import { Button } from "@/components/ui/button";
@@ -34,12 +34,9 @@ const dayLabels: Record<string, string> = {
 
 export default function OnboardingPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  // When launched from the org switcher ("Criar nova organização") we're
-  // creating an ADDITIONAL org for an authenticated user — no profile.id
-  // rewrite needed, just a new org + membership. Same form works in both
-  // flows; only the submit logic branches on this flag.
-  const isNewOrgFlow = searchParams.get("mode") === "new-org";
+  // First-run only: authenticated user with no organisation yet. The
+  // "add another organisation" flow for existing admins lives in
+  // CreateOrgModal (opened from the sidebar org switcher).
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -123,22 +120,16 @@ export default function OnboardingPage() {
       return;
     }
 
-    // Update profile: set active_org_id always. Only write legacy org_id/role
-    // on the FIRST org (isNewOrgFlow === false). For additional orgs we keep
-    // profile.org_id pointing to the user's original org so legacy queries
-    // don't silently switch context.
-    const profileUpdate: Record<string, unknown> = {
-      active_org_id: org.id,
-    };
-    if (!isNewOrgFlow) {
-      profileUpdate.org_id = org.id;
-      profileUpdate.full_name = fullName;
-      profileUpdate.role = "admin";
-    }
-
+    // First-run: write active_org_id + legacy org_id/role/full_name so the
+    // profile is fully initialised for downstream queries.
     const { error: profileError } = await supabase
       .from("profiles")
-      .update(profileUpdate)
+      .update({
+        active_org_id: org.id,
+        org_id: org.id,
+        full_name: fullName,
+        role: "admin",
+      })
       .eq("id", user.id);
 
     if (profileError) {
@@ -155,27 +146,9 @@ export default function OnboardingPage() {
   return (
     <div className="min-h-screen bg-stone-50 flex items-center justify-center px-4">
       <div className="w-full max-w-lg">
-        {/* Cancel link — only makes sense when adding an ADDITIONAL org.
-             On first-time onboarding, the user has no org yet so we don't
-             offer an escape (they'd end up on a blocked dashboard). */}
-        {isNewOrgFlow && (
-          <div className="mb-4">
-            <button
-              type="button"
-              onClick={() => router.push("/dashboard")}
-              className="text-sm text-stone-500 hover:text-stone-800 inline-flex items-center gap-1"
-            >
-              ← Cancelar e voltar ao dashboard
-            </button>
-          </div>
-        )}
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold" style={{ color: "var(--primary)" }}>Shiftera</h1>
-          <p className="text-stone-500 mt-2">
-            {isNewOrgFlow
-              ? "Adiciona uma nova organização em 2 passos"
-              : "Configura a tua empresa em 2 passos"}
-          </p>
+          <p className="text-stone-500 mt-2">Configura a tua empresa em 2 passos</p>
         </div>
 
         {/* Progress — two steps, branded orange */}
