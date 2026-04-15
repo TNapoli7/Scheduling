@@ -22,18 +22,25 @@ import {
 
 const PAGE_SIZE = 25;
 
+// Canonical entity types shown in the filter dropdown.
+// Legacy aliases (schedule_entry, time_off) are still resolved for rendering
+// via the translations map, but aren't duplicated in the filter.
 const ENTITY_ICONS: Record<string, typeof Clock> = {
   schedule: Calendar,
-  schedule_entry: Clock,
-  time_off: FileText,
+  shift: Clock,
   timeoff: FileText,
   swap: ArrowRightLeft,
   employee: User,
-  shift: Clock,
   availability: Calendar,
   organization: Briefcase,
   settings: Settings,
   auth: LogIn,
+};
+
+// Legacy aliases mapped back to a canonical key when we find them in old logs.
+const LEGACY_ENTITY_ALIASES: Record<string, string> = {
+  schedule_entry: "shift",
+  time_off: "timeoff",
 };
 
 function timeAgo(dateStr: string): string {
@@ -122,7 +129,15 @@ export function ActivityLogPanel() {
       .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
 
     if (entityFilter !== "all") {
-      query = query.eq("entity_type", entityFilter);
+      // Include any legacy aliases that map to the selected canonical key.
+      const aliases = Object.entries(LEGACY_ENTITY_ALIASES)
+        .filter(([, canonical]) => canonical === entityFilter)
+        .map(([legacy]) => legacy);
+      const match = [entityFilter, ...aliases];
+      query =
+        match.length > 1
+          ? query.in("entity_type", match)
+          : query.eq("entity_type", entityFilter);
     }
 
     if (search.trim()) {
@@ -164,7 +179,7 @@ export function ActivityLogPanel() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
           <input
             type="text"
-            placeholder={t("title")}
+            placeholder={t("searchPlaceholder")}
             value={search}
             onChange={(e) => {
               setSearch(e.target.value);
@@ -185,7 +200,7 @@ export function ActivityLogPanel() {
             }}
             className="pl-9 pr-8 py-2 text-sm border border-stone-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 bg-white appearance-none cursor-pointer"
           >
-            <option value="all">{t("title")}</option>
+            <option value="all">{t("allCategories")}</option>
             {Object.entries(ENTITY_ICONS).map(([key]) => (
               <option key={key} value={key}>
                 {getEntityLabel(key)}
@@ -199,10 +214,10 @@ export function ActivityLogPanel() {
       <div className="bg-white border border-stone-200 rounded-xl overflow-hidden">
         {/* Table header */}
         <div className="grid grid-cols-[1fr_140px_120px_100px] gap-4 px-4 py-2.5 bg-stone-50 border-b border-stone-100 text-xs font-medium text-stone-500 uppercase tracking-wider">
-          <span>Ação</span>
-          <span>Utilizador</span>
-          <span>Categoria</span>
-          <span className="text-right">Quando</span>
+          <span>{t("colAction")}</span>
+          <span>{t("colUser")}</span>
+          <span>{t("colCategory")}</span>
+          <span className="text-right">{t("colWhen")}</span>
         </div>
 
         {/* Rows */}
@@ -221,8 +236,9 @@ export function ActivityLogPanel() {
           </div>
         ) : (
           logs.map((log) => {
-            const Icon =
-              ENTITY_ICONS[log.entity_type] || Clock;
+            const canonical =
+              LEGACY_ENTITY_ALIASES[log.entity_type] || log.entity_type;
+            const Icon = ENTITY_ICONS[canonical] || Clock;
             return (
               <div
                 key={log.id}
@@ -256,7 +272,7 @@ export function ActivityLogPanel() {
 
                 {/* Entity type */}
                 <span className="text-xs text-stone-500 bg-stone-100 px-2 py-1 rounded-md truncate text-center">
-                  {getEntityLabel(log.entity_type)}
+                  {getEntityLabel(canonical)}
                 </span>
 
                 {/* Timestamp */}
