@@ -137,9 +137,27 @@ export default function OnboardingPage() {
   return (
     <div className="min-h-screen bg-stone-50 flex items-center justify-center px-4">
       <div className="w-full max-w-lg">
+        {/* Cancel link — only makes sense when adding an ADDITIONAL org.
+             On first-time onboarding, the user has no org yet so we don't
+             offer an escape (they'd end up on a blocked dashboard). */}
+        {isNewOrgFlow && (
+          <div className="mb-4">
+            <button
+              type="button"
+              onClick={() => router.push("/dashboard")}
+              className="text-sm text-stone-500 hover:text-stone-800 inline-flex items-center gap-1"
+            >
+              ← Cancelar e voltar ao dashboard
+            </button>
+          </div>
+        )}
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold" style={{ color: "var(--primary)" }}>Shiftera</h1>
-          <p className="text-stone-500 mt-2">Configura a tua empresa em 3 passos</p>
+          <p className="text-stone-500 mt-2">
+            {isNewOrgFlow
+              ? "Adiciona uma nova organização em 3 passos"
+              : "Configura a tua empresa em 3 passos"}
+          </p>
         </div>
 
         {/* Progress */}
@@ -284,7 +302,7 @@ export default function OnboardingPage() {
                   Voltar
                 </Button>
                 <Button onClick={handleSubmit} loading={loading} disabled={!fullName} className="flex-1">
-                  Comecar
+                  Começar
                 </Button>
               </div>
             </div>
