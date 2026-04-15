@@ -22,15 +22,25 @@ import type { UserRole } from "@/types/database";
 import { LanguageSelector } from "./language-selector";
 import { useClientLocale } from "@/hooks/use-locale";
 import { ShifteraLogo } from "@/components/lp/ShifteraLogo";
+import { OrgSwitcher, type OrgSwitcherItem } from "./OrgSwitcher";
 
 interface SidebarProps {
   role: UserRole;
   orgName: string;
   open: boolean;
   onClose: () => void;
+  memberships: OrgSwitcherItem[];
+  activeOrgId: string | null;
 }
 
-export function Sidebar({ role, orgName, open, onClose }: SidebarProps) {
+export function Sidebar({
+  role,
+  orgName,
+  open,
+  onClose,
+  memberships,
+  activeOrgId,
+}: SidebarProps) {
   const t = useTranslations('navigation');
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
@@ -77,19 +87,31 @@ export function Sidebar({ role, orgName, open, onClose }: SidebarProps) {
         {/* Subtle inner glow at top */}
         <div className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-white/[0.04] to-transparent" />
 
-        {/* Logo / Org name */}
-        <div className="relative flex items-center justify-between h-16 px-4 shrink-0">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <ShifteraLogo size={32} className="shrink-0" />
-            {!collapsed && (
-              <div className="min-w-0">
-                <p className="text-sm font-display font-semibold text-white tracking-tight leading-tight">Shiftera</p>
-                <p
-                  className="text-[10px] text-[color:var(--sidebar-fg-muted)] truncate capitalize"
-                  title={orgName}
-                >
-                  {orgName}
-                </p>
+        {/* Logo / Org switcher */}
+        <div className="relative flex items-start justify-between px-2 pt-3 pb-2 shrink-0 gap-1">
+          <div className="flex-1 min-w-0">
+            {memberships.length > 0 ? (
+              <OrgSwitcher
+                memberships={memberships}
+                activeOrgId={activeOrgId}
+                collapsed={collapsed}
+              />
+            ) : (
+              <div className="flex items-center gap-2.5 px-2 py-2">
+                <ShifteraLogo size={32} className="shrink-0" />
+                {!collapsed && (
+                  <div className="min-w-0">
+                    <p className="text-sm font-display font-semibold text-white tracking-tight leading-tight">
+                      Shiftera
+                    </p>
+                    <p
+                      className="text-[10px] text-[color:var(--sidebar-fg-muted)] truncate capitalize"
+                      title={orgName}
+                    >
+                      {orgName}
+                    </p>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -97,7 +119,7 @@ export function Sidebar({ role, orgName, open, onClose }: SidebarProps) {
           {/* Mobile close */}
           <button
             onClick={onClose}
-            className="lg:hidden text-[color:var(--sidebar-fg-muted)] hover:text-white p-1.5 rounded-lg hover:bg-white/5 transition"
+            className="lg:hidden text-[color:var(--sidebar-fg-muted)] hover:text-white p-1.5 rounded-lg hover:bg-white/5 transition mt-1"
             aria-label={t('close')}
           >
             <X className="w-4 h-4" />

@@ -41,18 +41,49 @@ export interface OrgSummary extends Organization {
 
 export interface Profile {
   id: string;
+  /** @deprecated org-specific fields moved to Membership. Kept for 1 release for rollback safety. */
   org_id: string | null;
   email: string;
+  /** @deprecated moved to Membership.full_name. Still read as fallback during transition. */
   full_name: string;
+  /** @deprecated moved to Membership.role. Still read as fallback during transition. */
   role: UserRole;
+  /** @deprecated moved to Membership.credential. */
   credential: string | null;
+  /** @deprecated moved to Membership.contract_type. */
   contract_type: ContractType;
+  /** @deprecated moved to Membership.weekly_hours. */
   weekly_hours: number;
+  /** @deprecated moved to Membership.is_active. */
   is_active: boolean;
   avatar_url: string | null;
+  /** @deprecated moved to Membership.vacation_quota. */
   vacation_quota: number;
   is_super_admin: boolean;
   last_login_at: string | null;
+  /** Which organisation the user is currently viewing (set by the switcher). */
+  active_org_id: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+/**
+ * A user's membership in a specific organisation.
+ * One user can have many memberships; their active session is keyed by
+ * profiles.active_org_id and surfaced via RLS helpers (get_my_org_id,
+ * get_my_role).
+ */
+export interface Membership {
+  id: string;
+  user_id: string;
+  org_id: string;
+  role: UserRole;
+  full_name: string;
+  credential: string | null;
+  contract_type: ContractType;
+  weekly_hours: number;
+  vacation_quota: number;
+  is_active: boolean;
   created_at: string;
   updated_at: string;
 }

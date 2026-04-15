@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Sidebar } from "./sidebar";
 import { Header } from "./header";
 import type { UserRole } from "@/types/database";
+import type { OrgSwitcherItem } from "./OrgSwitcher";
 
 interface DashboardShellProps {
   children: React.ReactNode;
@@ -11,6 +12,8 @@ interface DashboardShellProps {
   orgName: string;
   userName: string;
   unreadCount?: number;
+  memberships: OrgSwitcherItem[];
+  activeOrgId: string | null;
 }
 
 export function DashboardShell({
@@ -19,6 +22,8 @@ export function DashboardShell({
   orgName,
   userName,
   unreadCount = 0,
+  memberships,
+  activeOrgId,
 }: DashboardShellProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -29,6 +34,8 @@ export function DashboardShell({
         orgName={orgName}
         open={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
+        memberships={memberships}
+        activeOrgId={activeOrgId}
       />
       <div className="flex-1 flex flex-col min-w-0">
         <Header

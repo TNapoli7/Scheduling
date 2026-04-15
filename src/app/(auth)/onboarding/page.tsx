@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { logActivity } from "@/lib/activity-log";
 import { Button } from "@/components/ui/button";
@@ -34,6 +34,12 @@ const dayLabels: Record<string, string> = {
 
 export default function OnboardingPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  // When launched from the org switcher ("Criar nova organização") we're
+  // creating an ADDITIONAL org for an authenticated user — no profile.id
+  // rewrite needed, just a new org + membership. Same form works in both
+  // flows; only the submit logic branches on this flag.
+  const isNewOrgFlow = searchParams.get("mode") === "new-org";
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -82,14 +88,39 @@ export default function OnboardingPage() {
       return;
     }
 
-    // Update profile with org_id and name
+    // Create the membership making the current user the admin of this org.
+    const { error: membershipError } = await supabase
+      .from("memberships")
+      .insert({
+        user_id: user.id,
+        org_id: org.id,
+        role: "admin",
+        full_name: fullName,
+        is_active: true,
+      });
+
+    if (membershipError) {
+      setError(membershipError.message);
+      setLoading(false);
+      return;
+    }
+
+    // Update profile: set active_org_id always. Only write legacy org_id/role
+    // on the FIRST org (isNewOrgFlow === false). For additional orgs we keep
+    // profile.org_id pointing to the user's original org so legacy queries
+    // don't silently switch context.
+    const profileUpdate: Record<string, unknown> = {
+      active_org_id: org.id,
+    };
+    if (!isNewOrgFlow) {
+      profileUpdate.org_id = org.id;
+      profileUpdate.full_name = fullName;
+      profileUpdate.role = "admin";
+    }
+
     const { error: profileError } = await supabase
       .from("profiles")
-      .update({
-        org_id: org.id,
-        full_name: fullName,
-        role: "admin",
-      })
+      .update(profileUpdate)
       .eq("id", user.id);
 
     if (profileError) {

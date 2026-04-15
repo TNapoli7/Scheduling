@@ -11,7 +11,16 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Modal } from "@/components/ui/modal";
 import { SkeletonTable } from "@/components/ui/skeleton";
-import type { Profile } from "@/types/database";
+import type { Profile, Membership } from "@/types/database";
+
+/**
+ * Row shown in the Equipa page = membership joined with the user's email.
+ * Memberships are scoped to the currently active org (via RLS), so listing
+ * here automatically switches when the user flips orgs.
+ */
+type TeamMemberRow = Membership & {
+  profile?: { email: string } | null;
+};
 
 type EmployeeForm = {
   email: string;
@@ -41,7 +50,7 @@ const roleBadge: Record<string, "accent" | "navy" | "default"> = {
 
 export default function EmployeesPage() {
   const t = useTranslations("employees");
-  const [employees, setEmployees] = useState<Profile[]>([]);
+  const [employees, setEmployees] = useState<TeamMemberRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -51,7 +60,7 @@ export default function EmployeesPage() {
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState<"all" | "admin" | "manager" | "employee">("all");
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("active");
-  const [confirmDeactivate, setConfirmDeactivate] = useState<Profile | null>(null);
+  const [confirmDeactivate, setConfirmDeactivate] = useState<TeamMemberRow | null>(null);
 
   const supabase = createClient();
 
@@ -86,11 +95,13 @@ export default function EmployeesPage() {
   };
 
   const fetchEmployees = useCallback(async () => {
+    // Memberships are scoped to the active org by RLS — no need to filter here.
+    // We join profiles to get the user's email (not duplicated on membership).
     const { data } = await supabase
-      .from("profiles")
-      .select("*")
+      .from("memberships")
+      .select("*, profile:profiles!memberships_user_id_fkey(email)")
       .order("full_name");
-    if (data) setEmployees(data);
+    if (data) setEmployees(data as TeamMemberRow[]);
     setLoading(false);
   }, [supabase]);
 
@@ -105,10 +116,12 @@ export default function EmployeesPage() {
     setShowModal(true);
   }
 
-  function openEdit(emp: Profile) {
+  function openEdit(emp: TeamMemberRow) {
+    // When editing an existing member, we store the MEMBERSHIP id (not user_id)
+    // so the save handler updates the org-scoped row, not the user-level profile.
     setEditingId(emp.id);
     setForm({
-      email: emp.email,
+      email: emp.profile?.email || "",
       full_name: emp.full_name,
       role: emp.role,
       credential: emp.credential || "",
@@ -130,9 +143,10 @@ export default function EmployeesPage() {
     }
 
     if (editingId) {
-      // Update existing
+      // Update the membership row for this org. RLS allows admin/manager of
+      // the current org to update rows scoped there.
       const { error: err } = await supabase
-        .from("profiles")
+        .from("memberships")
         .update({
           full_name: form.full_name,
           role: form.role,
@@ -184,9 +198,11 @@ export default function EmployeesPage() {
     fetchEmployees();
   }
 
-  async function toggleActive(emp: Profile) {
+  async function toggleActive(emp: TeamMemberRow) {
+    // Deactivate at the membership level only — the user may still be active
+    // in other orgs they belong to.
     await supabase
-      .from("profiles")
+      .from("memberships")
       .update({ is_active: !emp.is_active })
       .eq("id", emp.id);
     logActivity(emp.is_active ? "employee_deactivated" : "employee_activated", "employee", emp.id);
@@ -198,7 +214,7 @@ export default function EmployeesPage() {
     const matchesSearch =
       !q ||
       e.full_name.toLowerCase().includes(q) ||
-      e.email.toLowerCase().includes(q) ||
+      (e.profile?.email || "").toLowerCase().includes(q) ||
       (e.credential || "").toLowerCase().includes(q);
     const matchesRole = roleFilter === "all" || e.role === roleFilter;
     const matchesStatus =
@@ -294,7 +310,7 @@ export default function EmployeesPage() {
                     <td className="py-3 px-4">
                       <div>
                         <p className="font-medium text-[color:var(--text-primary)]">{emp.full_name}</p>
-                        <p className="text-[color:var(--text-muted)] text-xs">{emp.email}</p>
+                        <p className="text-[color:var(--text-muted)] text-xs">{emp.profile?.email || "—"}</p>
                       </div>
                     </td>
                     <td className="py-3 px-4 text-[color:var(--text-secondary)] hidden sm:table-cell capitalize">

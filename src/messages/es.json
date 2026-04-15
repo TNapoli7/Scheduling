@@ -1,4 +1,13 @@
 {
+  "orgSwitcher": {
+    "yourOrgs": "Tus organizaciones",
+    "createNew": "Crear nueva organización",
+    "roles": {
+      "admin": "Administrador",
+      "manager": "Gestor",
+      "employee": "Empleado"
+    }
+  },
   "cookieConsent": {
     "title": "Respetamos tu privacidad",
     "body": "Usamos cookies esenciales para que el sitio funcione y, con tu consentimiento, otras para analizar el uso y mejorar el producto.",
