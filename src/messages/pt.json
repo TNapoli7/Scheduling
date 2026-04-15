@@ -240,7 +240,9 @@
       "pricing": "Preços",
       "faq": "FAQ",
       "signIn": "Entrar",
-      "startFree": "Começar grátis"
+      "startFree": "Começar grátis",
+      "openMenu": "Abrir menu",
+      "closeMenu": "Fechar menu"
     },
     "hero": {
       "badge": "14 dias grátis — sem cartão de crédito",

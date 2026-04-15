@@ -19,7 +19,7 @@ export function LpFooter() {
 
   return (
     <footer className="border-t border-stone-200 bg-stone-50 px-6 py-12">
-      <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 text-sm">
+      <div className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 text-sm">
         <div>
           <Link href="/" className="flex items-center gap-2 mb-4">
             <ShifteraLogo size={26} />
