@@ -945,7 +945,7 @@ export default function SchedulePage() {
             )}
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center flex-wrap gap-2">
           {violations.length > 0 && (
             <Button
               variant="ghost"

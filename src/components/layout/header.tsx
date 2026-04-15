@@ -130,9 +130,11 @@ export function Header({ userName, unreadCount: initialUnread, onMenuClick }: He
           <Menu className="w-5 h-5" />
         </button>
 
-        {/* Page title — synced with the active sidebar item */}
+        {/* Page title — hidden on mobile (each page renders its own big H1
+             with subtitle/badges, duplicate would waste space). Shown on
+             desktop for sticky-scroll context as the user moves down. */}
         {pageTitle && (
-          <h1 className="text-sm font-semibold text-[color:var(--text-primary)] tracking-tight truncate">
+          <h1 className="hidden lg:inline-block text-sm font-semibold text-[color:var(--text-primary)] tracking-tight truncate">
             {pageTitle}
           </h1>
         )}

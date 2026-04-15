@@ -36,7 +36,9 @@ export function DashboardShell({
           unreadCount={unreadCount}
           onMenuClick={() => setSidebarOpen(true)}
         />
-        <main className="flex-1 p-4 lg:p-6">
+        {/* pb-24 reserves space for the floating chat bubble (~80px + margin)
+             so the last row/card isn't covered on small viewports. */}
+        <main className="flex-1 p-4 lg:p-6 pb-24">
           {children}
         </main>
       </div>
