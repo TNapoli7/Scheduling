@@ -208,6 +208,7 @@ export default function EmployeesPage() {
       contract_type: emp.contract_type,
       weekly_hours: emp.weekly_hours,
       org_id: emp.org_id,
+      invite: false,
     });
     setError("");
     setShowModal(true);
