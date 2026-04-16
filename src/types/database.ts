@@ -57,6 +57,9 @@ export interface Profile {
   /** @deprecated moved to Membership.is_active. */
   is_active: boolean;
   avatar_url: string | null;
+  /** Optional personal info — user-editable on /profile. */
+  date_of_birth: string | null;
+  gender: string | null;
   /** @deprecated moved to Membership.vacation_quota. */
   vacation_quota: number;
   is_super_admin: boolean;

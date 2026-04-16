@@ -11,6 +11,7 @@ interface DashboardShellProps {
   role: UserRole;
   orgName: string;
   userName: string;
+  avatarUrl?: string | null;
   unreadCount?: number;
   memberships: OrgSwitcherItem[];
   activeOrgId: string | null;
@@ -28,6 +29,7 @@ export function DashboardShell({
   role,
   orgName,
   userName,
+  avatarUrl,
   unreadCount = 0,
   memberships,
   activeOrgId,
@@ -45,6 +47,7 @@ export function DashboardShell({
         activeOrgId={activeOrgId}
         userName={userName}
         unreadCount={unreadCount}
+        avatarUrl={avatarUrl ?? null}
       />
       <div className="flex-1 flex flex-col min-w-0">
         {/* Mobile-only floating hamburger — replaces the old top header for

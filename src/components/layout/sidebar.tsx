@@ -36,6 +36,8 @@ interface SidebarProps {
   userName: string;
   /** Unread notification count — shown as a badge on the sidebar bell. */
   unreadCount: number;
+  /** Avatar URL — falls back to user initial if null. */
+  avatarUrl?: string | null;
 }
 
 export function Sidebar({
@@ -47,6 +49,7 @@ export function Sidebar({
   activeOrgId,
   userName,
   unreadCount,
+  avatarUrl,
 }: SidebarProps) {
   const t = useTranslations('navigation');
   const pathname = usePathname();
@@ -108,14 +111,14 @@ export function Sidebar({
                 <ShifteraLogo size={32} className="shrink-0" />
                 {!collapsed && (
                   <div className="min-w-0">
-                    <p className="text-sm font-display font-semibold text-white tracking-tight leading-tight">
-                      Shiftera
-                    </p>
                     <p
-                      className="text-[10px] text-[color:var(--sidebar-fg-muted)] truncate capitalize"
+                      className="text-sm font-semibold text-white tracking-tight leading-tight truncate capitalize"
                       title={orgName}
                     >
                       {orgName}
+                    </p>
+                    <p className="text-[10px] font-normal text-[color:var(--sidebar-fg-muted)] leading-tight">
+                      Shiftera
                     </p>
                   </div>
                 )}
@@ -133,8 +136,12 @@ export function Sidebar({
           </button>
         </div>
 
-        {/* Navigation */}
-        <nav className="relative flex-1 overflow-y-auto px-3 pt-2 pb-4 space-y-1">
+        {/* Navigation — `sidebar-nav-scroll` hides the scrollbar chrome but
+            keeps overflow behaviour for users on very short viewports. Spacing
+            tightened slightly (py-2, no gap between items) so all items fit
+            without scrolling on a 768px-tall laptop. */}
+        <nav className="sidebar-nav-scroll relative flex-1 overflow-y-auto px-3 pt-2 pb-4">
+          <style>{`.sidebar-nav-scroll::-webkit-scrollbar{display:none}.sidebar-nav-scroll{scrollbar-width:none;-ms-overflow-style:none}`}</style>
           {filteredNav.map((item) => {
             const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
             return (
@@ -144,7 +151,7 @@ export function Sidebar({
                 onClick={onClose}
                 title={collapsed ? t(item.key as any) : undefined}
                 className={`
-                  group relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium
+                  group relative flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium
                   transition-all duration-150
                   ${collapsed ? "lg:justify-center lg:px-0" : ""}
                   ${isActive
@@ -179,6 +186,7 @@ export function Sidebar({
             userName={userName}
             unreadCount={unreadCount}
             collapsed={collapsed}
+            avatarUrl={avatarUrl ?? null}
           />
 
           <div className="border-t border-[color:var(--sidebar-border)]" />

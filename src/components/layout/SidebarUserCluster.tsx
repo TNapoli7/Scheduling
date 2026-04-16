@@ -26,6 +26,8 @@ interface Props {
   userName: string;
   unreadCount: number;
   collapsed: boolean;
+  /** Optional avatar URL from profiles.avatar_url — falls back to initial. */
+  avatarUrl?: string | null;
 }
 
 function timeAgo(dateStr: string, t: (key: string) => string): string {
@@ -39,7 +41,7 @@ function timeAgo(dateStr: string, t: (key: string) => string): string {
   return `${days} ${t("timeAgo.day")}`;
 }
 
-export function SidebarUserCluster({ userName, unreadCount: initialUnread, collapsed }: Props) {
+export function SidebarUserCluster({ userName, unreadCount: initialUnread, collapsed, avatarUrl }: Props) {
   const t = useTranslations("header");
   const router = useRouter();
 
@@ -118,8 +120,13 @@ export function SidebarUserCluster({ userName, unreadCount: initialUnread, colla
             collapsed ? "lg:justify-center lg:px-0" : ""
           }`}
         >
-          <div className="w-7 h-7 rounded-full bg-[color:var(--accent-soft)] text-[color:var(--accent)] flex items-center justify-center text-xs font-bold shrink-0">
-            {userName.charAt(0).toUpperCase()}
+          <div className="w-7 h-7 rounded-full overflow-hidden bg-[color:var(--accent-soft)] text-[color:var(--accent)] flex items-center justify-center text-xs font-bold shrink-0">
+            {avatarUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={avatarUrl} alt={userName} className="w-full h-full object-cover" />
+            ) : (
+              userName.charAt(0).toUpperCase()
+            )}
           </div>
           {!collapsed && (
             <span className="text-[13px] font-medium text-white truncate min-w-0 flex-1 text-left">
@@ -138,7 +145,7 @@ export function SidebarUserCluster({ userName, unreadCount: initialUnread, colla
               <p className="text-sm font-medium text-stone-900 truncate">{userName}</p>
             </div>
             <button
-              onClick={() => { setShowUserMenu(false); router.push("/settings"); }}
+              onClick={() => { setShowUserMenu(false); router.push("/profile"); }}
               className="flex items-center gap-2.5 w-full px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50"
             >
               <User className="w-4 h-4 text-stone-400" />

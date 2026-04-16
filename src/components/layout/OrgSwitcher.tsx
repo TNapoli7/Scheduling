@@ -110,14 +110,17 @@ export function OrgSwitcher({ memberships, activeOrgId, collapsed }: OrgSwitcher
         {!collapsed && (
           <>
             <div className="min-w-0 flex-1 text-left">
-              <p className="text-sm font-display font-semibold text-white tracking-tight leading-tight">
-                Shiftera
-              </p>
+              {/* Hierarchy: the ORG the user is currently in is the primary
+                  line (bold, white, sm). The product name sits below as a
+                  muted subtitle — it's context, not the important thing. */}
               <p
-                className="text-[10px] text-[color:var(--sidebar-fg-muted)] truncate capitalize"
+                className="text-sm font-semibold text-white tracking-tight leading-tight truncate capitalize"
                 title={active.org_name}
               >
                 {active.org_name}
+              </p>
+              <p className="text-[10px] font-normal text-[color:var(--sidebar-fg-muted)] leading-tight">
+                Shiftera
               </p>
             </div>
             <ChevronsUpDown
