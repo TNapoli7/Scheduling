@@ -89,7 +89,7 @@ export default function RegisterPage() {
         <div className="w-full max-w-md mx-auto lg:mx-0">
           <Link
             href="/"
-            className="inline-flex items-center gap-1.5 text-sm text-[color:var(--text-secondary)] hover:text-[color:var(--primary)] transition-colors mb-10"
+            className="flex w-fit items-center gap-1.5 text-sm text-[color:var(--text-secondary)] hover:text-[color:var(--primary)] transition-colors mb-10"
           >
             <svg
               className="w-4 h-4"
@@ -104,8 +104,8 @@ export default function RegisterPage() {
             Voltar ao site
           </Link>
 
-          <Link href="/" className="inline-flex mb-10" aria-label="Shiftera home">
-            <ShifteraLockup size={36} />
+          <Link href="/" className="flex w-fit mb-10" aria-label="Shiftera home">
+            <ShifteraLockup size={40} />
           </Link>
 
           {sentToEmail ? (

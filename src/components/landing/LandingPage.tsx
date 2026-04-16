@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { ChatWidget } from "@/components/chat/ChatWidget";
 import { LpNavbar } from "@/components/lp/LpNavbar";
 import { LpFooter } from "@/components/lp/LpFooter";
+import { Reveal } from "./Reveal";
 import {
   ArrowRight,
   Check,
@@ -73,27 +74,54 @@ function Hero() {
   const t = useTranslations("landing");
 
   return (
-    <section className="pt-32 pb-20 px-6" style={{ background: `linear-gradient(135deg, ${WARM_CREAM}, rgba(232, 133, 10, 0.03))` }}>
-      <div className="max-w-4xl mx-auto text-center">
-        {/* Badge */}
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium mb-6" style={{ backgroundColor: "rgba(232, 133, 10, 0.08)", color: ORANGE_PRIMARY }}>
+    <section
+      className="relative pt-32 pb-24 px-6 overflow-hidden"
+      style={{ background: `linear-gradient(135deg, ${WARM_CREAM}, rgba(255, 138, 115, 0.04))` }}
+    >
+      {/* Two drifting coloured blobs give the hero motion without needing
+          a video or heavy JS library. See globals.css for the keyframes. */}
+      <div className="hero-blob hero-blob-a" aria-hidden="true" />
+      <div className="hero-blob hero-blob-b" aria-hidden="true" />
+
+      <div className="relative max-w-4xl mx-auto text-center">
+        {/* Badge — first item revealed (delay 0) */}
+        <div
+          className="hero-reveal inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium mb-6"
+          style={{
+            backgroundColor: "rgba(255, 107, 91, 0.08)",
+            color: "var(--accent)",
+            animationDelay: "0ms",
+          }}
+        >
           <span className="text-sm">⚡</span>
           {t("hero.badge")}
         </div>
 
-        <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-stone-900 tracking-tight leading-[1.1]">
+        <h1
+          className="hero-reveal text-4xl sm:text-5xl lg:text-6xl font-extrabold text-stone-900 tracking-tight leading-[1.1]"
+          style={{ animationDelay: "120ms" }}
+        >
           {t("hero.heading")}
         </h1>
 
-        <p className="mt-6 text-lg sm:text-xl text-stone-600 max-w-2xl mx-auto leading-relaxed">
+        <p
+          className="hero-reveal mt-6 text-lg sm:text-xl text-stone-600 max-w-2xl mx-auto leading-relaxed"
+          style={{ animationDelay: "260ms" }}
+        >
           {t("hero.description")}
         </p>
 
-        <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+        <div
+          className="hero-reveal mt-10 flex flex-col sm:flex-row items-center justify-center gap-4"
+          style={{ animationDelay: "400ms" }}
+        >
           <Link
             href="/register"
             className="inline-flex items-center gap-2 px-6 py-3.5 text-base font-semibold text-white rounded-xl shadow-lg transition-all hover:shadow-xl hover:-translate-y-0.5"
-            style={{ backgroundColor: ORANGE_PRIMARY, boxShadow: `0 10px 25px rgba(232, 133, 10, 0.2)` }}
+            style={{
+              backgroundColor: "var(--accent)",
+              boxShadow: "0 10px 25px rgba(255, 107, 91, 0.25)",
+            }}
           >
             {t("hero.tryFree")}
             <ArrowRight className="w-4 h-4" />
@@ -101,7 +129,7 @@ function Hero() {
           <a
             href="#features"
             className="inline-flex items-center gap-2 px-6 py-3.5 text-base font-medium text-stone-700 bg-white rounded-xl shadow-sm hover:shadow-md transition-all"
-            style={{ border: `1px solid rgba(232, 133, 10, 0.15)` }}
+            style={{ border: "1px solid rgba(255, 107, 91, 0.18)" }}
           >
             {t("hero.viewDemo")}
             <ArrowRight className="w-4 h-4" />
@@ -109,7 +137,10 @@ function Hero() {
         </div>
 
         {/* Social proof */}
-        <div className="mt-14 flex flex-col sm:flex-row items-center justify-center gap-6 text-sm text-stone-600">
+        <div
+          className="hero-reveal mt-14 flex flex-col sm:flex-row items-center justify-center gap-6 text-sm text-stone-600"
+          style={{ animationDelay: "540ms" }}
+        >
           <div className="flex items-center gap-1">
             {[...Array(5)].map((_, i) => (
               <span key={i} className="text-lg">⭐</span>
@@ -591,14 +622,17 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen" style={{ backgroundColor: WARM_CREAM }}>
       <LpNavbar />
+      {/* Hero runs its own CSS reveal on mount (always above-the-fold). All
+          subsequent sections fade+slide into view as the user scrolls — the
+          Reveal wrapper uses IntersectionObserver so it fires once. */}
       <Hero />
-      <AppPreview />
-      <Features />
-      <HowItWorks />
-      <Testimonials />
-      <Pricing />
-      <FAQ />
-      <FinalCTA />
+      <Reveal><AppPreview /></Reveal>
+      <Reveal><Features /></Reveal>
+      <Reveal><HowItWorks /></Reveal>
+      <Reveal><Testimonials /></Reveal>
+      <Reveal><Pricing /></Reveal>
+      <Reveal><FAQ /></Reveal>
+      <Reveal><FinalCTA /></Reveal>
       <LpFooter />
       <ChatWidget />
     </div>

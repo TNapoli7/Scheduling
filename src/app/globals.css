@@ -174,3 +174,64 @@ select,
 a {
   cursor: pointer;
 }
+
+/* ─────────────────────────────────────────────────────────────
+   Hero animations — used on the marketing landing page
+   ─────────────────────────────────────────────────────────────
+   - heroBlob: slow diagonal drift + gentle scale, loops
+   - heroBlobAlt: counter-phase drift so two blobs feel organic
+   - heroReveal: initial fade-up for the H1 lines, chained via
+     animation-delay on each line so it reads top→bottom
+   - heroFadeUp: utility keyframe reused for badges, CTAs, stats
+   Respects prefers-reduced-motion — animations collapse to a
+   simple opacity fade so nothing moves.
+   ───────────────────────────────────────────────────────────── */
+@keyframes heroBlob {
+  0%   { transform: translate3d(-12%, -8%, 0) scale(1);   }
+  50%  { transform: translate3d(6%, 4%, 0)    scale(1.08); }
+  100% { transform: translate3d(-12%, -8%, 0) scale(1);   }
+}
+@keyframes heroBlobAlt {
+  0%   { transform: translate3d(10%, 12%, 0) scale(1.05); }
+  50%  { transform: translate3d(-4%, -2%, 0) scale(0.98); }
+  100% { transform: translate3d(10%, 12%, 0) scale(1.05); }
+}
+@keyframes heroReveal {
+  from { opacity: 0; transform: translate3d(0, 24px, 0); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0);    }
+}
+
+.hero-blob {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(80px);
+  opacity: 0.55;
+  pointer-events: none;
+  will-change: transform;
+}
+.hero-blob-a {
+  width: 560px;
+  height: 560px;
+  top: -120px;
+  left: -120px;
+  background: radial-gradient(circle at 30% 30%, rgba(255, 138, 115, 0.85), rgba(255, 138, 115, 0) 70%);
+  animation: heroBlob 18s ease-in-out infinite;
+}
+.hero-blob-b {
+  width: 480px;
+  height: 480px;
+  top: 40px;
+  right: -140px;
+  background: radial-gradient(circle at 30% 30%, rgba(15, 27, 45, 0.32), rgba(15, 27, 45, 0) 70%);
+  animation: heroBlobAlt 22s ease-in-out infinite;
+}
+
+.hero-reveal {
+  animation: heroReveal 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-blob-a,
+  .hero-blob-b { animation: none; }
+  .hero-reveal { animation: none; opacity: 1; transform: none; }
+}

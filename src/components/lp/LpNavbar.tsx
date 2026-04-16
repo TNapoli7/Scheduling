@@ -14,7 +14,17 @@ import { ArrowRight, ChevronDown, Menu, X } from "lucide-react";
 import { LpLanguageSelector } from "./LpLanguageSelector";
 import { ShifteraLockup } from "./ShifteraLogo";
 
-const ORANGE_PRIMARY = "#E8850A";
+/**
+ * Shared class for desktop nav links: subtle colour transition on hover
+ * PLUS an animated coral underline that sweeps in from the left. Uses
+ * `::after` so we don't pollute the DOM with extra spans.
+ */
+const navLinkClass =
+  "relative inline-flex items-center py-1 hover:text-stone-900 transition-colors " +
+  "after:absolute after:left-0 after:bottom-0 after:h-[2px] after:w-full " +
+  "after:origin-left after:scale-x-0 after:bg-[color:var(--accent)] " +
+  "after:transition-transform after:duration-300 after:ease-out " +
+  "hover:after:scale-x-100";
 
 const INDUSTRIES = [
   { key: "farmacias", emoji: "💊", href: "/industrias/farmacias" },
@@ -41,7 +51,7 @@ export function LpNavbar() {
 
         {/* Desktop nav */}
         <div className="hidden md:flex items-center gap-8 text-sm text-stone-600">
-          <a href="/#features" className="hover:text-stone-900 transition-colors">
+          <a href="/#features" className={navLinkClass}>
             {t("navbar.features")}
           </a>
 
@@ -52,7 +62,7 @@ export function LpNavbar() {
           >
             <button
               onClick={() => setIndustriesOpen((v) => !v)}
-              className="flex items-center gap-1 hover:text-stone-900 transition-colors"
+              className={`${navLinkClass} gap-1`}
             >
               {tInd("trigger")}
               <ChevronDown
@@ -86,10 +96,10 @@ export function LpNavbar() {
             )}
           </div>
 
-          <a href="/#pricing" className="hover:text-stone-900 transition-colors">
+          <a href="/#pricing" className={navLinkClass}>
             {t("navbar.pricing")}
           </a>
-          <a href="/#faq" className="hover:text-stone-900 transition-colors">
+          <a href="/#faq" className={navLinkClass}>
             {t("navbar.faq")}
           </a>
         </div>
@@ -106,7 +116,7 @@ export function LpNavbar() {
           <Link
             href="/register"
             className="hidden sm:inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white rounded-lg shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5"
-            style={{ backgroundColor: ORANGE_PRIMARY }}
+            style={{ backgroundColor: "var(--accent)" }}
           >
             {t("navbar.startFree")}
             <ArrowRight className="w-3.5 h-3.5" />
@@ -188,7 +198,7 @@ export function LpNavbar() {
                 href="/register"
                 onClick={closeMobile}
                 className="inline-flex items-center justify-center gap-1.5 w-full px-4 py-3 text-sm font-semibold text-white rounded-lg shadow-sm"
-                style={{ backgroundColor: ORANGE_PRIMARY }}
+                style={{ backgroundColor: "var(--accent)" }}
               >
                 {t("navbar.startFree")}
                 <ArrowRight className="w-3.5 h-3.5" />
