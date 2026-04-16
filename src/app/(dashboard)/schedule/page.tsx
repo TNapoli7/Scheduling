@@ -1321,7 +1321,7 @@ export default function SchedulePage() {
                             if (!entry.shift_template) return null;
                             const [sh, sm] = entry.shift_template.start_time.split(":").map(Number);
                             const [eh, em] = entry.shift_template.end_time.split(":").map(Number);
-                            let startM = sh * 60 + (sm || 0);
+                            const startM = sh * 60 + (sm || 0);
                             let endM = eh * 60 + (em || 0);
                             if (endM <= startM) endM += 24 * 60;
 
