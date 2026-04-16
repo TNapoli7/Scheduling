@@ -7,6 +7,7 @@ import { logActivity } from "@/lib/activity-log";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
+import { ShifteraLockup } from "@/components/lp/ShifteraLogo";
 
 const sectors = [
   { value: "pharmacy", label: "Farmácia" },
@@ -146,9 +147,9 @@ export default function OnboardingPage() {
   return (
     <div className="min-h-screen bg-stone-50 flex items-center justify-center px-4">
       <div className="w-full max-w-lg">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold" style={{ color: "var(--primary)" }}>Shiftera</h1>
-          <p className="text-stone-500 mt-2">Configura a tua empresa em 2 passos</p>
+        <div className="flex flex-col items-center mb-8">
+          <ShifteraLockup size={36} />
+          <p className="text-stone-500 mt-3">Configura a tua empresa em 2 passos</p>
         </div>
 
         {/* Progress — two steps, branded orange */}

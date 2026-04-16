@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="Shiftera">
+  <defs>
+    <linearGradient id="shifteraCoralS" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FF8A73"/>
+      <stop offset="1" stop-color="#D85543"/>
+    </linearGradient>
+  </defs>
+  <rect x="0" y="0" width="256" height="256" rx="56" ry="56" fill="url(#shifteraCoralS)"/>
+  <!-- Bold "S" monogram in white, drawn as two curves with round caps so it
+       stays legible from 16px up to 512px without relying on a bundled font. -->
+  <path
+    d="M 182 84
+       C 182 56, 74 52, 74 108
+       C 74 138, 182 138, 182 168
+       C 182 216, 74 212, 74 184"
+    fill="none"
+    stroke="#FFFFFF"
+    stroke-width="28"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+</svg>

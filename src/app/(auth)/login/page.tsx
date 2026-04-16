@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useTranslations } from 'next-intl';
 import { createClient } from "@/lib/supabase/client";
+import { ShifteraLockup } from "@/components/lp/ShifteraLogo";
 
 export default function LoginPage() {
   const t = useTranslations('auth');
@@ -60,26 +61,8 @@ export default function LoginPage() {
             {t('backToSite')}
           </Link>
 
-          <Link href="/" className="flex items-center gap-2.5 mb-12">
-            <svg viewBox="0 0 96 106" className="w-9 h-10">
-              <rect x="4" y="22" width="88" height="76" rx="10" ry="10" fill="#E8850A" />
-              <rect x="4" y="22" width="88" height="26" rx="10" ry="10" fill="#D47608" />
-              <rect x="4" y="38" width="88" height="10" fill="#D47608" />
-              <rect x="26" y="10" width="8" height="22" rx="4" fill="#E8850A" />
-              <rect x="62" y="10" width="8" height="22" rx="4" fill="#E8850A" />
-              <circle cx="28" cy="57" r="3" fill="#FFF" opacity="0.9" />
-              <circle cx="48" cy="57" r="3" fill="#FFF" opacity="0.9" />
-              <circle cx="68" cy="57" r="3" fill="#FFF" opacity="0.9" />
-              <circle cx="28" cy="72" r="3" fill="#FFF" opacity="0.9" />
-              <circle cx="48" cy="72" r="3" fill="#FFF" opacity="0.9" />
-              <circle cx="68" cy="72" r="3" fill="#FFF" opacity="0.9" />
-              <circle cx="28" cy="87" r="3" fill="#FFF" opacity="0.9" />
-              <circle cx="48" cy="87" r="3" fill="#FFF" opacity="0.9" />
-              <circle cx="68" cy="87" r="3" fill="#FFF" opacity="0.9" />
-            </svg>
-            <span className="font-display text-xl font-semibold text-[color:var(--accent)]" style={{ color: '#E8850A' }}>
-              Shiftera
-            </span>
+          <Link href="/" className="inline-flex mb-12" aria-label="Shiftera home">
+            <ShifteraLockup size={36} />
           </Link>
 
           <h1 className="font-display text-4xl md:text-5xl font-semibold text-[color:var(--primary)] leading-[1.1]">

@@ -8,7 +8,7 @@
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { openConsentBanner } from "@/lib/cookie-consent";
-import { ShifteraLogo } from "./ShifteraLogo";
+import { ShifteraLockup } from "./ShifteraLogo";
 
 const ORANGE_PRIMARY = "#E8850A";
 const ORANGE_GRADIENT = "#f5a623";
@@ -21,9 +21,8 @@ export function LpFooter() {
     <footer className="border-t border-stone-200 bg-stone-50 px-6 py-12">
       <div className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 text-sm">
         <div>
-          <Link href="/" className="flex items-center gap-2 mb-4">
-            <ShifteraLogo size={26} />
-            <span className="font-bold text-stone-900">Shiftera</span>
+          <Link href="/" className="inline-flex mb-4" aria-label="Shiftera home">
+            <ShifteraLockup size={28} />
           </Link>
           <p className="text-xs text-stone-500 leading-relaxed mb-3">
             {tFooter("tagline")}

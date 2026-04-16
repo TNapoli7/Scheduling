@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import { ShifteraLockup } from "@/components/lp/ShifteraLogo";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -30,26 +31,8 @@ export default function ForgotPasswordPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-[color:var(--background)] px-4">
       <div className="w-full max-w-md">
-        <Link href="/login" className="flex items-center gap-2.5 justify-center mb-10">
-          <svg viewBox="0 0 96 106" className="w-9 h-10">
-            <rect x="4" y="22" width="88" height="76" rx="10" ry="10" fill="#E8850A" />
-            <rect x="4" y="22" width="88" height="26" rx="10" ry="10" fill="#D47608" />
-            <rect x="4" y="38" width="88" height="10" fill="#D47608" />
-            <rect x="26" y="10" width="8" height="22" rx="4" fill="#E8850A" />
-            <rect x="62" y="10" width="8" height="22" rx="4" fill="#E8850A" />
-            <circle cx="28" cy="57" r="3" fill="#FFF" opacity="0.9" />
-            <circle cx="48" cy="57" r="3" fill="#FFF" opacity="0.9" />
-            <circle cx="68" cy="57" r="3" fill="#FFF" opacity="0.9" />
-            <circle cx="28" cy="72" r="3" fill="#FFF" opacity="0.9" />
-            <circle cx="48" cy="72" r="3" fill="#FFF" opacity="0.9" />
-            <circle cx="68" cy="72" r="3" fill="#FFF" opacity="0.9" />
-            <circle cx="28" cy="87" r="3" fill="#FFF" opacity="0.9" />
-            <circle cx="48" cy="87" r="3" fill="#FFF" opacity="0.9" />
-            <circle cx="68" cy="87" r="3" fill="#FFF" opacity="0.9" />
-          </svg>
-          <span className="font-display text-xl font-semibold" style={{ color: '#E8850A' }}>
-            Shiftera
-          </span>
+        <Link href="/login" className="flex justify-center mb-10" aria-label="Shiftera home">
+          <ShifteraLockup size={36} />
         </Link>
 
         <div className="bg-[color:var(--surface)] rounded-2xl border border-[color:var(--border)] p-8 shadow-sm">
