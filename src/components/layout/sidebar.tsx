@@ -23,6 +23,7 @@ import { LanguageSelector } from "./language-selector";
 import { useClientLocale } from "@/hooks/use-locale";
 import { ShifteraLogo } from "@/components/lp/ShifteraLogo";
 import { OrgSwitcher, type OrgSwitcherItem } from "./OrgSwitcher";
+import { SidebarUserCluster } from "./SidebarUserCluster";
 
 interface SidebarProps {
   role: UserRole;
@@ -31,6 +32,10 @@ interface SidebarProps {
   onClose: () => void;
   memberships: OrgSwitcherItem[];
   activeOrgId: string | null;
+  /** User display name — shown in the footer user cluster. */
+  userName: string;
+  /** Unread notification count — shown as a badge on the sidebar bell. */
+  unreadCount: number;
 }
 
 export function Sidebar({
@@ -40,6 +45,8 @@ export function Sidebar({
   onClose,
   memberships,
   activeOrgId,
+  userName,
+  unreadCount,
 }: SidebarProps) {
   const t = useTranslations('navigation');
   const pathname = usePathname();
@@ -163,8 +170,19 @@ export function Sidebar({
           })}
         </nav>
 
-        {/* Footer: language selector, collapse toggle + branding */}
-        <div className="relative shrink-0 border-t border-[color:var(--sidebar-border)] px-3 py-3 space-y-1">
+        {/* Footer: user cluster (avatar + notifications), divider, language
+            selector, collapse toggle + branding. The user cluster sits ABOVE
+            the language selector so the notification bell and profile
+            actions are the first thing close at hand. */}
+        <div className="relative shrink-0 border-t border-[color:var(--sidebar-border)] px-3 py-3 space-y-3">
+          <SidebarUserCluster
+            userName={userName}
+            unreadCount={unreadCount}
+            collapsed={collapsed}
+          />
+
+          <div className="border-t border-[color:var(--sidebar-border)]" />
+
           {/* Language selector */}
           <div className={`flex justify-center ${collapsed ? "lg:px-0" : ""}`}>
             <LanguageSelector currentLocale={locale} />

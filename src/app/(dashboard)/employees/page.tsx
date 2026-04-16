@@ -26,21 +26,28 @@ function FilterChip({
   onChange,
   options,
   active,
+  minWidth = 180,
 }: {
   icon: React.ReactNode;
   value: string;
   onChange: (v: string) => void;
   options: { value: string; label: string }[];
   active: boolean;
+  /** Keeps chip width stable so selecting a value doesn't reflow the toolbar. */
+  minWidth?: number;
 }) {
   return (
     <div
-      className={`relative inline-flex items-center h-10 rounded-[var(--radius-md)] border transition-colors shrink-0 ${
+      className={`relative inline-flex items-center h-10 rounded-[var(--radius-md)] border transition-colors shrink-0 filter-chip ${
         active
           ? "border-[color:var(--primary)] bg-[color:var(--primary-soft)]"
           : "border-[color:var(--border)] bg-[color:var(--surface)] hover:border-[color:var(--border-strong)]"
       }`}
+      style={{ minWidth }}
     >
+      {/* Override globals.css `*:focus-visible { outline: var(--accent) }` —
+          the chip's own border colour already signals focus/active state. */}
+      <style>{`.filter-chip select:focus, .filter-chip select:focus-visible { outline: none !important; box-shadow: none !important; }`}</style>
       <span
         className={`pl-3 pr-1.5 pointer-events-none ${
           active ? "text-[color:var(--primary)]" : "text-[color:var(--text-muted)]"
@@ -51,7 +58,7 @@ function FilterChip({
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className={`h-10 pl-0 pr-9 bg-transparent text-sm appearance-none cursor-pointer focus:outline-none focus-visible:outline-none ${
+        className={`flex-1 h-10 pl-0 pr-9 bg-transparent text-sm appearance-none cursor-pointer ${
           active ? "text-[color:var(--primary)] font-medium" : "text-[color:var(--text-primary)]"
         }`}
       >
@@ -370,6 +377,7 @@ export default function EmployeesPage() {
                   value={orgFilter}
                   onChange={setOrgFilter}
                   active={orgActive}
+                  minWidth={220}
                   options={[
                     { value: "all", label: "Todas as organizações" },
                     ...orgs.map((o) => ({ value: o.id, label: o.name })),
@@ -381,6 +389,7 @@ export default function EmployeesPage() {
                 value={roleFilter}
                 onChange={(v) => setRoleFilter(v as typeof roleFilter)}
                 active={roleActive}
+                minWidth={180}
                 options={[
                   { value: "all", label: t("filterRoleAll") },
                   { value: "admin", label: t("roles.admin") },
@@ -394,6 +403,7 @@ export default function EmployeesPage() {
                   value={statusFilter}
                   onChange={(v) => setStatusFilter(v as typeof statusFilter)}
                   active={statusActive}
+                  minWidth={140}
                   options={[
                     { value: "active", label: t("activeStatus") },
                     { value: "inactive", label: t("inactiveStatus") },
