@@ -11,16 +11,22 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Modal } from "@/components/ui/modal";
 import { SkeletonTable } from "@/components/ui/skeleton";
-import type { Profile, Membership } from "@/types/database";
+import type { Membership } from "@/types/database";
 
 /**
- * Row shown in the Equipa page = membership joined with the user's email.
- * Memberships are scoped to the currently active org (via RLS), so listing
- * here automatically switches when the user flips orgs.
+ * Cross-org team row. Admin/manager sees members across every org they
+ * manage; employees see only the active-org roster with limited fields.
+ * The `org` relation is joined server-side so we can render the
+ * "Organização" column without a second round trip.
  */
 type TeamMemberRow = Membership & {
   profile?: { email: string } | null;
+  org?: { id: string; name: string } | null;
 };
+
+type ViewMode = "full" | "limited";
+
+type OrgLite = { id: string; name: string };
 
 type EmployeeForm = {
   email: string;
@@ -29,6 +35,8 @@ type EmployeeForm = {
   credential: string;
   contract_type: string;
   weekly_hours: number;
+  /** Required when caller manages multiple orgs — which org to add them to. */
+  org_id: string;
 };
 
 const emptyForm: EmployeeForm = {
@@ -38,19 +46,20 @@ const emptyForm: EmployeeForm = {
   credential: "",
   contract_type: "full_time",
   weekly_hours: 40,
+  org_id: "",
 };
 
-// Role badges use distinct families from the status (success/danger) colours
-// so "Gestor" never clashes visually with "Ativo".
 const roleBadge: Record<string, "accent" | "navy" | "default"> = {
-  admin: "accent",  // orange — highest authority
-  manager: "navy",  // dark — management
-  employee: "default", // neutral
+  admin: "accent",
+  manager: "navy",
+  employee: "default",
 };
 
 export default function EmployeesPage() {
   const t = useTranslations("employees");
   const [employees, setEmployees] = useState<TeamMemberRow[]>([]);
+  const [orgs, setOrgs] = useState<OrgLite[]>([]);
+  const [viewMode, setViewMode] = useState<ViewMode>("full");
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -60,6 +69,7 @@ export default function EmployeesPage() {
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState<"all" | "admin" | "manager" | "employee">("all");
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("active");
+  const [orgFilter, setOrgFilter] = useState<string>("all");
   const [confirmDeactivate, setConfirmDeactivate] = useState<TeamMemberRow | null>(null);
 
   const supabase = createClient();
@@ -94,31 +104,34 @@ export default function EmployeesPage() {
     employee: t("roles.employee"),
   };
 
-  const fetchEmployees = useCallback(async () => {
-    // Memberships are scoped to the active org by RLS — no need to filter here.
-    // We join profiles to get the user's email (not duplicated on membership).
-    const { data } = await supabase
-      .from("memberships")
-      .select("*, profile:profiles!memberships_user_id_fkey(email)")
-      .order("full_name");
-    if (data) setEmployees(data as TeamMemberRow[]);
+  const fetchTeam = useCallback(async () => {
+    // Hits the cross-org API. Admin/manager gets every org they manage;
+    // employee gets a limited same-org roster (no email/contract/hours).
+    const res = await fetch("/api/team", { cache: "no-store" });
+    if (!res.ok) { setLoading(false); return; }
+    const data = await res.json();
+    setEmployees((data.memberships || []) as TeamMemberRow[]);
+    setOrgs((data.orgs || []) as OrgLite[]);
+    setViewMode((data.viewMode || "full") as ViewMode);
     setLoading(false);
-  }, [supabase]);
+  }, []);
 
   useEffect(() => {
-    fetchEmployees();
-  }, [fetchEmployees]);
+    fetchTeam();
+  }, [fetchTeam]);
+
+  // Default the "add" form org_id to the user's active org when we have
+  // multiple orgs available. If only one org, auto-pick it.
+  const defaultOrgId = orgs.length === 1 ? orgs[0].id : "";
 
   function openAdd() {
     setEditingId(null);
-    setForm(emptyForm);
+    setForm({ ...emptyForm, org_id: defaultOrgId });
     setError("");
     setShowModal(true);
   }
 
   function openEdit(emp: TeamMemberRow) {
-    // When editing an existing member, we store the MEMBERSHIP id (not user_id)
-    // so the save handler updates the org-scoped row, not the user-level profile.
     setEditingId(emp.id);
     setForm({
       email: emp.profile?.email || "",
@@ -127,6 +140,7 @@ export default function EmployeesPage() {
       credential: emp.credential || "",
       contract_type: emp.contract_type,
       weekly_hours: emp.weekly_hours,
+      org_id: emp.org_id,
     });
     setError("");
     setShowModal(true);
@@ -143,8 +157,8 @@ export default function EmployeesPage() {
     }
 
     if (editingId) {
-      // Update the membership row for this org. RLS allows admin/manager of
-      // the current org to update rows scoped there.
+      // Update the membership row directly. RLS (or the service-role path on
+      // the admin API if we later migrate) permits admin/manager of that org.
       const { error: err } = await supabase
         .from("memberships")
         .update({
@@ -164,9 +178,14 @@ export default function EmployeesPage() {
 
       logActivity("employee_updated", "employee", editingId);
     } else {
-      // Create employee via server API (no email sent)
       if (!form.email.trim()) {
         setError(t("errorEmailRequired"));
+        setSaving(false);
+        return;
+      }
+
+      if (orgs.length > 1 && !form.org_id) {
+        setError("Escolhe uma organização");
         setSaving(false);
         return;
       }
@@ -181,6 +200,9 @@ export default function EmployeesPage() {
           credential: form.credential || null,
           contract_type: form.contract_type,
           weekly_hours: form.weekly_hours,
+          // Explicit target org — falls back to active org on the server if
+          // absent (caller with a single org doesn't need to pick).
+          org_id: form.org_id || undefined,
         }),
       });
 
@@ -195,19 +217,20 @@ export default function EmployeesPage() {
 
     setShowModal(false);
     setSaving(false);
-    fetchEmployees();
+    fetchTeam();
   }
 
   async function toggleActive(emp: TeamMemberRow) {
-    // Deactivate at the membership level only — the user may still be active
-    // in other orgs they belong to.
     await supabase
       .from("memberships")
       .update({ is_active: !emp.is_active })
       .eq("id", emp.id);
     logActivity(emp.is_active ? "employee_deactivated" : "employee_activated", "employee", emp.id);
-    fetchEmployees();
+    fetchTeam();
   }
+
+  const showOrgColumn = viewMode === "full" && orgs.length >= 2;
+  const canManage = viewMode === "full";
 
   const filtered = employees.filter((e) => {
     const q = search.toLowerCase();
@@ -218,12 +241,15 @@ export default function EmployeesPage() {
       (e.credential || "").toLowerCase().includes(q);
     const matchesRole = roleFilter === "all" || e.role === roleFilter;
     const matchesStatus =
+      !canManage ||
       statusFilter === "all" ||
       (statusFilter === "active" ? e.is_active : !e.is_active);
-    return matchesSearch && matchesRole && matchesStatus;
+    const matchesOrg =
+      !showOrgColumn || orgFilter === "all" || e.org_id === orgFilter;
+    return matchesSearch && matchesRole && matchesStatus && matchesOrg;
   });
 
-  const activeCount = employees.filter((e) => e.is_active).length;
+  const activeCount = employees.filter((e) => !canManage || e.is_active).length;
 
   return (
     <div className="space-y-6">
@@ -233,14 +259,17 @@ export default function EmployeesPage() {
           <h1 className="text-2xl font-bold text-[color:var(--text-primary)] font-display tracking-tight">{t("title")}</h1>
           <p className="text-sm text-[color:var(--text-muted)] mt-1">
             {activeCount} {activeCount === 1 ? t("active") : t("active")} {t("total")} {employees.length}
+            {showOrgColumn && <> · {orgs.length} organizações</>}
           </p>
         </div>
-        <Button onClick={openAdd}>
-          <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-          {t("addButton")}
-        </Button>
+        {canManage && (
+          <Button onClick={openAdd}>
+            <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            {t("addButton")}
+          </Button>
+        )}
       </div>
 
       {/* Search + filters */}
@@ -251,7 +280,18 @@ export default function EmployeesPage() {
           onChange={(e) => setSearch(e.target.value)}
           className="flex-1"
         />
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
+          {showOrgColumn && (
+            <Select
+              value={orgFilter}
+              onChange={(e) => setOrgFilter(e.target.value)}
+              className="lg:w-52"
+              options={[
+                { value: "all", label: "Todas as organizações" },
+                ...orgs.map((o) => ({ value: o.id, label: o.name })),
+              ]}
+            />
+          )}
           <Select
             value={roleFilter}
             onChange={(e) => setRoleFilter(e.target.value as typeof roleFilter)}
@@ -263,29 +303,31 @@ export default function EmployeesPage() {
               { value: "employee", label: t("roles.employee") },
             ]}
           />
-          <Select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}
-            className="lg:w-40"
-            options={[
-              { value: "active", label: t("activeStatus") },
-              { value: "inactive", label: t("inactiveStatus") },
-              { value: "all", label: t("filterStatusAll") },
-            ]}
-          />
+          {canManage && (
+            <Select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}
+              className="lg:w-40"
+              options={[
+                { value: "active", label: t("activeStatus") },
+                { value: "inactive", label: t("inactiveStatus") },
+                { value: "all", label: t("filterStatusAll") },
+              ]}
+            />
+          )}
         </div>
       </div>
 
       {/* Table */}
       <Card padding="sm">
         {loading ? (
-          <SkeletonTable rows={6} cols={6} />
+          <SkeletonTable rows={6} cols={canManage ? 6 : 3} />
         ) : filtered.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-[color:var(--text-muted)]">
               {search ? t("noResults") : t("noTeamMembers")}
             </p>
-            {!search && (
+            {!search && canManage && (
               <Button onClick={openAdd} variant="ghost" className="mt-2">
                 {t("addFirstMember")}
               </Button>
@@ -297,11 +339,20 @@ export default function EmployeesPage() {
               <thead>
                 <tr className="border-b border-[color:var(--border-light)]">
                   <th className="text-left py-3 px-4 font-medium text-[color:var(--text-muted)]">{t("tableNameHeader")}</th>
+                  {showOrgColumn && (
+                    <th className="text-left py-3 px-4 font-medium text-[color:var(--text-muted)]">Organização</th>
+                  )}
                   <th className="text-left py-3 px-4 font-medium text-[color:var(--text-muted)] hidden sm:table-cell">{t("tableCredentialHeader")}</th>
-                  <th className="text-left py-3 px-4 font-medium text-[color:var(--text-muted)] hidden md:table-cell">{t("tableContractHeader")}</th>
+                  {canManage && (
+                    <th className="text-left py-3 px-4 font-medium text-[color:var(--text-muted)] hidden md:table-cell">{t("tableContractHeader")}</th>
+                  )}
                   <th className="text-left py-3 px-4 font-medium text-[color:var(--text-muted)]">{t("tableRoleHeader")}</th>
-                  <th className="text-left py-3 px-4 font-medium text-[color:var(--text-muted)]">{t("tableStatusHeader")}</th>
-                  <th className="text-right py-3 px-4 font-medium text-[color:var(--text-muted)]">{t("tableActionsHeader")}</th>
+                  {canManage && (
+                    <>
+                      <th className="text-left py-3 px-4 font-medium text-[color:var(--text-muted)]">{t("tableStatusHeader")}</th>
+                      <th className="text-right py-3 px-4 font-medium text-[color:var(--text-muted)]">{t("tableActionsHeader")}</th>
+                    </>
+                  )}
                 </tr>
               </thead>
               <tbody>
@@ -310,43 +361,58 @@ export default function EmployeesPage() {
                     <td className="py-3 px-4">
                       <div>
                         <p className="font-medium text-[color:var(--text-primary)]">{emp.full_name}</p>
-                        <p className="text-[color:var(--text-muted)] text-xs">{emp.profile?.email || "—"}</p>
+                        {canManage && (
+                          <p className="text-[color:var(--text-muted)] text-xs">{emp.profile?.email || "—"}</p>
+                        )}
                       </div>
                     </td>
+                    {showOrgColumn && (
+                      <td className="py-3 px-4">
+                        <span className="inline-flex items-center gap-1.5 text-xs px-2 py-1 rounded-md bg-[color:var(--primary-soft)] text-[color:var(--primary)] capitalize">
+                          {emp.org?.name || "—"}
+                        </span>
+                      </td>
+                    )}
                     <td className="py-3 px-4 text-[color:var(--text-secondary)] hidden sm:table-cell capitalize">
                       {emp.credential || "—"}
                     </td>
-                    <td className="py-3 px-4 text-[color:var(--text-secondary)] hidden md:table-cell">
-                      {emp.contract_type === "full_time" ? `${t("contracts.full_time")} (${emp.weekly_hours}h)` : `${t("contracts.part_time")} (${emp.weekly_hours}h)`}
-                    </td>
+                    {canManage && (
+                      <td className="py-3 px-4 text-[color:var(--text-secondary)] hidden md:table-cell">
+                        {emp.contract_type === "full_time" ? `${t("contracts.full_time")} (${emp.weekly_hours}h)` : `${t("contracts.part_time")} (${emp.weekly_hours}h)`}
+                      </td>
+                    )}
                     <td className="py-3 px-4">
                       <Badge variant={roleBadge[emp.role] || "default"}>
                         {roleLabel[emp.role] || emp.role}
                       </Badge>
                     </td>
-                    <td className="py-3 px-4">
-                      <Badge variant={emp.is_active ? "success" : "danger"}>
-                        {emp.is_active ? t("activeStatus") : t("inactiveStatus")}
-                      </Badge>
-                    </td>
-                    <td className="py-3 px-4 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <Button variant="ghost" size="sm" onClick={() => openEdit(emp)}>
-                          {t("editButton")}
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() =>
-                            emp.is_active
-                              ? setConfirmDeactivate(emp)
-                              : toggleActive(emp)
-                          }
-                        >
-                          {emp.is_active ? t("deactivateButton") : t("activateButton")}
-                        </Button>
-                      </div>
-                    </td>
+                    {canManage && (
+                      <>
+                        <td className="py-3 px-4">
+                          <Badge variant={emp.is_active ? "success" : "danger"}>
+                            {emp.is_active ? t("activeStatus") : t("inactiveStatus")}
+                          </Badge>
+                        </td>
+                        <td className="py-3 px-4 text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <Button variant="ghost" size="sm" onClick={() => openEdit(emp)}>
+                              {t("editButton")}
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() =>
+                                emp.is_active
+                                  ? setConfirmDeactivate(emp)
+                                  : toggleActive(emp)
+                              }
+                            >
+                              {emp.is_active ? t("deactivateButton") : t("activateButton")}
+                            </Button>
+                          </div>
+                        </td>
+                      </>
+                    )}
                   </tr>
                 ))}
               </tbody>
@@ -355,118 +421,134 @@ export default function EmployeesPage() {
         )}
       </Card>
 
-      {/* Add/Edit Modal */}
-      <Modal
-        open={showModal}
-        onClose={() => setShowModal(false)}
-        title={editingId ? t("modalEditTitle") : t("modalAddTitle")}
-      >
-        <div className="space-y-4">
-          {error && (
-            <div className="p-3 bg-[color:var(--danger-soft)] border border-[color:var(--danger-soft)] rounded-lg text-sm text-[color:var(--danger)]">
-              {error}
-            </div>
-          )}
+      {/* Add/Edit Modal — admin/manager only */}
+      {canManage && (
+        <Modal
+          open={showModal}
+          onClose={() => setShowModal(false)}
+          title={editingId ? t("modalEditTitle") : t("modalAddTitle")}
+        >
+          <div className="space-y-4">
+            {error && (
+              <div className="p-3 bg-[color:var(--danger-soft)] border border-[color:var(--danger-soft)] rounded-lg text-sm text-[color:var(--danger)]">
+                {error}
+              </div>
+            )}
 
-          {!editingId && (
+            {!editingId && (
+              <Input
+                label={t("emailLabel")}
+                type="email"
+                placeholder={t("emailPlaceholder")}
+                value={form.email}
+                onChange={(e) => setForm({ ...form, email: e.target.value })}
+                required
+              />
+            )}
+
             <Input
-              label={t("emailLabel")}
-              type="email"
-              placeholder={t("emailPlaceholder")}
-              value={form.email}
-              onChange={(e) => setForm({ ...form, email: e.target.value })}
+              label={t("fullNameLabel")}
+              placeholder={t("fullNamePlaceholder")}
+              value={form.full_name}
+              onChange={(e) => setForm({ ...form, full_name: e.target.value })}
               required
             />
-          )}
 
-          <Input
-            label={t("fullNameLabel")}
-            placeholder={t("fullNamePlaceholder")}
-            value={form.full_name}
-            onChange={(e) => setForm({ ...form, full_name: e.target.value })}
-            required
-          />
+            {/* Org picker — only when the admin manages 2+ orgs AND we're
+                creating (you cannot move an existing membership between orgs
+                from here — it would silently break schedules). */}
+            {!editingId && orgs.length >= 2 && (
+              <Select
+                label="Organização"
+                value={form.org_id}
+                onChange={(e) => setForm({ ...form, org_id: e.target.value })}
+                options={[
+                  { value: "", label: "Escolher organização…" },
+                  ...orgs.map((o) => ({ value: o.id, label: o.name })),
+                ]}
+              />
+            )}
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Select
-              label={t("functionLabel")}
-              value={form.role}
-              onChange={(e) => setForm({ ...form, role: e.target.value })}
-              options={roleOptions}
-            />
-            <Select
-              label={t("credentialLabel")}
-              value={form.credential}
-              onChange={(e) => setForm({ ...form, credential: e.target.value })}
-              options={credentialOptions}
-            />
-          </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Select
+                label={t("functionLabel")}
+                value={form.role}
+                onChange={(e) => setForm({ ...form, role: e.target.value })}
+                options={roleOptions}
+              />
+              <Select
+                label={t("credentialLabel")}
+                value={form.credential}
+                onChange={(e) => setForm({ ...form, credential: e.target.value })}
+                options={credentialOptions}
+              />
+            </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Select
-              label={t("contractLabel")}
-              value={form.contract_type}
-              onChange={(e) => setForm({
-                ...form,
-                contract_type: e.target.value,
-                weekly_hours: e.target.value === "full_time" ? 40 : 20,
-              })}
-              options={contractOptions}
-            />
-            <Input
-              label={t("hoursLabel")}
-              type="number"
-              min={1}
-              max={60}
-              value={form.weekly_hours}
-              onChange={(e) => setForm({ ...form, weekly_hours: parseInt(e.target.value) || 0 })}
-            />
-          </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Select
+                label={t("contractLabel")}
+                value={form.contract_type}
+                onChange={(e) => setForm({
+                  ...form,
+                  contract_type: e.target.value,
+                  weekly_hours: e.target.value === "full_time" ? 40 : 20,
+                })}
+                options={contractOptions}
+              />
+              <Input
+                label={t("hoursLabel")}
+                type="number"
+                min={1}
+                max={60}
+                value={form.weekly_hours}
+                onChange={(e) => setForm({ ...form, weekly_hours: parseInt(e.target.value) || 0 })}
+              />
+            </div>
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-[color:var(--border-light)]">
-            <Button variant="secondary" onClick={() => setShowModal(false)}>
-              {t("cancelButton")}
-            </Button>
-            <Button onClick={handleSave} loading={saving}>
-              {editingId ? t("saveButton") : t("createButton")}
-            </Button>
-          </div>
-        </div>
-      </Modal>
-
-      {/* Confirm deactivate modal */}
-      <Modal
-        open={!!confirmDeactivate}
-        onClose={() => setConfirmDeactivate(null)}
-        title={t("confirmDeactivateTitle")}
-        size="sm"
-      >
-        {confirmDeactivate && (
-          <div className="space-y-4">
-            <p className="text-sm text-[color:var(--text-secondary)]">
-              {t("confirmDeactivateBody", { name: confirmDeactivate.full_name })}
-            </p>
-            <div className="flex justify-end gap-2">
-              <Button
-                variant="secondary"
-                onClick={() => setConfirmDeactivate(null)}
-              >
-                {t("cancel")}
+            <div className="flex justify-end gap-3 pt-4 border-t border-[color:var(--border-light)]">
+              <Button variant="secondary" onClick={() => setShowModal(false)}>
+                {t("cancelButton")}
               </Button>
-              <Button
-                variant="danger"
-                onClick={async () => {
-                  const emp = confirmDeactivate;
-                  setConfirmDeactivate(null);
-                  await toggleActive(emp);
-                }}
-              >
-                {t("deactivateButton")}
+              <Button onClick={handleSave} loading={saving}>
+                {editingId ? t("saveButton") : t("createButton")}
               </Button>
             </div>
           </div>
-        )}
-      </Modal>
+        </Modal>
+      )}
+
+      {/* Confirm deactivate */}
+      {canManage && (
+        <Modal
+          open={!!confirmDeactivate}
+          onClose={() => setConfirmDeactivate(null)}
+          title={t("confirmDeactivateTitle")}
+          size="sm"
+        >
+          {confirmDeactivate && (
+            <div className="space-y-4">
+              <p className="text-sm text-[color:var(--text-secondary)]">
+                {t("confirmDeactivateBody", { name: confirmDeactivate.full_name })}
+              </p>
+              <div className="flex justify-end gap-2">
+                <Button variant="secondary" onClick={() => setConfirmDeactivate(null)}>
+                  {t("cancel")}
+                </Button>
+                <Button
+                  variant="danger"
+                  onClick={async () => {
+                    const emp = confirmDeactivate;
+                    setConfirmDeactivate(null);
+                    await toggleActive(emp);
+                  }}
+                >
+                  {t("deactivateButton")}
+                </Button>
+              </div>
+            </div>
+          )}
+        </Modal>
+      )}
     </div>
   );
 }

@@ -22,15 +22,38 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
     }
 
-    // Resolve the caller's active organisation + role via memberships.
-    const { data: requesterProfile } = await supabase
-      .from("profiles")
-      .select("active_org_id, org_id")
-      .eq("id", user.id)
-      .single();
+    const body = await request.json();
+    const {
+      email,
+      full_name,
+      role,
+      credential,
+      contract_type,
+      weekly_hours,
+      org_id: targetOrgId,
+    } = body as {
+      email: string;
+      full_name: string;
+      role?: string;
+      credential?: string | null;
+      contract_type?: string;
+      weekly_hours?: number;
+      /** Optional — defaults to caller's active org when absent. */
+      org_id?: string;
+    };
 
-    const activeOrgId =
-      requesterProfile?.active_org_id ?? requesterProfile?.org_id ?? null;
+    // Resolve the org we're adding the employee to. If the client didn't
+    // specify (single-org caller), fall back to active_org_id on the profile.
+    let activeOrgId: string | null = targetOrgId ?? null;
+    if (!activeOrgId) {
+      const { data: requesterProfile } = await supabase
+        .from("profiles")
+        .select("active_org_id, org_id")
+        .eq("id", user.id)
+        .single();
+      activeOrgId =
+        requesterProfile?.active_org_id ?? requesterProfile?.org_id ?? null;
+    }
 
     if (!activeOrgId) {
       return NextResponse.json(
@@ -39,28 +62,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Verify the caller is admin/manager of the TARGET org specifically —
+    // so a manager of Org A can't add employees to Org B by passing its id.
     const { data: callerMembership } = await supabase
       .from("memberships")
       .select("role")
       .eq("user_id", user.id)
       .eq("org_id", activeOrgId)
+      .eq("is_active", true)
       .maybeSingle();
 
     const callerRole = callerMembership?.role;
     if (!callerRole || !["admin", "manager"].includes(callerRole)) {
       return NextResponse.json({ error: "Sem permissão" }, { status: 403 });
     }
-
-    const body = await request.json();
-    const { email, full_name, role, credential, contract_type, weekly_hours } =
-      body as {
-        email: string;
-        full_name: string;
-        role?: string;
-        credential?: string | null;
-        contract_type?: string;
-        weekly_hours?: number;
-      };
 
     if (!email || !full_name) {
       return NextResponse.json(
