@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useTranslations } from "next-intl";
+import { Building2, UserCog, CircleDot, Search, X, Plus } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { logActivity } from "@/lib/activity-log";
 import { Button } from "@/components/ui/button";
@@ -12,6 +13,62 @@ import { Badge } from "@/components/ui/badge";
 import { Modal } from "@/components/ui/modal";
 import { SkeletonTable } from "@/components/ui/skeleton";
 import type { Membership } from "@/types/database";
+
+/**
+ * Inline FilterChip — styled native <select> that reads as a compact
+ * prefix-icon chip. Centralised here so the three filters keep identical
+ * height, padding and hover states without dragging a new shared component
+ * into the design system before we validate the pattern across pages.
+ */
+function FilterChip({
+  icon,
+  value,
+  onChange,
+  options,
+  active,
+}: {
+  icon: React.ReactNode;
+  value: string;
+  onChange: (v: string) => void;
+  options: { value: string; label: string }[];
+  active: boolean;
+}) {
+  return (
+    <div
+      className={`relative inline-flex items-center h-10 rounded-[var(--radius-md)] border transition-colors shrink-0 ${
+        active
+          ? "border-[color:var(--primary)] bg-[color:var(--primary-soft)]"
+          : "border-[color:var(--border)] bg-[color:var(--surface)] hover:border-[color:var(--border-strong)]"
+      }`}
+    >
+      <span
+        className={`pl-3 pr-1.5 pointer-events-none ${
+          active ? "text-[color:var(--primary)]" : "text-[color:var(--text-muted)]"
+        }`}
+      >
+        {icon}
+      </span>
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className={`h-10 pl-0 pr-9 bg-transparent text-sm appearance-none cursor-pointer focus:outline-none focus-visible:outline-none ${
+          active ? "text-[color:var(--primary)] font-medium" : "text-[color:var(--text-primary)]"
+        }`}
+      >
+        {options.map((opt) => (
+          <option key={opt.value} value={opt.value}>
+            {opt.label}
+          </option>
+        ))}
+      </select>
+      <span className={`absolute right-2.5 pointer-events-none ${active ? "text-[color:var(--primary)]" : "text-[color:var(--text-muted)]"}`}>
+        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+        </svg>
+      </span>
+    </div>
+  );
+}
 
 /**
  * Cross-org team row. Admin/manager sees members across every org they
@@ -264,59 +321,104 @@ export default function EmployeesPage() {
         </div>
         {canManage && (
           <Button onClick={openAdd}>
-            <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
+            <Plus className="w-4 h-4 mr-1.5" strokeWidth={2.5} />
             {t("addButton")}
           </Button>
         )}
       </div>
 
-      {/* Search + filters */}
-      <div className="flex flex-col lg:flex-row gap-2">
-        <Input
-          placeholder={t("searchPlaceholder")}
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="flex-1"
-        />
-        <div className="flex gap-2 flex-wrap">
-          {showOrgColumn && (
-            <Select
-              value={orgFilter}
-              onChange={(e) => setOrgFilter(e.target.value)}
-              className="lg:w-52"
-              options={[
-                { value: "all", label: "Todas as organizações" },
-                ...orgs.map((o) => ({ value: o.id, label: o.name })),
-              ]}
-            />
-          )}
-          <Select
-            value={roleFilter}
-            onChange={(e) => setRoleFilter(e.target.value as typeof roleFilter)}
-            className="lg:w-44"
-            options={[
-              { value: "all", label: t("filterRoleAll") },
-              { value: "admin", label: t("roles.admin") },
-              { value: "manager", label: t("roles.manager") },
-              { value: "employee", label: t("roles.employee") },
-            ]}
-          />
-          {canManage && (
-            <Select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}
-              className="lg:w-40"
-              options={[
-                { value: "active", label: t("activeStatus") },
-                { value: "inactive", label: t("inactiveStatus") },
-                { value: "all", label: t("filterStatusAll") },
-              ]}
-            />
-          )}
-        </div>
-      </div>
+      {/* Unified toolbar: search (flex-1) + filter chips (inline, scrolls
+          horizontally on narrow viewports instead of wrapping vertically).
+          A chip turns navy-on-soft-navy when its filter is non-default, so
+          the user sees active filters at a glance. */}
+      {(() => {
+        const orgActive = showOrgColumn && orgFilter !== "all";
+        const roleActive = roleFilter !== "all";
+        const statusActive = canManage && statusFilter !== "active";
+        const anyActive = orgActive || roleActive || statusActive;
+
+        return (
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+            {/* Search with leading icon */}
+            <div className="relative flex-1 min-w-0">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[color:var(--text-muted)] pointer-events-none" />
+              <input
+                type="text"
+                placeholder={t("searchPlaceholder")}
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full h-10 pl-10 pr-9 rounded-[var(--radius-md)] bg-[color:var(--surface)] border border-[color:var(--border)] text-sm text-[color:var(--text-primary)] placeholder:text-[color:var(--text-muted)] transition-colors hover:border-[color:var(--border-strong)] focus:outline-none focus-visible:outline-none focus:border-[color:var(--primary)] focus:ring-2 focus:ring-[color:var(--primary-soft)]"
+              />
+              {search && (
+                <button
+                  type="button"
+                  onClick={() => setSearch("")}
+                  aria-label="Limpar pesquisa"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)] rounded"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+
+            {/* Filter chips — horizontal scroll on small viewports so the
+                toolbar stays on one row no matter how many filters we add. */}
+            <div className="flex items-center gap-2 overflow-x-auto -mx-1 px-1 sm:mx-0 sm:px-0 scrollbar-thin">
+              {showOrgColumn && (
+                <FilterChip
+                  icon={<Building2 className="w-4 h-4" />}
+                  value={orgFilter}
+                  onChange={setOrgFilter}
+                  active={orgActive}
+                  options={[
+                    { value: "all", label: "Todas as organizações" },
+                    ...orgs.map((o) => ({ value: o.id, label: o.name })),
+                  ]}
+                />
+              )}
+              <FilterChip
+                icon={<UserCog className="w-4 h-4" />}
+                value={roleFilter}
+                onChange={(v) => setRoleFilter(v as typeof roleFilter)}
+                active={roleActive}
+                options={[
+                  { value: "all", label: t("filterRoleAll") },
+                  { value: "admin", label: t("roles.admin") },
+                  { value: "manager", label: t("roles.manager") },
+                  { value: "employee", label: t("roles.employee") },
+                ]}
+              />
+              {canManage && (
+                <FilterChip
+                  icon={<CircleDot className="w-4 h-4" />}
+                  value={statusFilter}
+                  onChange={(v) => setStatusFilter(v as typeof statusFilter)}
+                  active={statusActive}
+                  options={[
+                    { value: "active", label: t("activeStatus") },
+                    { value: "inactive", label: t("inactiveStatus") },
+                    { value: "all", label: t("filterStatusAll") },
+                  ]}
+                />
+              )}
+              {anyActive && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setOrgFilter("all");
+                    setRoleFilter("all");
+                    setStatusFilter("active");
+                  }}
+                  className="h-10 px-3 text-xs font-medium text-[color:var(--text-muted)] hover:text-[color:var(--text-primary)] inline-flex items-center gap-1 shrink-0"
+                >
+                  <X className="w-3.5 h-3.5" />
+                  Limpar
+                </button>
+              )}
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Table */}
       <Card padding="sm">
@@ -337,28 +439,28 @@ export default function EmployeesPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-[color:var(--border-light)]">
-                  <th className="text-left py-3 px-4 font-medium text-[color:var(--text-muted)]">{t("tableNameHeader")}</th>
+                <tr className="border-b border-[color:var(--border-light)] bg-[color:var(--surface-sunken)]/40">
+                  <th className="text-left py-2.5 px-4 text-[11px] font-semibold uppercase tracking-wider text-[color:var(--text-muted)]">{t("tableNameHeader")}</th>
                   {showOrgColumn && (
-                    <th className="text-left py-3 px-4 font-medium text-[color:var(--text-muted)]">Organização</th>
+                    <th className="text-left py-2.5 px-4 text-[11px] font-semibold uppercase tracking-wider text-[color:var(--text-muted)]">Organização</th>
                   )}
-                  <th className="text-left py-3 px-4 font-medium text-[color:var(--text-muted)] hidden sm:table-cell">{t("tableCredentialHeader")}</th>
+                  <th className="text-left py-2.5 px-4 text-[11px] font-semibold uppercase tracking-wider text-[color:var(--text-muted)] hidden sm:table-cell">{t("tableCredentialHeader")}</th>
                   {canManage && (
-                    <th className="text-left py-3 px-4 font-medium text-[color:var(--text-muted)] hidden md:table-cell">{t("tableContractHeader")}</th>
+                    <th className="text-left py-2.5 px-4 text-[11px] font-semibold uppercase tracking-wider text-[color:var(--text-muted)] hidden md:table-cell">{t("tableContractHeader")}</th>
                   )}
-                  <th className="text-left py-3 px-4 font-medium text-[color:var(--text-muted)]">{t("tableRoleHeader")}</th>
+                  <th className="text-left py-2.5 px-4 text-[11px] font-semibold uppercase tracking-wider text-[color:var(--text-muted)]">{t("tableRoleHeader")}</th>
                   {canManage && (
                     <>
-                      <th className="text-left py-3 px-4 font-medium text-[color:var(--text-muted)]">{t("tableStatusHeader")}</th>
-                      <th className="text-right py-3 px-4 font-medium text-[color:var(--text-muted)]">{t("tableActionsHeader")}</th>
+                      <th className="text-left py-2.5 px-4 text-[11px] font-semibold uppercase tracking-wider text-[color:var(--text-muted)]">{t("tableStatusHeader")}</th>
+                      <th className="text-right py-2.5 px-4 text-[11px] font-semibold uppercase tracking-wider text-[color:var(--text-muted)]">{t("tableActionsHeader")}</th>
                     </>
                   )}
                 </tr>
               </thead>
               <tbody>
                 {filtered.map((emp) => (
-                  <tr key={emp.id} className="border-b border-[color:var(--border-light)] last:border-0 hover:bg-[color:var(--surface-sunken)]">
-                    <td className="py-3 px-4">
+                  <tr key={emp.id} className="border-b border-[color:var(--border-light)] last:border-0 hover:bg-[color:var(--surface-sunken)]/60 transition-colors">
+                    <td className="py-2.5 px-4">
                       <div>
                         <p className="font-medium text-[color:var(--text-primary)]">{emp.full_name}</p>
                         {canManage && (
@@ -367,34 +469,35 @@ export default function EmployeesPage() {
                       </div>
                     </td>
                     {showOrgColumn && (
-                      <td className="py-3 px-4">
-                        <span className="inline-flex items-center gap-1.5 text-xs px-2 py-1 rounded-md bg-[color:var(--primary-soft)] text-[color:var(--primary)] capitalize">
+                      <td className="py-2.5 px-4">
+                        <span className="inline-flex items-center gap-1.5 text-xs font-medium px-2 py-1 rounded-md bg-[color:var(--primary-soft)] text-[color:var(--primary)] capitalize">
+                          <Building2 className="w-3 h-3" strokeWidth={2.5} />
                           {emp.org?.name || "—"}
                         </span>
                       </td>
                     )}
-                    <td className="py-3 px-4 text-[color:var(--text-secondary)] hidden sm:table-cell capitalize">
+                    <td className="py-2.5 px-4 text-[color:var(--text-secondary)] hidden sm:table-cell capitalize">
                       {emp.credential || "—"}
                     </td>
                     {canManage && (
-                      <td className="py-3 px-4 text-[color:var(--text-secondary)] hidden md:table-cell">
+                      <td className="py-2.5 px-4 text-[color:var(--text-secondary)] hidden md:table-cell">
                         {emp.contract_type === "full_time" ? `${t("contracts.full_time")} (${emp.weekly_hours}h)` : `${t("contracts.part_time")} (${emp.weekly_hours}h)`}
                       </td>
                     )}
-                    <td className="py-3 px-4">
+                    <td className="py-2.5 px-4">
                       <Badge variant={roleBadge[emp.role] || "default"}>
                         {roleLabel[emp.role] || emp.role}
                       </Badge>
                     </td>
                     {canManage && (
                       <>
-                        <td className="py-3 px-4">
+                        <td className="py-2.5 px-4">
                           <Badge variant={emp.is_active ? "success" : "danger"}>
                             {emp.is_active ? t("activeStatus") : t("inactiveStatus")}
                           </Badge>
                         </td>
-                        <td className="py-3 px-4 text-right">
-                          <div className="flex items-center justify-end gap-2">
+                        <td className="py-2.5 px-4 text-right">
+                          <div className="flex items-center justify-end gap-1">
                             <Button variant="ghost" size="sm" onClick={() => openEdit(emp)}>
                               {t("editButton")}
                             </Button>
