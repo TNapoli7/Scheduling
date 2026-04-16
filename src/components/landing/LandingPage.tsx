@@ -7,6 +7,7 @@ import { ChatWidget } from "@/components/chat/ChatWidget";
 import { LpNavbar } from "@/components/lp/LpNavbar";
 import { LpFooter } from "@/components/lp/LpFooter";
 import { Reveal } from "./Reveal";
+import { TextRotator } from "./TextRotator";
 import {
   ArrowRight,
   Check,
@@ -101,7 +102,20 @@ function Hero() {
           className="hero-reveal text-4xl sm:text-5xl lg:text-6xl font-extrabold text-stone-900 tracking-tight leading-[1.1]"
           style={{ animationDelay: "120ms" }}
         >
-          {t("hero.heading")}
+          {t("hero.headingLine1")}{" "}
+          <br className="hidden sm:block" />
+          <TextRotator
+            words={[
+              t("hero.rotator.farmacias"),
+              t("hero.rotator.clinicas"),
+              t("hero.rotator.laboratorios"),
+              t("hero.rotator.restaurantes"),
+              t("hero.rotator.hoteis"),
+            ]}
+            interval={2500}
+            duration={420}
+            className="bg-clip-text text-transparent bg-gradient-to-r from-[#FF8A73] to-[#D85543]"
+          />
         </h1>
 
         <p

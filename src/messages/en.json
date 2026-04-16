@@ -256,6 +256,14 @@
     "hero": {
       "badge": "14 days free — no credit card",
       "heading": "Work schedules in minutes, not hours",
+      "headingLine1": "Perfect schedules for",
+      "rotator": {
+        "farmacias": "Pharmacies",
+        "clinicas": "Clinics",
+        "laboratorios": "Laboratories",
+        "restaurantes": "Restaurants",
+        "hoteis": "Hotels"
+      },
       "description": "Simplify shift management in your pharmacy, clinic, restaurant or hotel. Automatic, fair and legally compliant schedules.",
       "tryFree": "Try for free",
       "features": "See features",

@@ -256,6 +256,14 @@
     "hero": {
       "badge": "14 dias grátis — sem cartão de crédito",
       "heading": "Escalas de trabalho em minutos, não em horas",
+      "headingLine1": "Escalas impecáveis para",
+      "rotator": {
+        "farmacias": "Farmácias",
+        "clinicas": "Clínicas",
+        "laboratorios": "Laboratórios",
+        "restaurantes": "Restaurantes",
+        "hoteis": "Hotéis"
+      },
       "description": "Simplifique a gestão de turnos na sua farmácia, clínica, restaurante ou hotel. Escalas automáticas, justas e conformes com a lei.",
       "tryFree": "Experimentar grátis",
       "features": "Ver funcionalidades",

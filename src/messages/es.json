@@ -256,6 +256,14 @@
     "hero": {
       "badge": "14 días gratis — sin tarjeta de crédito",
       "heading": "Horarios de trabajo en minutos, no en horas",
+      "headingLine1": "Horarios impecables para",
+      "rotator": {
+        "farmacias": "Farmacias",
+        "clinicas": "Clínicas",
+        "laboratorios": "Laboratorios",
+        "restaurantes": "Restaurantes",
+        "hoteis": "Hoteles"
+      },
       "description": "Simplifique la gestión de turnos en su farmacia, clínica, restaurante u hotel. Horarios automáticos, justos y conforme a la ley.",
       "tryFree": "Probar gratis",
       "features": "Ver características",
