@@ -208,9 +208,17 @@ export default function SchedulePage() {
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth() + 1);
-  const [viewMode, setViewMode] = useState<"week" | "month">("month");
+  const [viewMode, setViewMode] = useState<"week" | "month" | "day">("month");
   const [layoutMode, setLayoutMode] = useState<"grid" | "byDay">("byDay");
   const [weekStart, setWeekStart] = useState(0);
+  /** For daily view — YYYY-MM-DD of the selected day */
+  const [selectedDay, setSelectedDay] = useState(() => {
+    const n = new Date();
+    const yy = n.getFullYear();
+    const mm = String(n.getMonth() + 1).padStart(2, "0");
+    const dd = String(n.getDate()).padStart(2, "0");
+    return `${yy}-${mm}-${dd}`;
+  });
   const [emptyPublishModal, setEmptyPublishModal] = useState(false);
   const [unpublishConfirm, setUnpublishConfirm] = useState(false);
   const [employees, setEmployees] = useState<Profile[]>([]);
@@ -275,10 +283,11 @@ export default function SchedulePage() {
     [year]
   );
   const visibleDays = useMemo(() => {
+    if (viewMode === "day") return days.includes(selectedDay) ? [selectedDay] : days.slice(0, 1);
     if (viewMode === "month") return days;
     const start = Math.max(0, Math.min(weekStart, days.length - 1));
     return days.slice(start, start + 7);
-  }, [viewMode, weekStart, days]);
+  }, [viewMode, weekStart, days, selectedDay]);
 
   // Assigned hours per employee across visible days (respects week/month view).
   const assignedHoursByUser = useMemo(() => {
@@ -1051,22 +1060,24 @@ export default function SchedulePage() {
         <Button variant="ghost" size="sm" onClick={nextMonth}>
           &gt;
         </Button>
-        <div className="flex items-center gap-1 ml-2 border-l border-[color:var(--border)] pl-3">
-          <Button
-            variant={layoutMode === "byDay" ? "primary" : "ghost"}
-            size="sm"
-            onClick={() => setLayoutMode("byDay")}
-          >
-            {t("viewByDay")}
-          </Button>
-          <Button
-            variant={layoutMode === "grid" ? "primary" : "ghost"}
-            size="sm"
-            onClick={() => setLayoutMode("grid")}
-          >
-            {t("viewByEmployee")}
-          </Button>
-        </div>
+        {viewMode !== "day" && (
+          <div className="flex items-center gap-1 ml-2 border-l border-[color:var(--border)] pl-3">
+            <Button
+              variant={layoutMode === "byDay" ? "primary" : "ghost"}
+              size="sm"
+              onClick={() => setLayoutMode("byDay")}
+            >
+              {t("viewByDay")}
+            </Button>
+            <Button
+              variant={layoutMode === "grid" ? "primary" : "ghost"}
+              size="sm"
+              onClick={() => setLayoutMode("grid")}
+            >
+              {t("viewByEmployee")}
+            </Button>
+          </div>
+        )}
         <div className="flex items-center gap-1 border-l border-[color:var(--border)] pl-3">
           <Button
             variant={viewMode === "month" ? "primary" : "ghost"}
@@ -1081,6 +1092,22 @@ export default function SchedulePage() {
             onClick={() => setViewMode("week")}
           >
             {t("viewWeek")}
+          </Button>
+          <Button
+            variant={viewMode === "day" ? "primary" : "ghost"}
+            size="sm"
+            onClick={() => {
+              setViewMode("day");
+              // Default to today if today is in the current month
+              const todayStr = (() => {
+                const n = new Date();
+                return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, "0")}-${String(n.getDate()).padStart(2, "0")}`;
+              })();
+              if (days.includes(todayStr)) setSelectedDay(todayStr);
+              else setSelectedDay(days[0]);
+            }}
+          >
+            {t("viewDay")}
           </Button>
         </div>
         {viewMode === "week" && (
@@ -1100,6 +1127,38 @@ export default function SchedulePage() {
               onClick={() => setWeekStart(Math.min(days.length - 7, weekStart + 7))}
               disabled={weekStart + 7 >= days.length}
               title={t("nextWeek")}
+            >
+              ▶
+            </Button>
+          </div>
+        )}
+        {viewMode === "day" && (
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                const idx = days.indexOf(selectedDay);
+                if (idx > 0) setSelectedDay(days[idx - 1]);
+              }}
+              disabled={days.indexOf(selectedDay) <= 0}
+              title={t("prevDay")}
+            >
+              ◀
+            </Button>
+            <span className="text-sm font-medium text-[color:var(--text-primary)] min-w-[120px] text-center">
+              {dayOfWeekPt(selectedDay, (key: string) => d(key))}{" "}
+              {parseInt(selectedDay.slice(8))}
+            </span>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                const idx = days.indexOf(selectedDay);
+                if (idx < days.length - 1) setSelectedDay(days[idx + 1]);
+              }}
+              disabled={days.indexOf(selectedDay) >= days.length - 1}
+              title={t("nextDay")}
             >
               ▶
             </Button>
@@ -1143,6 +1202,163 @@ export default function SchedulePage() {
               : t("createShiftsFirst")}
           </div>
         </Card>
+      ) : viewMode === "day" ? (
+        /* ──────────────────────────────────────────────────────────
+         * DAILY VIEW — single-day timeline with 30-min slots.
+         * Shows only employees scheduled that day.
+         * Time range auto-detected from earliest/latest shift ± 1h.
+         * ────────────────────────────────────────────────────────── */
+        (() => {
+          const dayStr = selectedDay;
+          const dayEntries = entries
+            .filter((e) => e.date === dayStr)
+            .sort((a, b) =>
+              (a.shift_template?.start_time || "").localeCompare(
+                b.shift_template?.start_time || ""
+              )
+            );
+
+          // Find employees scheduled this day
+          const scheduledUserIds = [...new Set(dayEntries.map((e) => e.user_id))];
+          const scheduledEmployees = scheduledUserIds
+            .map((id) => employees.find((emp) => emp.id === id))
+            .filter(Boolean) as Profile[];
+
+          if (scheduledEmployees.length === 0) {
+            return (
+              <Card>
+                <div className="text-center py-12 text-[color:var(--text-muted)]">
+                  <p className="text-sm">{t("noOneWorking")}</p>
+                  {schedule?.status === "draft" && (
+                    <p className="text-xs mt-1">{t("dayViewClickToAssign")}</p>
+                  )}
+                </div>
+              </Card>
+            );
+          }
+
+          // Auto-detect time range: earliest shift start – latest shift end ± 1h margin
+          let minMinutes = 24 * 60;
+          let maxMinutes = 0;
+          for (const entry of dayEntries) {
+            if (!entry.shift_template) continue;
+            const [sh, sm] = entry.shift_template.start_time.split(":").map(Number);
+            const [eh, em] = entry.shift_template.end_time.split(":").map(Number);
+            const startM = sh * 60 + (sm || 0);
+            let endM = eh * 60 + (em || 0);
+            if (endM <= startM) endM += 24 * 60; // overnight
+            if (startM < minMinutes) minMinutes = startM;
+            if (endM > maxMinutes) maxMinutes = endM;
+          }
+          // Add 1h margin and round to 30min
+          const rangeStart = Math.max(0, Math.floor((minMinutes - 60) / 30) * 30);
+          const rangeEnd = Math.min(24 * 60, Math.ceil((maxMinutes + 60) / 30) * 30);
+
+          // Generate 30-min slot labels
+          const slots: { minutes: number; label: string }[] = [];
+          for (let m = rangeStart; m < rangeEnd; m += 30) {
+            const hh = String(Math.floor(m / 60) % 24).padStart(2, "0");
+            const mm = String(m % 60).padStart(2, "0");
+            slots.push({ minutes: m, label: `${hh}:${mm}` });
+          }
+
+          const slotHeight = 40; // px per 30-min slot
+          const totalHeight = slots.length * slotHeight;
+
+          return (
+            <Card>
+              <div className="p-3 sm:p-4">
+                <div className="flex gap-0 overflow-x-auto">
+                  {/* Time column */}
+                  <div
+                    className="shrink-0 border-r border-[color:var(--border-light)] pr-2"
+                    style={{ width: 56 }}
+                  >
+                    <div className="h-8" /> {/* header spacer */}
+                    <div className="relative" style={{ height: totalHeight }}>
+                      {slots.map((slot, i) => (
+                        <div
+                          key={slot.minutes}
+                          className="absolute left-0 right-0 text-[10px] text-[color:var(--text-muted)] text-right pr-1 leading-none"
+                          style={{ top: i * slotHeight, height: slotHeight }}
+                        >
+                          {slot.label}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Employee columns */}
+                  {scheduledEmployees.map((emp) => {
+                    const empEntries = dayEntries.filter((e) => e.user_id === emp.id);
+                    return (
+                      <div
+                        key={emp.id}
+                        className="flex-1 min-w-[120px] max-w-[200px] border-r border-[color:var(--border-light)] last:border-r-0"
+                      >
+                        {/* Employee name header */}
+                        <div className="h-8 flex items-center justify-center px-1">
+                          <span className="text-xs font-medium text-[color:var(--text-primary)] truncate" title={emp.full_name}>
+                            {emp.full_name}
+                          </span>
+                        </div>
+                        {/* Timeline body */}
+                        <div className="relative" style={{ height: totalHeight }}>
+                          {/* Slot grid lines */}
+                          {slots.map((slot, i) => (
+                            <div
+                              key={slot.minutes}
+                              className={`absolute left-0 right-0 border-t ${
+                                slot.minutes % 60 === 0
+                                  ? "border-[color:var(--border)]"
+                                  : "border-[color:var(--border-light)] border-dashed"
+                              }`}
+                              style={{ top: i * slotHeight }}
+                            />
+                          ))}
+                          {/* Shift blocks */}
+                          {empEntries.map((entry) => {
+                            if (!entry.shift_template) return null;
+                            const [sh, sm] = entry.shift_template.start_time.split(":").map(Number);
+                            const [eh, em] = entry.shift_template.end_time.split(":").map(Number);
+                            let startM = sh * 60 + (sm || 0);
+                            let endM = eh * 60 + (em || 0);
+                            if (endM <= startM) endM += 24 * 60;
+
+                            const top = ((startM - rangeStart) / 30) * slotHeight;
+                            const height = ((endM - startM) / 30) * slotHeight;
+
+                            return (
+                              <div
+                                key={entry.id}
+                                className="absolute left-1 right-1 rounded-md text-white text-[10px] font-medium px-1.5 py-1 overflow-hidden shadow-sm cursor-pointer hover:opacity-90 transition-opacity"
+                                style={{
+                                  top,
+                                  height: Math.max(height, slotHeight * 0.8),
+                                  backgroundColor: entry.shift_template.color || "#6B7280",
+                                }}
+                                onClick={() =>
+                                  schedule?.status === "draft" &&
+                                  openAssignModal(emp.id, dayStr, emp.full_name)
+                                }
+                                title={`${entry.shift_template.name} · ${entry.shift_template.start_time.slice(0, 5)}–${entry.shift_template.end_time.slice(0, 5)}`}
+                              >
+                                <div className="leading-tight truncate">{entry.shift_template.name}</div>
+                                <div className="leading-tight opacity-80">
+                                  {entry.shift_template.start_time.slice(0, 5)}–{entry.shift_template.end_time.slice(0, 5)}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </Card>
+          );
+        })()
       ) : layoutMode === "byDay" ? (
         <Card>
           <div className="p-3 sm:p-4">

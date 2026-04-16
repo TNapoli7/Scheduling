@@ -101,6 +101,8 @@ type EmployeeForm = {
   weekly_hours: number;
   /** Required when caller manages multiple orgs — which org to add them to. */
   org_id: string;
+  /** When true the admin wants to invite the employee to the platform (email required). */
+  invite: boolean;
 };
 
 const emptyForm: EmployeeForm = {
@@ -111,6 +113,7 @@ const emptyForm: EmployeeForm = {
   contract_type: "full_time",
   weekly_hours: 40,
   org_id: "",
+  invite: false,
 };
 
 const roleBadge: Record<string, "accent" | "navy" | "default"> = {
@@ -242,7 +245,8 @@ export default function EmployeesPage() {
 
       logActivity("employee_updated", "employee", editingId);
     } else {
-      if (!form.email.trim()) {
+      // Email is only required when the admin wants to invite to the platform
+      if (form.invite && !form.email.trim()) {
         setError(t("errorEmailRequired"));
         setSaving(false);
         return;
@@ -258,7 +262,7 @@ export default function EmployeesPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          email: form.email,
+          email: form.invite ? form.email : undefined,
           full_name: form.full_name,
           role: form.role,
           credential: form.credential || null,
@@ -548,17 +552,6 @@ export default function EmployeesPage() {
               </div>
             )}
 
-            {!editingId && (
-              <Input
-                label={t("emailLabel")}
-                type="email"
-                placeholder={t("emailPlaceholder")}
-                value={form.email}
-                onChange={(e) => setForm({ ...form, email: e.target.value })}
-                required
-              />
-            )}
-
             <Input
               label={t("fullNameLabel")}
               placeholder={t("fullNamePlaceholder")}
@@ -580,6 +573,43 @@ export default function EmployeesPage() {
                   ...orgs.map((o) => ({ value: o.id, label: o.name })),
                 ]}
               />
+            )}
+
+            {/* Invite toggle — only visible when creating a new employee */}
+            {!editingId && (
+              <div className="space-y-3">
+                <label className="flex items-center justify-between gap-3 cursor-pointer group">
+                  <div>
+                    <p className="text-sm font-medium text-[color:var(--text-primary)]">{t("inviteToggleLabel")}</p>
+                    <p className="text-xs text-[color:var(--text-muted)] mt-0.5">{t("inviteToggleHint")}</p>
+                  </div>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={form.invite}
+                    onClick={() => setForm({ ...form, invite: !form.invite, email: !form.invite ? form.email : "" })}
+                    className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out ${
+                      form.invite ? "bg-[color:var(--primary)]" : "bg-[color:var(--border-strong)]"
+                    }`}
+                  >
+                    <span
+                      className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-sm ring-0 transition-transform duration-200 ease-in-out ${
+                        form.invite ? "translate-x-5" : "translate-x-0"
+                      }`}
+                    />
+                  </button>
+                </label>
+                {form.invite && (
+                  <Input
+                    label={t("emailLabel")}
+                    type="email"
+                    placeholder={t("emailPlaceholder")}
+                    value={form.email}
+                    onChange={(e) => setForm({ ...form, email: e.target.value })}
+                    required
+                  />
+                )}
+              </div>
             )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

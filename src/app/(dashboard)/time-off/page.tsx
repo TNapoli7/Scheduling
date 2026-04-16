@@ -59,6 +59,8 @@ export default function TimeOffPage() {
   const [newEnd, setNewEnd] = useState("");
   const [newReason, setNewReason] = useState("");
   const [formError, setFormError] = useState<string | null>(null);
+  /** When admin creates on behalf of an employee — "self" means own request */
+  const [newOnBehalf, setNewOnBehalf] = useState<string>("self");
 
   const supabase = createClient();
   const isManager = myRole === "admin" || myRole === "manager";
@@ -122,6 +124,11 @@ export default function TimeOffPage() {
       setFormError(t("errorAuth"));
       return;
     }
+
+    // Who is the target employee?
+    const isOnBehalf = isManager && newOnBehalf !== "self";
+    const targetUserId = isOnBehalf ? newOnBehalf : myId;
+
     // Defensive: if end before start on full_day, align end to start
     const effectiveEnd =
       newPeriod !== "full_day"
@@ -131,17 +138,22 @@ export default function TimeOffPage() {
         : newEnd;
     setSaving(true);
 
+    // When admin creates on behalf → auto-approved immediately
+    const autoApproved = isOnBehalf;
+
     const { error: insertError } = await supabase
       .from("time_off_requests")
       .insert({
-        user_id: myId,
+        user_id: targetUserId,
         org_id: orgId,
         start_date: newStart,
         end_date: effectiveEnd,
         type: newType,
         period: newPeriod,
         reason: newReason || null,
-        status: "pending",
+        status: autoApproved ? "approved" : "pending",
+        reviewed_by: autoApproved ? myId : null,
+        reviewed_at: autoApproved ? new Date().toISOString() : null,
       });
 
     if (insertError) {
@@ -151,21 +163,38 @@ export default function TimeOffPage() {
       return;
     }
 
-    logActivity("timeoff_requested", "timeoff", null, { type: newType, start_date: newStart, end_date: effectiveEnd });
+    logActivity(
+      autoApproved ? "timeoff_created_by_admin" : "timeoff_requested",
+      "timeoff",
+      null,
+      { type: newType, start_date: newStart, end_date: effectiveEnd, on_behalf_of: isOnBehalf ? targetUserId : undefined },
+    );
 
-    // Notify managers
-    const managers = employees.filter((e) => e.role === "admin" || e.role === "manager");
-    if (managers.length > 0 && isManager === false) {
-      const me = employees.find((e) => e.id === myId);
-      for (const mgr of managers) {
-        await supabase.from("notifications").insert({
-          user_id: mgr.id,
-          type: "time_off_request",
-          title: "Novo pedido de férias",
-          body: `${me?.full_name || "Funcionário"} pediu ${TYPE_LABELS[newType]?.toLowerCase()}${newPeriod !== "full_day" ? ` (${PERIOD_LABELS[newPeriod]?.toLowerCase()})` : ""} de ${formatDate(newStart)}${newPeriod === "full_day" ? ` a ${formatDate(effectiveEnd)}` : ""}.`,
-          metadata: { requester_id: myId, type: newType, period: newPeriod, start_date: newStart, end_date: effectiveEnd },
-        });
+    if (!isOnBehalf) {
+      // Notify managers (regular employee flow)
+      const managers = employees.filter((e) => e.role === "admin" || e.role === "manager");
+      if (managers.length > 0 && isManager === false) {
+        const me = employees.find((e) => e.id === myId);
+        for (const mgr of managers) {
+          await supabase.from("notifications").insert({
+            user_id: mgr.id,
+            type: "time_off_request",
+            title: "Novo pedido de férias",
+            body: `${me?.full_name || "Funcionário"} pediu ${TYPE_LABELS[newType]?.toLowerCase()}${newPeriod !== "full_day" ? ` (${PERIOD_LABELS[newPeriod]?.toLowerCase()})` : ""} de ${formatDate(newStart)}${newPeriod === "full_day" ? ` a ${formatDate(effectiveEnd)}` : ""}.`,
+            metadata: { requester_id: myId, type: newType, period: newPeriod, start_date: newStart, end_date: effectiveEnd },
+          });
+        }
       }
+    } else {
+      // Notify the employee that admin booked time-off for them
+      const emp = employees.find((e) => e.id === targetUserId);
+      await supabase.from("notifications").insert({
+        user_id: targetUserId,
+        type: "time_off_approved",
+        title: t("notifAdminBookedTitle"),
+        body: `${TYPE_LABELS[newType]} ${formatDate(newStart)}${newPeriod === "full_day" ? ` a ${formatDate(effectiveEnd)}` : ""} — ${t("notifAdminBookedBody")}`,
+        metadata: { booked_by: myId, type: newType, period: newPeriod, start_date: newStart, end_date: effectiveEnd },
+      });
     }
 
     setShowNew(false);
@@ -174,6 +203,7 @@ export default function TimeOffPage() {
     setNewStart("");
     setNewEnd("");
     setNewReason("");
+    setNewOnBehalf("self");
     setSaving(false);
     fetchData();
   }
@@ -435,8 +465,32 @@ export default function TimeOffPage() {
       )}
 
       {/* New request modal */}
-      <Modal open={showNew} onClose={() => setShowNew(false)} title={t("modalTitle")} size="sm">
+      <Modal open={showNew} onClose={() => setShowNew(false)} title={isManager ? t("modalTitleAdmin") : t("modalTitle")} size="sm">
         <div className="space-y-4">
+          {/* Employee picker — admin/manager only */}
+          {isManager && employees.length > 0 && (
+            <Select
+              label={t("onBehalfLabel")}
+              value={newOnBehalf}
+              onChange={(e) => setNewOnBehalf(e.target.value)}
+            >
+              <option value="self">{t("onBehalfSelf")}</option>
+              {employees
+                .filter((e) => e.id !== myId && e.is_active)
+                .sort((a, b) => (a.full_name || "").localeCompare(b.full_name || ""))
+                .map((e) => (
+                  <option key={e.id} value={e.id}>{e.full_name}</option>
+                ))}
+            </Select>
+          )}
+
+          {/* Auto-approved notice when booking on behalf */}
+          {isManager && newOnBehalf !== "self" && (
+            <div className="text-xs rounded-md px-3 py-2 border border-[color:var(--primary-soft)] bg-[color:var(--primary-soft)] text-[color:var(--primary)]">
+              {t("autoApprovedNotice")}
+            </div>
+          )}
+
           <div className="grid grid-cols-2 gap-3">
             <Select
               label={t("typeLabel")}
@@ -503,7 +557,23 @@ export default function TimeOffPage() {
               end_date: newPeriod !== "full_day" ? newStart : newEnd,
               period: newPeriod,
             } as TimeOffRequest & { profile?: Profile });
-            const afterRemaining = remainingDays - days;
+
+            // When booking on behalf, compute the TARGET employee's balance
+            const isOnBehalf = isManager && newOnBehalf !== "self";
+            const targetId = isOnBehalf ? newOnBehalf : myId;
+            const targetQuota = isOnBehalf
+              ? (employees.find((e) => e.id === targetId)?.vacation_quota ?? 22)
+              : vacationQuota;
+            const targetUsed = requests.filter(
+              (r) =>
+                r.user_id === targetId &&
+                r.type === "ferias" &&
+                r.status === "approved" &&
+                new Date(r.start_date).getFullYear() === currentYear
+            ).reduce((sum, r) => sum + countDays(r), 0);
+            const targetRemaining = targetQuota - targetUsed;
+
+            const afterRemaining = targetRemaining - days;
             const overBudget = afterRemaining < 0;
             return (
               <div

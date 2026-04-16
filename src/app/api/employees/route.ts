@@ -77,38 +77,62 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Sem permissão" }, { status: 403 });
     }
 
-    if (!email || !full_name) {
+    if (!full_name) {
       return NextResponse.json(
-        { error: "Email e nome são obrigatórios" },
+        { error: "Nome é obrigatório" },
         { status: 400 }
       );
     }
 
     const admin = createAdminClient();
 
-    // 1. Look up or create the auth user. If the email already exists in
-    //    the auth directory, we re-use their user_id and just add a
-    //    membership to this org.
     let targetUserId: string | null = null;
+    let existing: { id: string; email?: string } | undefined;
 
-    // Find existing auth user by email (admin listUsers is paginated, but
-    // email is unique, so single lookup works with filter).
-    const { data: existingList } = await admin.auth.admin.listUsers({
-      page: 1,
-      perPage: 200,
-    });
-    const existing = existingList?.users?.find(
-      (u) => u.email?.toLowerCase() === email.toLowerCase()
-    );
+    if (email) {
+      // ── Flow A: Employee WITH email ─────────────────────────────────
+      // Look up or create an auth user. If the email already exists in
+      // the auth directory, re-use their user_id and add a membership.
+      const { data: existingList } = await admin.auth.admin.listUsers({
+        page: 1,
+        perPage: 200,
+      });
+      existing = existingList?.users?.find(
+        (u) => u.email?.toLowerCase() === email.toLowerCase()
+      );
 
-    if (existing) {
-      targetUserId = existing.id;
+      if (existing) {
+        targetUserId = existing.id;
+      } else {
+        const { data: authData, error: authError } =
+          await admin.auth.admin.createUser({
+            email,
+            email_confirm: true,
+            user_metadata: { full_name, role: role || "employee" },
+          });
+        if (authError) {
+          return NextResponse.json({ error: authError.message }, { status: 500 });
+        }
+        if (!authData.user) {
+          return NextResponse.json(
+            { error: "Erro ao criar utilizador" },
+            { status: 500 }
+          );
+        }
+        targetUserId = authData.user.id;
+      }
     } else {
+      // ── Flow B: Employee WITHOUT email (offline-only) ───────────────
+      // Create an auth user with a placeholder email so we get a valid
+      // UUID to link profile + membership. The placeholder is not a real
+      // inbox — the employee can't log in until the admin later adds a
+      // real email and sends an invite.
+      const placeholderEmail = `noinvite+${crypto.randomUUID().slice(0, 8)}@shiftera.app`;
       const { data: authData, error: authError } =
         await admin.auth.admin.createUser({
-          email,
+          email: placeholderEmail,
           email_confirm: true,
-          user_metadata: { full_name, role: role || "employee" },
+          user_metadata: { full_name, role: role || "employee", placeholder: true },
         });
       if (authError) {
         return NextResponse.json({ error: authError.message }, { status: 500 });
@@ -127,7 +151,7 @@ export async function POST(request: NextRequest) {
     await admin
       .from("profiles")
       .upsert(
-        { id: targetUserId, email },
+        { id: targetUserId, email: email || null },
         { onConflict: "id", ignoreDuplicates: true }
       );
 
@@ -185,7 +209,7 @@ export async function POST(request: NextRequest) {
         p_action: existing ? "employee_invited" : "employee_created",
         p_entity_type: "employee",
         p_entity_id: targetUserId,
-        p_details: { email, full_name, org_id: activeOrgId },
+        p_details: { email: email || null, full_name, org_id: activeOrgId },
       })
       .then(({ error: logErr }) => {
         if (logErr) console.warn("[activity-log]", logErr.message);
