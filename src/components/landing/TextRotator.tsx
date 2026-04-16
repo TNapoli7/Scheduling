@@ -77,10 +77,12 @@ export function TextRotator({
 
   return (
     <span
-      className={`relative inline-flex justify-center whitespace-nowrap align-baseline overflow-hidden ${className}`}
+      className={`relative inline-block whitespace-nowrap align-baseline`}
       style={{
         width: containerWidth ? `${containerWidth}px` : "auto",
+        height: "1.2em",
         transition: `width ${duration}ms ${cubic}`,
+        overflow: "hidden",
       }}
     >
       {words.map((word, idx) => {
@@ -95,7 +97,7 @@ export function TextRotator({
             key={word}
             ref={(el) => { wordRefs.current[idx] = el; }}
             aria-hidden={!isActive}
-            className="inline-flex justify-center"
+            className={`inline-block ${className}`}
             style={{
               position: idx === 0 ? "relative" : "absolute",
               left: 0,
@@ -105,7 +107,7 @@ export function TextRotator({
               transform: `translateY(${translateY})`,
               transition: `opacity ${duration}ms ${cubic}, filter ${duration}ms ${cubic}, transform ${duration}ms ${cubic}`,
               // The first word stays position:relative so the container keeps
-              // a fallback intrinsic height even before JS measures anything.
+              // a fallback intrinsic width even before JS measures anything.
               // All others are absolute-stacked on top.
               visibility: idx === 0 && !isActive ? "hidden" : "visible",
             }}
