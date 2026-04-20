@@ -59,7 +59,7 @@
     "noAccount": "Don't have an account?",
     "startTrial": "Start free trial",
     "backToSite": "Back to site",
-    "emailPlaceholder": "name@pharmacy.com",
+    "emailPlaceholder": "name@company.com",
     "passwordPlaceholder": "Your password",
     "register": {
       "backToSite": "Back to site",
@@ -892,10 +892,13 @@
     "avatarUpdated": "Profile photo updated.",
     "avatarRemoved": "Photo removed.",
     "changePasswordTitle": "Change password",
-    "changePasswordHint": "Minimum 8 characters. You will stay signed in.",
+    "changePasswordHint": "Enter your current password and choose a new one. Minimum 8 characters.",
+    "currentPassword": "Current password",
     "newPassword": "New password",
     "confirmPassword": "Confirm",
     "changePasswordButton": "Change password",
+    "currentPasswordRequired": "Please enter your current password.",
+    "currentPasswordWrong": "Current password is incorrect.",
     "passwordMinLength": "Password must be at least 8 characters.",
     "passwordMismatch": "Passwords do not match.",
     "passwordChanged": "Password changed successfully."
@@ -933,20 +936,16 @@
   "chatWidget": {
     "openChat": "Open support chat",
     "closeChat": "Close chat",
-    "welcomePt": "Hi there! How can I help you with Shiftera?",
-    "canHelpMore": "Can I help you with anything else?",
-    "noAnswer": "Sorry, I couldn't find an answer to that question. Would you like to contact support?",
-    "error": "Sorry, an error occurred. Please try again.",
-    "typeQuestion": "Type your question...",
-    "needsHelp": "Need more help?",
-    "contactForm": {
-      "name": "Name",
-      "email": "Email",
-      "message": "Message",
-      "submit": "Send",
-      "sentSuccess": "Thank you for your message! Our support team will get back to you shortly.",
-      "sendError": "Failed to send message. Please try again."
-    }
+    "welcomeMessage": "Hi there! How can I help you with Shiftera?",
+    "helpMore": "Can I help you with anything else?",
+    "errorNoAnswer": "Sorry, I couldn't find an answer. Would you like to contact support?",
+    "thankYou": "Thank you! Our team will get back to you shortly.",
+    "inputPlaceholder": "Type your question...",
+    "contactFormTitle": "Contact support",
+    "nameLabel": "Name",
+    "emailLabel": "Email",
+    "messageLabel": "Message",
+    "submitButton": "Send"
   },
   "industries": {
     "common": {

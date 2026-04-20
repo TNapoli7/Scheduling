@@ -59,7 +59,7 @@
     "noAccount": "¿No tienes cuenta?",
     "startTrial": "Comenzar prueba gratuita",
     "backToSite": "Volver al sitio",
-    "emailPlaceholder": "nombre@farmacia.es",
+    "emailPlaceholder": "nombre@empresa.es",
     "passwordPlaceholder": "Tu contraseña",
     "register": {
       "backToSite": "Volver al sitio",
@@ -892,10 +892,13 @@
     "avatarUpdated": "Foto de perfil actualizada.",
     "avatarRemoved": "Foto eliminada.",
     "changePasswordTitle": "Cambiar contraseña",
-    "changePasswordHint": "Mínimo 8 caracteres. Mantendrás la sesión iniciada.",
+    "changePasswordHint": "Introduce tu contraseña actual y elige la nueva. Mínimo 8 caracteres.",
+    "currentPassword": "Contraseña actual",
     "newPassword": "Nueva contraseña",
     "confirmPassword": "Confirmar",
     "changePasswordButton": "Cambiar contraseña",
+    "currentPasswordRequired": "Introduce tu contraseña actual.",
+    "currentPasswordWrong": "La contraseña actual es incorrecta.",
     "passwordMinLength": "La contraseña debe tener al menos 8 caracteres.",
     "passwordMismatch": "Las contraseñas no coinciden.",
     "passwordChanged": "Contraseña cambiada correctamente."
@@ -933,20 +936,16 @@
   "chatWidget": {
     "openChat": "Abrir chat de soporte",
     "closeChat": "Cerrar chat",
-    "welcomePt": "¡Hola! ¿Cómo puedo ayudarte con Shiftera?",
-    "canHelpMore": "¿Puedo ayudarte con algo más?",
-    "noAnswer": "Lo siento, no pude encontrar una respuesta a esa pregunta. ¿Deseas contactar con el soporte?",
-    "error": "Lo siento, ocurrió un error. Por favor, inténtelo de nuevo.",
-    "typeQuestion": "Escribe tu pregunta...",
-    "needsHelp": "¿Necesitas más ayuda?",
-    "contactForm": {
-      "name": "Nombre",
-      "email": "Correo electrónico",
-      "message": "Mensaje",
-      "submit": "Enviar",
-      "sentSuccess": "¡Gracias por tu mensaje! Nuestro equipo de soporte se pondrá en contacto pronto.",
-      "sendError": "Error al enviar el mensaje. Por favor, inténtelo de nuevo."
-    }
+    "welcomeMessage": "¡Hola! ¿Cómo puedo ayudarte con Shiftera?",
+    "helpMore": "¿Puedo ayudarte con algo más?",
+    "errorNoAnswer": "No encontré respuesta. ¿Quieres contactar con soporte?",
+    "thankYou": "¡Gracias! Nuestro equipo te responderá pronto.",
+    "inputPlaceholder": "Escribe tu pregunta...",
+    "contactFormTitle": "Contactar soporte",
+    "nameLabel": "Nombre",
+    "emailLabel": "Correo electrónico",
+    "messageLabel": "Mensaje",
+    "submitButton": "Enviar"
   },
   "industries": {
     "common": {

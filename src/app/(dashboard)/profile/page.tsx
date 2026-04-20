@@ -52,6 +52,7 @@ export default function ProfilePage() {
 
   // Password change state (separate block so validation doesn't couple with
   // the personal-info save)
+  const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [changingPwd, setChangingPwd] = useState(false);
@@ -177,6 +178,10 @@ export default function ProfilePage() {
 
   async function changePassword() {
     setPwdMsg(null);
+    if (!currentPassword) {
+      setPwdMsg({ type: "error", text: t("currentPasswordRequired") });
+      return;
+    }
     if (newPassword.length < 8) {
       setPwdMsg({ type: "error", text: t("passwordMinLength") });
       return;
@@ -186,6 +191,18 @@ export default function ProfilePage() {
       return;
     }
     setChangingPwd(true);
+
+    // Verify current password first
+    const { error: verifyError } = await supabase.auth.signInWithPassword({
+      email,
+      password: currentPassword,
+    });
+    if (verifyError) {
+      setChangingPwd(false);
+      setPwdMsg({ type: "error", text: t("currentPasswordWrong") });
+      return;
+    }
+
     const { error } = await supabase.auth.updateUser({ password: newPassword });
     setChangingPwd(false);
     if (error) {
@@ -193,6 +210,7 @@ export default function ProfilePage() {
       return;
     }
     logActivity("password_changed", "auth");
+    setCurrentPassword("");
     setNewPassword("");
     setConfirmPassword("");
     setPwdMsg({ type: "success", text: t("passwordChanged") });
@@ -339,6 +357,14 @@ export default function ProfilePage() {
             </p>
           </div>
 
+          <Input
+            label={t("currentPassword")}
+            type="password"
+            value={currentPassword}
+            onChange={(e) => setCurrentPassword(e.target.value)}
+            autoComplete="current-password"
+          />
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input
               label={t("newPassword")}
@@ -373,7 +399,7 @@ export default function ProfilePage() {
             <Button
               onClick={changePassword}
               loading={changingPwd}
-              disabled={!newPassword || !confirmPassword}
+              disabled={!currentPassword || !newPassword || !confirmPassword}
             >
               {t("changePasswordButton")}
             </Button>

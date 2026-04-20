@@ -1,7 +1,5 @@
 import type { Metadata } from "next";
 import { IndustryPage } from "@/components/lp/IndustryPage";
-import { LpNavbar } from "@/components/lp/LpNavbar";
-import { LpFooter } from "@/components/lp/LpFooter";
 
 export const metadata: Metadata = {
   title: "Shiftera para Hotéis · Receção 24/7, housekeeping e F&B",
@@ -11,18 +9,14 @@ export const metadata: Metadata = {
 
 export default function HoteisPage() {
   return (
-    <>
-      <LpNavbar />
-      <IndustryPage
-        data={{
-          key: "hoteis",
-          emoji: "🏨",
-          featureCount: 6,
-          useCaseCount: 4,
-          faqCount: 5,
-        }}
-      />
-      <LpFooter />
-    </>
+    <IndustryPage
+      data={{
+        key: "hoteis",
+        emoji: "🏨",
+        featureCount: 6,
+        useCaseCount: 4,
+        faqCount: 5,
+      }}
+    />
   );
 }

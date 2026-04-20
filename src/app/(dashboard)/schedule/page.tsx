@@ -1329,6 +1329,170 @@ export default function SchedulePage() {
             </Card>
           );
         })()
+      ) : viewMode === "week" ? (
+        /* ──────────────────────────────────────────────────────────
+         * WEEKLY TIMELINE VIEW — Google Calendar style.
+         * 7 day columns with vertical time axis (30-min slots).
+         * ────────────────────────────────────────────────────────── */
+        (() => {
+          // Collect all entries for visible days
+          const weekEntries = entries.filter((e) => visibleDays.includes(e.date));
+
+          // Auto-detect time range from all shifts in the week
+          let minMinutes = 24 * 60;
+          let maxMinutes = 0;
+          for (const entry of weekEntries) {
+            if (!entry.shift_template) continue;
+            const [sh, sm] = entry.shift_template.start_time.split(":").map(Number);
+            const [eh, em] = entry.shift_template.end_time.split(":").map(Number);
+            const startM = sh * 60 + (sm || 0);
+            let endM = eh * 60 + (em || 0);
+            if (endM <= startM) endM += 24 * 60;
+            if (startM < minMinutes) minMinutes = startM;
+            if (endM > maxMinutes) maxMinutes = endM;
+          }
+
+          // Default range if no entries
+          if (minMinutes >= maxMinutes) {
+            minMinutes = 7 * 60; // 07:00
+            maxMinutes = 22 * 60; // 22:00
+          }
+
+          // Add 1h margin and round to 30min
+          const rangeStart = Math.max(0, Math.floor((minMinutes - 60) / 30) * 30);
+          const rangeEnd = Math.min(24 * 60, Math.ceil((maxMinutes + 60) / 30) * 30);
+
+          // Generate 30-min slot labels
+          const slots: { minutes: number; label: string }[] = [];
+          for (let m = rangeStart; m < rangeEnd; m += 30) {
+            const hh = String(Math.floor(m / 60) % 24).padStart(2, "0");
+            const mm = String(m % 60).padStart(2, "0");
+            slots.push({ minutes: m, label: `${hh}:${mm}` });
+          }
+
+          const slotHeight = 40;
+          const totalHeight = slots.length * slotHeight;
+
+          return (
+            <Card>
+              <div className="p-3 sm:p-4 overflow-x-auto">
+                <div className="flex" style={{ minWidth: 700 }}>
+                  {/* Time column */}
+                  <div
+                    className="shrink-0 border-r border-[color:var(--border-light)] pr-2"
+                    style={{ width: 56 }}
+                  >
+                    <div className="h-12" /> {/* header spacer */}
+                    <div className="relative" style={{ height: totalHeight }}>
+                      {slots.map((slot, i) => (
+                        <div
+                          key={slot.minutes}
+                          className="absolute left-0 right-0 text-[10px] text-[color:var(--text-muted)] text-right pr-1 leading-none"
+                          style={{ top: i * slotHeight, height: slotHeight }}
+                        >
+                          {slot.minutes % 60 === 0 ? slot.label : ""}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Day columns */}
+                  {visibleDays.map((day) => {
+                    const dayEntries = weekEntries
+                      .filter((e) => e.date === day)
+                      .sort((a, b) =>
+                        (a.shift_template?.start_time || "").localeCompare(
+                          b.shift_template?.start_time || ""
+                        )
+                      );
+                    const dayNum = parseInt(day.slice(8));
+                    const dow = dayOfWeekPt(day, (key: string) => d(key));
+                    const weekend = isWeekend(day);
+                    const isToday = day === new Date().toISOString().slice(0, 10);
+
+                    return (
+                      <div
+                        key={day}
+                        className="flex-1 border-r border-[color:var(--border-light)] last:border-r-0"
+                        style={{ minWidth: 90 }}
+                      >
+                        {/* Day header */}
+                        <div
+                          className="h-12 flex flex-col items-center justify-center border-b border-[color:var(--border-light)]"
+                          style={{
+                            background: isToday ? "var(--accent-soft)" : weekend ? "var(--surface-sunken)" : undefined,
+                          }}
+                        >
+                          <span className="text-[10px] uppercase font-semibold text-[color:var(--text-muted)]">
+                            {dow}
+                          </span>
+                          <span
+                            className="text-sm font-bold"
+                            style={{
+                              color: isToday ? "var(--accent)" : "var(--text-primary)",
+                            }}
+                          >
+                            {dayNum}
+                          </span>
+                        </div>
+                        {/* Timeline body */}
+                        <div className="relative" style={{ height: totalHeight }}>
+                          {/* Grid lines */}
+                          {slots.map((slot, i) => (
+                            <div
+                              key={slot.minutes}
+                              className={`absolute left-0 right-0 border-t ${
+                                slot.minutes % 60 === 0
+                                  ? "border-[color:var(--border)]"
+                                  : "border-[color:var(--border-light)] border-dashed"
+                              }`}
+                              style={{ top: i * slotHeight }}
+                            />
+                          ))}
+                          {/* Shift blocks */}
+                          {dayEntries.map((entry) => {
+                            if (!entry.shift_template) return null;
+                            const [sh, sm] = entry.shift_template.start_time.split(":").map(Number);
+                            const [eh, em] = entry.shift_template.end_time.split(":").map(Number);
+                            const startM = sh * 60 + (sm || 0);
+                            let endM = eh * 60 + (em || 0);
+                            if (endM <= startM) endM += 24 * 60;
+
+                            const top = ((startM - rangeStart) / 30) * slotHeight;
+                            const height = ((endM - startM) / 30) * slotHeight;
+                            const emp = employees.find((e) => e.id === entry.user_id);
+
+                            return (
+                              <div
+                                key={entry.id}
+                                className="absolute left-1 right-1 rounded-md text-white text-[9px] font-medium px-1.5 py-0.5 overflow-hidden shadow-sm cursor-pointer hover:opacity-90 transition-opacity"
+                                style={{
+                                  top,
+                                  height: Math.max(height, slotHeight * 0.7),
+                                  backgroundColor: entry.shift_template.color || "#6B7280",
+                                }}
+                                onClick={() =>
+                                  schedule?.status === "draft" && emp &&
+                                  openAssignModal(emp.id, day, emp.full_name)
+                                }
+                                title={`${emp?.full_name || ""} · ${entry.shift_template.name} · ${entry.shift_template.start_time.slice(0, 5)}–${entry.shift_template.end_time.slice(0, 5)}`}
+                              >
+                                <div className="leading-tight truncate">{emp?.full_name?.split(" ")[0]}</div>
+                                <div className="leading-tight opacity-80 truncate">
+                                  {entry.shift_template.start_time.slice(0, 5)}–{entry.shift_template.end_time.slice(0, 5)}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </Card>
+          );
+        })()
       ) : layoutMode === "byDay" ? (
         <Card>
           <div className="p-3 sm:p-4">

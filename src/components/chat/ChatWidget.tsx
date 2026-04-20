@@ -20,7 +20,7 @@ interface SearchResult {
 
 type WidgetStep = 'chat' | 'contact';
 
-const SHIFTERA_ORANGE = '#E8850A';
+const SHIFTERA_ACCENT = '#0F1B2D';
 
 export function ChatWidget() {
   const t = useTranslations('chatWidget');
@@ -147,7 +147,7 @@ export function ChatWidget() {
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="chat-widget-button"
-        style={{ backgroundColor: SHIFTERA_ORANGE }}
+        style={{ backgroundColor: SHIFTERA_ACCENT }}
         title={isOpen ? t("closeChat") : t("openChat")}
         aria-label={isOpen ? t("closeChat") : t("openChat")}
       >
@@ -158,7 +158,7 @@ export function ChatWidget() {
       {isOpen && (
         <div className="chat-widget-panel">
           {/* Header */}
-          <div className="chat-widget-header" style={{ backgroundColor: SHIFTERA_ORANGE }}>
+          <div className="chat-widget-header" style={{ backgroundColor: SHIFTERA_ACCENT }}>
             <div className="chat-widget-title">
               <MessageCircle size={20} />
               <span>Shiftera Support</span>
@@ -218,7 +218,7 @@ export function ChatWidget() {
                   type="submit"
                   disabled={isLoading || !input.trim()}
                   className="chat-submit-button"
-                  style={{ backgroundColor: SHIFTERA_ORANGE }}
+                  style={{ backgroundColor: SHIFTERA_ACCENT }}
                 >
                   <Send size={18} />
                 </button>
@@ -265,7 +265,7 @@ export function ChatWidget() {
                   type="submit"
                   disabled={submitStatus === 'loading'}
                   className="contact-submit"
-                  style={{ backgroundColor: SHIFTERA_ORANGE }}
+                  style={{ backgroundColor: SHIFTERA_ACCENT }}
                 >
                   {submitStatus === 'loading' ? t('submitButton') : t('submitButton')}
                 </button>

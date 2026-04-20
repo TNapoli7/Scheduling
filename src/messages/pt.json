@@ -59,7 +59,7 @@
     "noAccount": "Ainda não tens conta?",
     "startTrial": "Começar trial grátis",
     "backToSite": "Voltar ao site",
-    "emailPlaceholder": "nome@farmacia.pt",
+    "emailPlaceholder": "nome@empresa.pt",
     "passwordPlaceholder": "A tua password",
     "register": {
       "backToSite": "Voltar ao site",
@@ -72,7 +72,7 @@
       "companyName": "Nome da empresa",
       "companyNamePlaceholder": "Farmácia Central",
       "workEmail": "Email de trabalho",
-      "workEmailPlaceholder": "ana@farmacia.pt",
+      "workEmailPlaceholder": "ana@empresa.pt",
       "password": "Password",
       "passwordPlaceholder": "Mínimo 8 caracteres",
       "createAccount": "Iniciar trial de 14 dias",
@@ -892,10 +892,13 @@
     "avatarUpdated": "Foto de perfil atualizada.",
     "avatarRemoved": "Foto removida.",
     "changePasswordTitle": "Alterar palavra-passe",
-    "changePasswordHint": "Mínimo 8 caracteres. Vais manter a sessão iniciada.",
+    "changePasswordHint": "Introduz a tua password atual e escolhe a nova. Mínimo 8 caracteres.",
+    "currentPassword": "Password atual",
     "newPassword": "Nova palavra-passe",
     "confirmPassword": "Confirmar",
     "changePasswordButton": "Alterar palavra-passe",
+    "currentPasswordRequired": "Introduz a tua password atual.",
+    "currentPasswordWrong": "A password atual está incorreta.",
     "passwordMinLength": "Password tem de ter pelo menos 8 caracteres.",
     "passwordMismatch": "As passwords não coincidem.",
     "passwordChanged": "Password alterada com sucesso."
@@ -933,20 +936,16 @@
   "chatWidget": {
     "openChat": "Abrir chat de suporte",
     "closeChat": "Fechar chat",
-    "welcomePt": "Olá! Como posso ajudá-lo com o Shiftera?",
-    "canHelpMore": "Posso ajudá-lo com mais alguma coisa?",
-    "noAnswer": "Desculpe, não encontrei uma resposta para essa pergunta. Você pode entrar em contato com o suporte?",
-    "error": "Desculpe, ocorreu um erro. Por favor, tente novamente.",
-    "typeQuestion": "Digite sua pergunta...",
-    "needsHelp": "Precisa de mais ajuda?",
-    "contactForm": {
-      "name": "Nome",
-      "email": "Email",
-      "message": "Mensagem",
-      "submit": "Enviar",
-      "sentSuccess": "Thank you for your message! Our support team will get back to you shortly.",
-      "sendError": "Failed to send message. Please try again."
-    }
+    "welcomeMessage": "Olá! Como posso ajudar com o Shiftera?",
+    "helpMore": "Posso ajudar com mais alguma coisa?",
+    "errorNoAnswer": "Não encontrei resposta para essa pergunta. Quer contactar o suporte?",
+    "thankYou": "Obrigado pela mensagem! A nossa equipa responde em breve.",
+    "inputPlaceholder": "Escreva a sua pergunta...",
+    "contactFormTitle": "Contactar suporte",
+    "nameLabel": "Nome",
+    "emailLabel": "Email",
+    "messageLabel": "Mensagem",
+    "submitButton": "Enviar"
   },
   "industries": {
     "common": {
