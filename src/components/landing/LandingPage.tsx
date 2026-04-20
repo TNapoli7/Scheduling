@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, Fragment } from "react";
+import { useState, useEffect, useCallback, Fragment, type ReactNode } from "react";
 import Link from "next/link";
 import { ChatWidget } from "@/components/chat/ChatWidget";
 import "./landing.css";
@@ -31,7 +31,7 @@ const LOGOS = [
   { name: "Farmácia do Rossio", glyph: "pharmacy" },
 ];
 
-const LOGO_SVGS: Record<string, JSX.Element> = {
+const LOGO_SVGS: Record<string, ReactNode> = {
   pharmacy: <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M10 4v12M4 10h12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>,
   clinic: <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7" stroke="currentColor" strokeWidth="1.6"/><path d="M10 6v8M6 10h8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>,
   restaurant: <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M5 3v14M8 3v6a3 3 0 01-3 3M15 3v14M13 3c0 4 0 6 2 6" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>,
