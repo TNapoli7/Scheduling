@@ -10,21 +10,17 @@ import {
   MIN_PASSWORD_LENGTH,
 } from "@/lib/password-policy";
 import { useTranslations } from "next-intl";
-import { FakeBrandLogo, type BrandKey } from "@/components/lp/FakeBrandLogo";
-import { ShifteraLockup } from "@/components/lp/ShifteraLogo";
+import { ShifteraLogo } from "@/components/lp/ShifteraLogo";
 import { PasswordStrength } from "@/components/ui/password-strength";
+import "../auth.css";
 
-type FakeLogo = { name: string; brand: BrandKey };
-
-// Placeholder social-proof brands. Each uses a unique abstract SVG mark
-// (see FakeBrandLogo) — no real company is claimed. No taglines — kept minimal.
-const fakeLogos: FakeLogo[] = [
-  { name: "Farmácia Aurora", brand: "aurora" },
-  { name: "Clínica Vida+", brand: "vida-plus" },
-  { name: "Dental Porto", brand: "dental-porto" },
-  { name: "LusoMed", brand: "luso-med" },
-  { name: "Fisio Expert", brand: "fisio-expert" },
-  { name: "Farmácia Central", brand: "central" },
+const SOCIAL_PROOF_BRANDS = [
+  "Farmácia Aurora",
+  "Clínica Vida+",
+  "Dental Porto",
+  "LusoMed",
+  "Fisio Expert",
+  "Farmácia Central",
 ];
 
 export default function RegisterPage() {
@@ -85,301 +81,496 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen flex bg-[color:var(--background)]">
-      {/* LEFT — form */}
-      <div className="w-full lg:w-1/2 flex flex-col justify-center px-6 md:px-12 lg:px-20 xl:px-28 py-12">
-        <div className="w-full max-w-md mx-auto lg:mx-0">
-          <Link
-            href="/"
-            className="flex w-fit items-center gap-1.5 text-sm text-[color:var(--text-secondary)] hover:text-[color:var(--primary)] transition-colors mb-10"
-          >
-            <svg
-              className="w-4 h-4"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
+    <div className="auth-page">
+      <div className="min-h-screen flex">
+        {/* LEFT — form */}
+        <div className="w-full lg:w-1/2 flex flex-col justify-center px-6 md:px-12 lg:px-20 xl:px-28 py-12">
+          <div className="w-full max-w-md mx-auto lg:mx-0">
+            <Link href="/" className="back-link mb-10">
+              <svg
+                className="w-4 h-4"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+              >
+                <path d="M15 18l-6-6 6-6" />
+              </svg>
+              {t("backToSite")}
+            </Link>
+
+            <Link
+              href="/"
+              className="flex w-fit mb-10 items-center gap-2.5"
+              aria-label="Shiftera home"
             >
-              <path d="M15 18l-6-6 6-6" />
-            </svg>
-            {t('backToSite')}
-          </Link>
+              <ShifteraLogo size={36} />
+              <span
+                className="font-bold tracking-tight"
+                style={{
+                  fontFamily: "var(--font-serif)",
+                  fontSize: "26px",
+                  color: "var(--ink)",
+                }}
+              >
+                Shiftera
+              </span>
+            </Link>
 
-          <Link href="/" className="flex w-fit mb-10" aria-label="Shiftera home">
-            <ShifteraLockup size={40} />
-          </Link>
-
-          {sentToEmail ? (
-            <div>
-              <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-[color:var(--success-soft)] mb-6">
-                <svg className="w-7 h-7 text-[color:var(--success)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                  <path d="M4 12l5 5L20 6" />
-                </svg>
-              </div>
-              <h1 className="font-display text-4xl font-semibold text-[color:var(--primary)] leading-tight">
-                {t('verifyEmail')}
-              </h1>
-              <p className="mt-4 text-[color:var(--text-secondary)]">
-                {t('emailSent')} <strong className="text-[color:var(--primary)]">{email}</strong>. {t('openLink')}
-              </p>
-              <p className="mt-6 text-sm text-[color:var(--text-muted)]">
-                {t('noEmail')}{" "}
-                <button
-                  type="button"
-                  onClick={() => setSentToEmail(false)}
-                  className="text-[color:var(--accent)] hover:underline"
+            {sentToEmail ? (
+              <div>
+                <div
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    width: 56,
+                    height: 56,
+                    borderRadius: "16px",
+                    background: "oklch(0.94 0.04 160)",
+                    marginBottom: "24px",
+                  }}
                 >
-                  {t('tryAnotherEmail')}
-                </button>
-                .
-              </p>
-            </div>
-          ) : (
-            <>
-              <h1 className="font-display text-4xl md:text-5xl font-semibold text-[color:var(--primary)] leading-[1.1]">
-                {t('startTrialLine1')}<br />
-                <span className="italic text-[color:var(--accent)]">{t('startTrialLine2')}</span>
-              </h1>
-              <p className="mt-4 text-[color:var(--text-secondary)]">
-                {t('noCard')}
-              </p>
-
-              <form onSubmit={handleRegister} className="mt-8 space-y-4">
-                {error && (
-                  <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
-                    {error}
-                  </div>
-                )}
-
-                <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wider text-[color:var(--text-secondary)] mb-1.5">
-                    {t('fullName')}
-                  </label>
-                  <input
-                    type="text"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    required
-                    placeholder={t('fullNamePlaceholder')}
-                    className="w-full h-12 px-4 rounded-xl border border-[color:var(--border)] bg-white text-[color:var(--primary)] placeholder:text-[color:var(--text-muted)] focus:outline-none focus:border-[color:var(--primary)] focus:ring-4 focus:ring-[color:var(--primary-soft)] transition-all"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wider text-[color:var(--text-secondary)] mb-1.5">
-                    {t('companyName')}
-                  </label>
-                  <input
-                    type="text"
-                    value={orgName}
-                    onChange={(e) => setOrgName(e.target.value)}
-                    required
-                    placeholder={t('companyNamePlaceholder')}
-                    className="w-full h-12 px-4 rounded-xl border border-[color:var(--border)] bg-white text-[color:var(--primary)] placeholder:text-[color:var(--text-muted)] focus:outline-none focus:border-[color:var(--primary)] focus:ring-4 focus:ring-[color:var(--primary-soft)] transition-all"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wider text-[color:var(--text-secondary)] mb-1.5">
-                    {t('workEmail')}
-                  </label>
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    placeholder={t('workEmailPlaceholder')}
-                    className="w-full h-12 px-4 rounded-xl border border-[color:var(--border)] bg-white text-[color:var(--primary)] placeholder:text-[color:var(--text-muted)] focus:outline-none focus:border-[color:var(--primary)] focus:ring-4 focus:ring-[color:var(--primary-soft)] transition-all"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wider text-[color:var(--text-secondary)] mb-1.5">
-                    {t('password')}
-                  </label>
-                  <input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    minLength={MIN_PASSWORD_LENGTH}
-                    placeholder={tPwd("placeholder", { min: MIN_PASSWORD_LENGTH })}
-                    className="w-full h-12 px-4 rounded-xl border border-[color:var(--border)] bg-white text-[color:var(--primary)] placeholder:text-[color:var(--text-muted)] focus:outline-none focus:border-[color:var(--primary)] focus:ring-4 focus:ring-[color:var(--primary-soft)] transition-all"
-                  />
-                  <PasswordStrength
-                    password={password}
-                    labels={{
-                      weak: t("strengthWeak"),
-                      fair: t("strengthFair"),
-                      strong: t("strengthStrong"),
+                  <svg
+                    style={{
+                      width: 28,
+                      height: 28,
+                      color: "oklch(0.40 0.10 160)",
                     }}
-                  />
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                  >
+                    <path d="M4 12l5 5L20 6" />
+                  </svg>
                 </div>
-
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full h-12 rounded-xl bg-[color:var(--accent)] text-white font-semibold hover:bg-[color:var(--accent-hover)] active:scale-[0.99] transition-all shadow-sm hover:shadow-md disabled:opacity-60 disabled:cursor-not-allowed"
+                <h1
+                  className="heading"
+                  style={{ fontSize: "clamp(2rem, 5vw, 2.6rem)" }}
                 >
-                  {loading ? t('creatingAccount') : t('createAccount')}
-                </button>
-
-                <p className="text-center text-xs text-[color:var(--text-muted)]">
-                  {t('agreeTerms')}{" "}
-                  <a href="/terms" className="underline hover:text-[color:var(--primary)]">
-                    {t('terms')}
-                  </a>{" "}
-                  e{" "}
-                  <a href="/privacy" className="underline hover:text-[color:var(--primary)]">
-                    {t('privacy')}
-                  </a>
+                  {t("verifyEmail")}
+                </h1>
+                <p
+                  className="mt-4"
+                  style={{ color: "var(--ink-soft)", fontSize: "15px" }}
+                >
+                  {t("emailSent")}{" "}
+                  <strong style={{ color: "var(--ink)" }}>{email}</strong>.{" "}
+                  {t("openLink")}
+                </p>
+                <p
+                  className="mt-6"
+                  style={{ fontSize: "14px", color: "var(--mute)" }}
+                >
+                  {t("noEmail")}{" "}
+                  <button
+                    type="button"
+                    onClick={() => setSentToEmail(false)}
+                    className="text-link"
+                    style={{ background: "none", border: "none", cursor: "pointer" }}
+                  >
+                    {t("tryAnotherEmail")}
+                  </button>
                   .
                 </p>
-              </form>
-
-              <p className="mt-8 text-sm text-center text-[color:var(--text-secondary)]">
-                {t('haveAccount')}{" "}
-                <Link
-                  href="/login"
-                  className="font-semibold text-[color:var(--primary)] hover:text-[color:var(--accent)] transition-colors"
+              </div>
+            ) : (
+              <>
+                <h1
+                  className="heading"
+                  style={{ fontSize: "clamp(2.2rem, 5vw, 3rem)" }}
                 >
-                  {t('signIn')}
-                </Link>
+                  {t("startTrialLine1")}
+                  <br />
+                  <em>{t("startTrialLine2")}</em>
+                </h1>
+                <p
+                  className="mt-4"
+                  style={{ color: "var(--ink-soft)", fontSize: "15px" }}
+                >
+                  {t("noCard")}
+                </p>
+
+                <form onSubmit={handleRegister} className="mt-8 space-y-4">
+                  {error && <div className="error-box">{error}</div>}
+
+                  <div>
+                    <label className="field-label">{t("fullName")}</label>
+                    <input
+                      type="text"
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      required
+                      placeholder={t("fullNamePlaceholder")}
+                      className="field-input"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="field-label">{t("companyName")}</label>
+                    <input
+                      type="text"
+                      value={orgName}
+                      onChange={(e) => setOrgName(e.target.value)}
+                      required
+                      placeholder={t("companyNamePlaceholder")}
+                      className="field-input"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="field-label">{t("workEmail")}</label>
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                      placeholder={t("workEmailPlaceholder")}
+                      className="field-input"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="field-label">{t("password")}</label>
+                    <input
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      minLength={MIN_PASSWORD_LENGTH}
+                      placeholder={tPwd("placeholder", {
+                        min: MIN_PASSWORD_LENGTH,
+                      })}
+                      className="field-input"
+                    />
+                    <PasswordStrength
+                      password={password}
+                      labels={{
+                        weak: t("strengthWeak"),
+                        fair: t("strengthFair"),
+                        strong: t("strengthStrong"),
+                      }}
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="btn-primary"
+                  >
+                    {loading ? t("creatingAccount") : t("createAccount")}
+                  </button>
+
+                  <p
+                    className="text-center"
+                    style={{
+                      fontSize: "12px",
+                      color: "var(--mute)",
+                    }}
+                  >
+                    {t("agreeTerms")}{" "}
+                    <a
+                      href="/terms"
+                      style={{ textDecoration: "underline" }}
+                      className="text-link"
+                    >
+                      {t("terms")}
+                    </a>{" "}
+                    e{" "}
+                    <a
+                      href="/privacy"
+                      style={{ textDecoration: "underline" }}
+                      className="text-link"
+                    >
+                      {t("privacy")}
+                    </a>
+                    .
+                  </p>
+                </form>
+
+                <p
+                  className="mt-8 text-sm text-center"
+                  style={{ color: "var(--ink-soft)" }}
+                >
+                  {t("haveAccount")}{" "}
+                  <Link href="/login" className="text-link">
+                    {t("signIn")}
+                  </Link>
+                </p>
+              </>
+            )}
+          </div>
+
+          {/* MOBILE — social proof (visible only below lg) */}
+          <div className="lg:hidden mt-10 panel-mobile mx-auto max-w-md w-full">
+            <SocialProofCompact brands={SOCIAL_PROOF_BRANDS} />
+          </div>
+        </div>
+
+        {/* RIGHT — social proof (desktop only) */}
+        <div className="hidden lg:flex w-1/2 panel-right">
+          <div className="dot-texture" />
+          <div className="glow glow-teal" />
+          <div className="glow glow-warm" />
+
+          <div className="relative z-10 flex flex-col justify-center px-12 xl:px-20 py-12 w-full">
+            <p
+              style={{
+                fontFamily: "var(--font-sans)",
+                fontSize: "11px",
+                fontWeight: 600,
+                textTransform: "uppercase",
+                letterSpacing: "0.1em",
+                color: "var(--auth-accent)",
+                marginBottom: "12px",
+              }}
+            >
+              Prova social
+            </p>
+            <h2
+              style={{
+                fontFamily: "var(--font-serif)",
+                fontSize: "clamp(1.6rem, 3vw, 2.2rem)",
+                fontWeight: 400,
+                color: "white",
+                lineHeight: 1.2,
+                maxWidth: "420px",
+              }}
+            >
+              Equipas que já
+              <br />
+              <em style={{ fontStyle: "italic", color: "var(--auth-accent)" }}>
+                fecharam o Excel.
+              </em>
+            </h2>
+
+            {/* Logo pills */}
+            <div
+              style={{
+                marginTop: "32px",
+                display: "flex",
+                flexWrap: "wrap",
+                gap: "10px",
+                maxWidth: "420px",
+              }}
+            >
+              {SOCIAL_PROOF_BRANDS.map((name) => (
+                <span key={name} className="logo-pill">
+                  <span
+                    style={{
+                      width: 8,
+                      height: 8,
+                      borderRadius: "50%",
+                      background: "var(--auth-accent)",
+                      display: "inline-block",
+                      flexShrink: 0,
+                    }}
+                  />
+                  {name}
+                </span>
+              ))}
+            </div>
+
+            {/* Testimonial */}
+            <div className="testimonial-card" style={{ marginTop: "40px" }}>
+              <div className="flex gap-1 mb-3">
+                {[0, 1, 2, 3, 4].map((s) => (
+                  <svg
+                    key={s}
+                    style={{ width: 14, height: 14, color: "var(--auth-accent)" }}
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path d="M10 1.5l2.6 5.3 5.9.85-4.25 4.15 1 5.85L10 14.9l-5.25 2.75 1-5.85L1.5 7.65l5.9-.85L10 1.5z" />
+                  </svg>
+                ))}
+              </div>
+              <p
+                style={{
+                  fontFamily: "var(--font-serif)",
+                  fontSize: "15px",
+                  color: "rgba(255,255,255,0.9)",
+                  lineHeight: 1.5,
+                }}
+              >
+                &ldquo;Passámos de 4 horas a montar escalas para 15 minutos.
+                Não voltamos ao Excel.&rdquo;
               </p>
-            </>
-          )}
-        </div>
-
-        {/* MOBILE — social proof (visible only below lg) */}
-        <div className="lg:hidden mt-10 rounded-2xl bg-[color:var(--surface-sunken)] border border-[color:var(--border)] px-6 py-8 mx-auto max-w-md">
-          <p className="text-xs font-semibold uppercase tracking-widest text-[color:var(--accent)] mb-2 text-center">
-            {t('socialProof')}
-          </p>
-          <h3 className="font-display text-xl font-semibold text-[color:var(--primary)] leading-tight text-center mb-6">
-            {t('socialProofTitle')}{" "}
-            <span className="italic text-[color:var(--accent)]">{t('closedExcel')}</span>
-          </h3>
-
-          {/* Logos compact row */}
-          <div className="grid grid-cols-3 gap-3 mb-6">
-            {fakeLogos.map((l) => (
-              <div key={l.name} className="flex flex-col items-center text-center">
-                <div className="mb-1">
-                  <FakeBrandLogo brand={l.brand} size={40} />
+              <div className="flex items-center gap-3 mt-5">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="https://randomuser.me/api/portraits/women/28.jpg"
+                  alt="Ana Rodrigues"
+                  style={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: "50%",
+                    objectFit: "cover",
+                    border: "2px solid rgba(255,255,255,0.15)",
+                  }}
+                />
+                <div>
+                  <p
+                    style={{
+                      fontWeight: 600,
+                      fontSize: "13px",
+                      color: "rgba(255,255,255,0.9)",
+                    }}
+                  >
+                    Ana Rodrigues
+                  </p>
+                  <p
+                    style={{
+                      fontSize: "11px",
+                      color: "rgba(255,255,255,0.5)",
+                    }}
+                  >
+                    Diretora Técnica · Farmácia Aurora
+                  </p>
                 </div>
-                <p className="font-display text-[10px] font-semibold text-[color:var(--primary)] leading-tight">
-                  {l.name}
-                </p>
-              </div>
-            ))}
-          </div>
-
-          {/* Testimonial card */}
-          <div className="bg-[color:var(--surface)] rounded-xl p-4 shadow-sm border border-[color:var(--border-light)]">
-            <div className="flex gap-0.5 mb-2">
-              {[0, 1, 2, 3, 4].map((s) => (
-                <svg
-                  key={s}
-                  className="w-3.5 h-3.5 text-[color:var(--accent)]"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path d="M10 1.5l2.6 5.3 5.9.85-4.25 4.15 1 5.85L10 14.9l-5.25 2.75 1-5.85L1.5 7.65l5.9-.85L10 1.5z" />
-                </svg>
-              ))}
-            </div>
-            <p className="text-sm text-[color:var(--primary)] leading-snug">
-              &ldquo;{t('testimonial')}&rdquo;
-            </p>
-            <div className="mt-3 flex items-center gap-2.5">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="https://randomuser.me/api/portraits/women/28.jpg"
-                alt={t('testimonialAuthor')}
-                className="w-9 h-9 rounded-full object-cover"
-              />
-              <div>
-                <p className="font-semibold text-xs text-[color:var(--primary)]">
-                  {t('testimonialAuthor')}
-                </p>
-                <p className="text-[10px] text-[color:var(--text-muted)]">
-                  {t('testimonialPosition')}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* RIGHT — social proof (desktop only) */}
-      <div className="hidden lg:flex w-1/2 bg-[color:var(--surface-sunken)] relative overflow-hidden">
-        <div
-          className="absolute inset-0 opacity-[0.04]"
-          style={{
-            backgroundImage:
-              "radial-gradient(circle at 1px 1px, var(--primary) 1px, transparent 0)",
-            backgroundSize: "24px 24px",
-          }}
-        />
-
-        <div className="relative z-10 flex flex-col justify-center px-12 xl:px-20 py-12 w-full">
-          <p className="text-xs font-semibold uppercase tracking-widest text-[color:var(--accent)] mb-3">
-            {t('socialProof')}
-          </p>
-          <h2 className="font-display text-3xl xl:text-4xl font-semibold text-[color:var(--primary)] leading-tight max-w-md">
-            {t('socialProofTitle')}<br />
-            <span className="italic text-[color:var(--accent)]">{t('closedExcel')}</span>
-          </h2>
-
-          <div className="mt-10 grid grid-cols-3 gap-x-4 gap-y-6 max-w-lg">
-            {fakeLogos.map((l) => (
-              <div key={l.name} className="flex flex-col items-center text-center">
-                <div className="mb-2">
-                  <FakeBrandLogo brand={l.brand} size={48} />
-                </div>
-                <p className="font-display text-xs font-semibold text-[color:var(--primary)] leading-tight">
-                  {l.name}
-                </p>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-12 bg-[color:var(--surface)] rounded-2xl p-6 shadow-md border border-[color:var(--border-light)] max-w-lg">
-            <div className="flex gap-0.5 mb-3">
-              {[0, 1, 2, 3, 4].map((s) => (
-                <svg
-                  key={s}
-                  className="w-4 h-4 text-[color:var(--accent)]"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path d="M10 1.5l2.6 5.3 5.9.85-4.25 4.15 1 5.85L10 14.9l-5.25 2.75 1-5.85L1.5 7.65l5.9-.85L10 1.5z" />
-                </svg>
-              ))}
-            </div>
-            <p className="font-display text-[color:var(--primary)] text-base leading-snug">
-              &ldquo;{t('testimonial')}&rdquo;
-            </p>
-            <div className="mt-5 flex items-center gap-3">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="https://randomuser.me/api/portraits/women/28.jpg"
-                alt={t('testimonialAuthor')}
-                className="w-11 h-11 rounded-full object-cover"
-              />
-              <div>
-                <p className="font-semibold text-sm text-[color:var(--primary)]">
-                  {t('testimonialAuthor')}
-                </p>
-                <p className="text-xs text-[color:var(--text-muted)]">
-                  {t('testimonialPosition')}
-                </p>
               </div>
             </div>
           </div>
         </div>
       </div>
     </div>
+  );
+}
+
+/* ---------- Social proof compact (mobile) ---------- */
+function SocialProofCompact({ brands }: { brands: string[] }) {
+  return (
+    <>
+      <p
+        style={{
+          fontSize: "11px",
+          fontWeight: 600,
+          textTransform: "uppercase",
+          letterSpacing: "0.1em",
+          color: "var(--auth-accent)",
+          textAlign: "center",
+          marginBottom: "8px",
+        }}
+      >
+        Prova social
+      </p>
+      <h3
+        style={{
+          fontFamily: "var(--font-serif)",
+          fontSize: "20px",
+          color: "white",
+          textAlign: "center",
+          marginBottom: "20px",
+          lineHeight: 1.3,
+        }}
+      >
+        Equipas que já{" "}
+        <em style={{ fontStyle: "italic", color: "var(--auth-accent)" }}>
+          fecharam o Excel.
+        </em>
+      </h3>
+
+      <div
+        style={{
+          display: "flex",
+          flexWrap: "wrap",
+          gap: "8px",
+          justifyContent: "center",
+          marginBottom: "20px",
+        }}
+      >
+        {brands.map((name) => (
+          <span
+            key={name}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "6px",
+              padding: "6px 12px",
+              borderRadius: "999px",
+              background: "rgba(255,255,255,0.08)",
+              border: "1px solid rgba(255,255,255,0.12)",
+              fontSize: "11px",
+              fontWeight: 500,
+              color: "rgba(255,255,255,0.8)",
+            }}
+          >
+            <span
+              style={{
+                width: 6,
+                height: 6,
+                borderRadius: "50%",
+                background: "var(--auth-accent)",
+                display: "inline-block",
+              }}
+            />
+            {name}
+          </span>
+        ))}
+      </div>
+
+      <div
+        style={{
+          background: "rgba(255,255,255,0.06)",
+          border: "1px solid rgba(255,255,255,0.1)",
+          borderRadius: "12px",
+          padding: "16px",
+        }}
+      >
+        <div className="flex gap-1 mb-2">
+          {[0, 1, 2, 3, 4].map((s) => (
+            <svg
+              key={s}
+              style={{ width: 12, height: 12, color: "var(--auth-accent)" }}
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path d="M10 1.5l2.6 5.3 5.9.85-4.25 4.15 1 5.85L10 14.9l-5.25 2.75 1-5.85L1.5 7.65l5.9-.85L10 1.5z" />
+            </svg>
+          ))}
+        </div>
+        <p
+          style={{
+            fontFamily: "var(--font-serif)",
+            fontSize: "13px",
+            color: "rgba(255,255,255,0.85)",
+            lineHeight: 1.5,
+          }}
+        >
+          &ldquo;Passámos de 4 horas a montar escalas para 15 minutos.&rdquo;
+        </p>
+        <div className="flex items-center gap-2 mt-3">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="https://randomuser.me/api/portraits/women/28.jpg"
+            alt="Ana Rodrigues"
+            style={{
+              width: 32,
+              height: 32,
+              borderRadius: "50%",
+              objectFit: "cover",
+              border: "1.5px solid rgba(255,255,255,0.15)",
+            }}
+          />
+          <div>
+            <p
+              style={{
+                fontWeight: 600,
+                fontSize: "11px",
+                color: "rgba(255,255,255,0.85)",
+              }}
+            >
+              Ana Rodrigues
+            </p>
+            <p style={{ fontSize: "10px", color: "rgba(255,255,255,0.45)" }}>
+              Diretora Técnica · Farmácia Aurora
+            </p>
+          </div>
+        </div>
+      </div>
+    </>
   );
 }

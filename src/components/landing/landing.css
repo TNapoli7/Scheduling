@@ -599,9 +599,14 @@
 .lp .price-card .big {
   font-family: var(--font-serif); font-size: 82px; line-height: 1;
   letter-spacing: -0.025em; margin-top: 16px;
+  display: flex; align-items: baseline;
 }
-.lp .price-card .big sup { font-size: 32px; vertical-align: top; color: var(--lp-accent); margin-right: 6px; font-style: italic; }
-.lp .price-card .big .per { font-size: 22px; color: color-mix(in oklch, var(--paper) 65%, transparent); }
+.lp .price-card .big .eur {
+  font-size: 34px; color: var(--lp-accent); margin-right: 4px;
+  font-style: italic; font-weight: 400; align-self: flex-start;
+  margin-top: 12px;
+}
+.lp .price-card .big .per { font-size: 22px; color: color-mix(in oklch, var(--paper) 65%, transparent); margin-left: 2px; }
 .lp .price-card .per-user {
   margin-top: 8px; font-size: 14px;
   color: color-mix(in oklch, var(--paper) 70%, transparent);
@@ -748,8 +753,12 @@
 
 @media (max-width: 768px) {
   .lp .wrap { padding: 0 20px; }
-  .lp h1.hero-title { font-size: 44px; }
-  .lp h2.section-title { font-size: 38px; }
+  .lp h1.hero-title { font-size: 38px; }
+  .lp h2.section-title { font-size: 32px; }
+  .lp .hero-grid { gap: 32px; }
+  .lp .hero-ctas { flex-direction: column; gap: 10px; }
+  .lp .hero-ctas .btn { width: 100%; justify-content: center; text-align: center; }
+  .lp .hero-meta { flex-direction: column; gap: 8px; }
   .lp .stats { grid-template-columns: repeat(2, 1fr); }
   .lp .stat { border-bottom: 1px solid oklch(0.30 0.02 80); }
   .lp .steps { grid-template-columns: 1fr; }
@@ -758,8 +767,29 @@
   .lp .feature.span-8, .lp .feature.span-6, .lp .feature.span-4 { grid-column: span 1; }
   .lp .logos-row { grid-template-columns: repeat(3, 1fr); gap: 16px; }
   .lp .nav-links { display: none; }
-  .lp .final-cta { padding: 48px 28px; }
-  .lp .final-cta h2 { font-size: 42px; }
-  .lp .quote q { font-size: 32px; }
+  .lp .final-cta { padding: 48px 20px; }
+  .lp .final-cta h2 { font-size: 36px; }
+  .lp .quote q { font-size: 28px; }
   .lp .foot-grid { grid-template-columns: 1fr; }
+  .lp .price-card { padding: 28px 22px; }
+  .lp .price-card .big { font-size: 60px; }
+  .lp .price-card .big .eur { font-size: 26px; margin-top: 8px; }
+  .lp .price-card .big .per { font-size: 18px; }
+  .lp .price-calc { grid-template-columns: auto 1fr auto; gap: 10px; padding: 12px 14px; }
+  .lp .price-calc .total { font-size: 22px; }
+  .lp .pricing-copy { text-align: center; }
+  .lp .price-list { align-items: flex-start; }
+  .lp .ind-tabs { flex-wrap: wrap; gap: 6px; }
+  .lp .ind-tab { font-size: 13px; padding: 6px 12px; }
+  .lp .mini-quotes { gap: 16px; }
+  .lp .lede { font-size: 16px; }
+  .lp section { padding: 56px 0; }
+  .lp .float { display: none; }
+  .lp .product { border-radius: 12px; }
+  .lp .product-head > div { padding: 8px 10px; font-size: 11px; }
+  .lp .product-row > .who { min-width: 80px; padding: 6px 10px; font-size: 12px; }
+  .lp .product-row > .cell { padding: 6px 4px; font-size: 10px; }
+  .lp .mobile-phone { display: none; }
+  .lp .foot-bottom { flex-direction: column; gap: 12px; text-align: center; }
+  .lp .foot-bottom .pills { flex-wrap: wrap; justify-content: center; }
 }

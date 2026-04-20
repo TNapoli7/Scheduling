@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, Fragment, type ReactNode } from "react";
 import Link from "next/link";
 import { ChatWidget } from "@/components/chat/ChatWidget";
+import { LpLanguageSelector } from "@/components/lp/LpLanguageSelector";
 import "./landing.css";
 
 /* ═══════════════════════ DATA ═══════════════════════ */
@@ -122,9 +123,8 @@ const FAQS = [
   { q: "Funciona para farmácias, clínicas, restaurantes e hotéis?", a: "Sim — e laboratórios, ginásios, centros de estética, postos de combustível. Qualquer equipa com turnos rotativos. Temos templates prontos para cada indústria." },
   { q: "Está conforme o Código do Trabalho português?", a: "Sim. Validação automática de descansos obrigatórios (Art. 214º), limites semanais (Art. 203º), feriados e folgas em domingos. Todos os relatórios estão prontos para a ACT." },
   { q: "Posso importar a minha escala atual de Excel?", a: "Sim. Aceite ficheiros .xlsx, .csv e templates próprios. A importação guia-se campo a campo e consegue migrar em menos de 10 minutos." },
-  { q: "Quanto custa para uma equipa de 5 pessoas?", a: "€19/mês (base) + 5 × €2 = €29/mês. Sem limites de escalas, sem surpresas. Pode cancelar a qualquer altura." },
-  { q: "Os meus colaboradores precisam de instalar alguma coisa?", a: "Apenas se quiserem. O Shiftera funciona no browser do telemóvel. Também temos apps nativas (iOS + Android) para quem prefere notificações push." },
-  { q: "Onde ficam os dados alojados?", a: "Servidores AWS em Frankfurt. Conforme RGPD, com encriptação em repouso e em trânsito. Assinamos DPA e acordos HIPAA a pedido." },
+  { q: "Quanto custa para uma equipa de 5 pessoas?", a: "€19/mês (base) + 5 × €2 = €29/mês para uma unidade. Se tiver mais que um estabelecimento, cada unidade extra custa +€9/mês. Sem limites de escalas, sem surpresas. Pode cancelar a qualquer altura." },
+  { q: "Os meus colaboradores precisam de instalar alguma coisa?", a: "Não. O Shiftera funciona totalmente no browser — no computador ou no telemóvel. Basta abrir o link e entrar. Sem apps para instalar." },
 ];
 
 /* ═══════════════════════ SUB-COMPONENTS ═══════════════════════ */
@@ -151,6 +151,7 @@ function Nav() {
           <a href="#faq">FAQ</a>
         </div>
         <div className="nav-cta">
+          <LpLanguageSelector />
           <Link href="/login" className="btn btn-ghost">Entrar</Link>
           <Link href="/register" className="btn btn-primary">
             Começar grátis <span style={{ opacity: 0.7, marginLeft: 4 }}>→</span>
@@ -342,13 +343,17 @@ function FAQSection() {
 
 function PricingCalc() {
   const [teamSize, setTeamSize] = useState(10);
-  const total = 19 + teamSize * 2;
+  const [units, setUnits] = useState(1);
+  const extraUnits = Math.max(0, units - 1);
+  const total = 19 + teamSize * 2 + extraUnits * 9;
 
   return (
     <div className="price-card">
       <span className="tag">Profissional</span>
-      <div className="big"><sup>€</sup>19<span className="per">/mês</span></div>
-      <div className="per-user">+ €2 por colaborador/mês</div>
+      <div className="big">
+        <span className="eur">€</span>19<span className="per">/mês</span>
+      </div>
+      <div className="per-user">+ €2 por colaborador/mês · + €9 por unidade extra</div>
       <hr />
       <div className="price-calc">
         <label>Equipa</label>
@@ -359,11 +364,25 @@ function PricingCalc() {
           value={teamSize}
           onChange={e => setTeamSize(Number(e.target.value))}
         />
-        <span className="total">€{total}</span>
+        <span className="total">{teamSize}</span>
       </div>
-      <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11.5px", color: "color-mix(in oklch, var(--paper) 55%, transparent)", marginTop: 8, fontFamily: "var(--font-mono)" }}>
-        <span>{teamSize} pessoa{teamSize > 1 ? "s" : ""}</span>
-        <span>€19 base + {teamSize} × €2</span>
+      <div className="price-calc" style={{ marginTop: 10 }}>
+        <label>Unidades</label>
+        <input
+          type="range"
+          min={1}
+          max={10}
+          value={units}
+          onChange={e => setUnits(Number(e.target.value))}
+        />
+        <span className="total">{units}</span>
+      </div>
+      <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11.5px", color: "color-mix(in oklch, var(--paper) 55%, transparent)", marginTop: 12, fontFamily: "var(--font-mono)" }}>
+        <span>{teamSize} pessoa{teamSize > 1 ? "s" : ""} · {units} unidade{units > 1 ? "s" : ""}</span>
+        <span className="price-total">€{total}/mês</span>
+      </div>
+      <div style={{ marginTop: 6, fontSize: "10.5px", color: "color-mix(in oklch, var(--paper) 45%, transparent)", fontFamily: "var(--font-mono)", lineHeight: 1.5 }}>
+        €19 base + {teamSize} × €2{extraUnits > 0 ? ` + ${extraUnits} × €9` : ""}
       </div>
       <Link href="/register" className="btn btn-primary">
         Começar trial de 14 dias &nbsp;→
@@ -676,7 +695,7 @@ export default function LandingPage() {
                 <li><span className="pi">✓</span> Fairness analytics e relatórios ACT</li>
                 <li><span className="pi">✓</span> Exportação PDF · Excel · Google Calendar</li>
                 <li><span className="pi">✓</span> Validação legal (Código do Trabalho PT)</li>
-                <li><span className="pi">✓</span> Suporte em português · em menos de 4h</li>
+                <li><span className="pi">✓</span> Suporte em português por email</li>
               </ul>
             </div>
             <PricingCalc />
