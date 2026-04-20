@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { SkeletonCard } from "@/components/ui/skeleton";
 import type { Organization } from "@/types/database";
 import { ActivityLogPanel } from "@/components/settings/ActivityLog";
-import { History, Settings as SettingsIcon, CreditCard, Bell } from "lucide-react";
+import { History, Settings as SettingsIcon, CreditCard, Bell, Camera, Loader2, Trash2 } from "lucide-react";
 
 type TabKey = "general" | "plan" | "notifications" | "activity";
 
@@ -38,6 +38,11 @@ export default function SettingsPage() {
   const [address, setAddress] = useState("");
   const [municipalHoliday, setMunicipalHoliday] = useState("");
   const [hours, setHours] = useState<OperatingHours>({});
+
+  // Icon upload state
+  const [iconUrl, setIconUrl] = useState<string | null>(null);
+  const [uploadingIcon, setUploadingIcon] = useState(false);
+  const iconInputRef = useRef<HTMLInputElement>(null);
 
   // Track whether the form has unsaved changes so we can warn before leaving
   // (browser beforeunload) and before switching tab inside the page.
@@ -72,6 +77,7 @@ export default function SettingsPage() {
       setSector(orgData.sector || "");
       setAddress(orgData.address || "");
       setMunicipalHoliday(orgData.municipal_holiday || "");
+      setIconUrl(orgData.icon_url || null);
 
       // Init operating hours with defaults
       const defaultHours: OperatingHours = {};
@@ -118,6 +124,60 @@ export default function SettingsPage() {
   useEffect(() => {
     fetchOrg();
   }, [fetchOrg]);
+
+  async function handleIconUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file || !org) return;
+
+    if (!file.type.startsWith("image/")) {
+      setSuccess(false);
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      // Max 2 MB for org icon
+      return;
+    }
+
+    setUploadingIcon(true);
+
+    const ext = file.name.split(".").pop()?.toLowerCase() || "png";
+    const path = `${org.id}/icon-${Date.now()}.${ext}`;
+
+    const { error: upErr } = await supabase.storage
+      .from("org-icons")
+      .upload(path, file, { cacheControl: "3600", upsert: false });
+
+    if (upErr) {
+      setUploadingIcon(false);
+      return;
+    }
+
+    const { data: pub } = supabase.storage.from("org-icons").getPublicUrl(path);
+    const url = pub.publicUrl;
+
+    await supabase
+      .from("organizations")
+      .update({ icon_url: url, updated_at: new Date().toISOString() })
+      .eq("id", org.id);
+
+    setIconUrl(url);
+    setUploadingIcon(false);
+    logActivity("org_icon_updated", "settings", org.id);
+  }
+
+  async function removeIcon() {
+    if (!org || !iconUrl) return;
+    setUploadingIcon(true);
+
+    await supabase
+      .from("organizations")
+      .update({ icon_url: null, updated_at: new Date().toISOString() })
+      .eq("id", org.id);
+
+    setIconUrl(null);
+    setUploadingIcon(false);
+    logActivity("org_icon_removed", "settings", org.id);
+  }
 
   async function handleSave() {
     if (!org) return;
@@ -225,6 +285,58 @@ export default function SettingsPage() {
       <Card>
         <CardTitle>{t("companyInfoTitle")}</CardTitle>
         <div className="mt-4 space-y-4">
+
+          {/* Org icon upload */}
+          <div className="flex items-center gap-4">
+            <div className="relative w-16 h-16 rounded-xl bg-[color:var(--accent-soft)] flex items-center justify-center overflow-hidden border border-[color:var(--border-light)] shrink-0">
+              {iconUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={iconUrl} alt={name} className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-xl font-bold text-[color:var(--accent)]">
+                  {(name || "?").charAt(0).toUpperCase()}
+                </span>
+              )}
+              {uploadingIcon && (
+                <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                  <Loader2 className="w-5 h-5 text-white animate-spin" />
+                </div>
+              )}
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <input
+                ref={iconInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleIconUpload}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => iconInputRef.current?.click()}
+                disabled={uploadingIcon}
+              >
+                <Camera className="w-4 h-4 mr-1.5" />
+                {iconUrl ? t("changeIcon") : t("uploadIcon")}
+              </Button>
+              {iconUrl && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={removeIcon}
+                  disabled={uploadingIcon}
+                >
+                  <Trash2 className="w-4 h-4 mr-1.5" />
+                  {t("removeIcon")}
+                </Button>
+              )}
+              <p className="text-xs text-[color:var(--text-muted)]">{t("iconHint")}</p>
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input
               label={t("nameLabel")}

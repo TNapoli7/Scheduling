@@ -42,7 +42,7 @@ export function LegalLayout({
             <p className="text-stone-500 mt-2 text-sm">{lastUpdated}</p>
           </div>
         </div>
-        <article className="max-w-4xl mx-auto px-6 py-12 prose prose-stone prose-headings:tracking-tight prose-h2:text-2xl prose-h2:mt-10 prose-h2:mb-3 prose-h3:text-lg prose-p:leading-relaxed prose-p:text-stone-700 prose-li:text-stone-700 prose-a:text-orange-600 hover:prose-a:text-orange-700">
+        <article className="max-w-4xl mx-auto px-6 py-12 prose prose-stone prose-headings:tracking-tight prose-h2:text-2xl prose-h2:mt-10 prose-h2:mb-3 prose-h3:text-lg prose-p:leading-relaxed prose-p:text-stone-700 prose-li:text-stone-700 prose-a:text-teal-600 hover:prose-a:text-teal-700">
           {children}
         </article>
       </div>

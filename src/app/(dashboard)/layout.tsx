@@ -28,7 +28,7 @@ export default async function DashboardLayout({
   // Load every org the user is a member of (used by the switcher).
   const { data: membershipsData } = await supabase
     .from("memberships")
-    .select("id, org_id, role, full_name, is_active, organizations(name)")
+    .select("id, org_id, role, full_name, is_active, organizations(name, icon_url)")
     .eq("user_id", user.id)
     .eq("is_active", true);
 
@@ -36,17 +36,18 @@ export default async function DashboardLayout({
     org_id: string;
     role: UserRole;
     full_name: string;
-    organizations: { name: string } | { name: string }[] | null;
+    organizations: { name: string; icon_url: string | null } | { name: string; icon_url: string | null }[] | null;
   };
 
   const memberships: OrgSwitcherItem[] = ((membershipsData || []) as MembershipRow[])
     .map((m) => {
-      const orgName = Array.isArray(m.organizations)
-        ? m.organizations[0]?.name
-        : m.organizations?.name;
+      const org = Array.isArray(m.organizations)
+        ? m.organizations[0]
+        : m.organizations;
       return {
         org_id: m.org_id,
-        org_name: orgName || "",
+        org_name: org?.name || "",
+        icon_url: org?.icon_url || null,
         role: m.role,
         full_name: m.full_name,
       };

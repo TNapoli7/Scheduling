@@ -416,7 +416,7 @@ export default function LandingPage() {
               </p>
               <div className="hero-ctas">
                 <Link href="/register" className="btn btn-primary btn-big">Experimentar 14 dias grátis</Link>
-                <a href="https://calendly.com/shiftera/demo" target="_blank" rel="noopener noreferrer" className="btn btn-outline btn-big">Agendar demo</a>
+                <a href="https://calendly.com/napoles-tomas/" target="_blank" rel="noopener noreferrer" className="btn btn-outline btn-big">Agendar demo</a>
               </div>
               <div className="hero-meta">
                 <span><span className="check">✓</span>&nbsp;&nbsp;Sem cartão de crédito</span>

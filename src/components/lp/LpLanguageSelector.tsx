@@ -83,7 +83,7 @@ export function LpLanguageSelector() {
               }}
               className={`w-full text-left px-4 py-2.5 text-sm font-medium transition-colors ${
                 currentLocale === lang.code
-                  ? "bg-orange-50 text-orange-700"
+                  ? "bg-teal-50 text-teal-700"
                   : "text-stone-700 hover:bg-stone-50"
               }`}
             >

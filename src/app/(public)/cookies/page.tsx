@@ -56,7 +56,7 @@ export default function CookiesPage() {
                 <p className="mt-2 text-sm text-stone-600">Prazo de expiração: 1 ano.</p>
               </div>
 
-              <div className="border-l-4 border-orange-500 pl-4">
+              <div className="border-l-4 border-amber-500 pl-4">
                 <h3 className="font-semibold text-stone-900">2.3 Cookies Analíticos</h3>
                 <p className="mt-2 text-stone-700">
                   <strong>Requer consentimento explícito.</strong> Permitem-nos entender como a plataforma é utilizada (páginas visitadas, tempo gasto, ações realizadas) para melhorar o Serviço.
@@ -222,7 +222,7 @@ export default function CookiesPage() {
                 <p className="mt-2 text-sm text-stone-600">Expiration: 1 year.</p>
               </div>
 
-              <div className="border-l-4 border-orange-500 pl-4">
+              <div className="border-l-4 border-amber-500 pl-4">
                 <h3 className="font-semibold text-stone-900">2.3 Analytics Cookies</h3>
                 <p className="mt-2 text-stone-700">
                   <strong>Requires explicit consent.</strong> Allow us to understand how the platform is used (pages visited, time spent, actions taken) to improve the Service.
@@ -388,7 +388,7 @@ export default function CookiesPage() {
                 <p className="mt-2 text-sm text-stone-600">Caducidad: 1 año.</p>
               </div>
 
-              <div className="border-l-4 border-orange-500 pl-4">
+              <div className="border-l-4 border-amber-500 pl-4">
                 <h3 className="font-semibold text-stone-900">2.3 Cookies Analíticas</h3>
                 <p className="mt-2 text-stone-700">
                   <strong>Requiere consentimiento explícito.</strong> Nos permiten entender cómo se utiliza la plataforma (páginas visitadas, tiempo invertido, acciones realizadas) para mejorar el Servicio.

@@ -770,6 +770,10 @@
     "trialLabel": "Trial",
     "trialEndsLabel": "Trial termina a",
     "saveButton": "Guardar alterações",
+    "uploadIcon": "Carregar logótipo",
+    "changeIcon": "Alterar logótipo",
+    "removeIcon": "Remover logótipo",
+    "iconHint": "PNG ou JPG, máx. 2 MB. Visível na barra lateral.",
     "sectors": {
       "farmacia": "Farmácia",
       "clinica": "Clínica",

@@ -324,7 +324,7 @@ export default function TimeOffPage() {
             </div>
           </div>
           {remainingDays <= 3 && remainingDays > 0 && (
-            <p className="text-xs text-orange-600 mt-2">{t("attention")}</p>
+            <p className="text-xs text-amber-600 mt-2">{t("attention")}</p>
           )}
           {remainingDays <= 0 && (
             <p className="text-xs text-red-600 mt-2">{t("noVacation")}</p>

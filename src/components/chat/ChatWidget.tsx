@@ -20,7 +20,7 @@ interface SearchResult {
 
 type WidgetStep = 'chat' | 'contact';
 
-const SHIFTERA_ACCENT = '#0F1B2D';
+const SHIFTERA_ACCENT = '#2A9D8F';
 
 export function ChatWidget() {
   const t = useTranslations('chatWidget');

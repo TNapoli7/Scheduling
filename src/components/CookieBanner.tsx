@@ -88,7 +88,7 @@ export function CookieBanner() {
               {t("body")}{" "}
               <Link
                 href="/cookies"
-                className="text-orange-600 hover:text-orange-700 underline underline-offset-2"
+                className="text-teal-600 hover:text-teal-700 underline underline-offset-2"
               >
                 {t("learnMore")}
               </Link>
@@ -110,7 +110,7 @@ export function CookieBanner() {
               <button
                 onClick={acceptAll}
                 className="order-1 sm:order-3 sm:ml-auto px-4 py-2.5 text-sm font-semibold text-white rounded-lg transition shadow-sm hover:shadow"
-                style={{ backgroundColor: "#E8850A" }}
+                style={{ backgroundColor: "#2A9D8F" }}
               >
                 {t("acceptAll")}
               </button>
@@ -173,7 +173,7 @@ export function CookieBanner() {
               <button
                 onClick={acceptAll}
                 className="order-1 sm:order-3 sm:ml-auto px-4 py-2.5 text-sm font-semibold text-white rounded-lg transition shadow-sm hover:shadow"
-                style={{ backgroundColor: "#E8850A" }}
+                style={{ backgroundColor: "#2A9D8F" }}
               >
                 {t("acceptAll")}
               </button>
@@ -212,7 +212,7 @@ function CategoryRow({
         disabled={disabled}
         onClick={() => !disabled && onChange(!checked)}
         className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full transition-colors ${
-          checked ? "bg-orange-500" : "bg-stone-300"
+          checked ? "bg-teal-500" : "bg-stone-300"
         } ${disabled ? "opacity-60 cursor-not-allowed" : ""}`}
       >
         <span

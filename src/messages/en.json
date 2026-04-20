@@ -770,6 +770,10 @@
     "trialLabel": "Trial",
     "trialEndsLabel": "Trial ends",
     "saveButton": "Save changes",
+    "uploadIcon": "Upload logo",
+    "changeIcon": "Change logo",
+    "removeIcon": "Remove logo",
+    "iconHint": "PNG or JPG, max 2 MB. Visible in the sidebar.",
     "sectors": {
       "farmacia": "Pharmacy",
       "clinica": "Clinic",

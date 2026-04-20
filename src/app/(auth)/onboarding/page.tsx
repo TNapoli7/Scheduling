@@ -155,7 +155,7 @@ export default function OnboardingPage() {
           <p className="text-stone-500 mt-3">{t('setupCompany')}</p>
         </div>
 
-        {/* Progress — two steps, branded orange */}
+        {/* Progress — two steps, branded teal */}
         <div className="flex items-center gap-2 mb-6">
           {[1, 2].map((s) => (
             <div key={s} className="flex-1 flex items-center gap-2">

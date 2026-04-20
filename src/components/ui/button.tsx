@@ -23,7 +23,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       "inline-flex items-center justify-center gap-2 font-medium rounded-[var(--radius-md)] transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[color:var(--background)] disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] whitespace-nowrap";
 
     const variantStyles = {
-      // Primary now uses the Shiftera brand accent (coral/orange) — main CTAs.
+      // Primary now uses the Shiftera brand accent (teal) — main CTAs.
       primary:
         "bg-[color:var(--accent)] text-[color:var(--accent-foreground)] hover:bg-[color:var(--accent-hover)] active:bg-[color:var(--accent-active)] shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-md)]",
       // Accent kept as alias of primary for backwards-compat — same style.

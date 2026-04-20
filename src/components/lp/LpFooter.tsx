@@ -10,8 +10,8 @@ import { useTranslations } from "next-intl";
 import { openConsentBanner } from "@/lib/cookie-consent";
 import { ShifteraLockup } from "./ShifteraLogo";
 
-const ORANGE_PRIMARY = "#E8850A";
-const ORANGE_GRADIENT = "#f5a623";
+const ORANGE_PRIMARY = "#2A9D8F";
+const ORANGE_GRADIENT = "#3DBDAD";
 
 export function LpFooter() {
   const tInd = useTranslations("industries.nav");

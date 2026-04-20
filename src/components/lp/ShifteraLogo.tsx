@@ -52,8 +52,8 @@ export function ShifteraLogo({
       {!isMono && (
         <defs>
           <linearGradient id={gradId} x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stopColor="#FF8A73" />
-            <stop offset="1" stopColor="#D85543" />
+            <stop offset="0" stopColor="#3DBDAD" />
+            <stop offset="1" stopColor="#1C7A6E" />
           </linearGradient>
         </defs>
       )}

@@ -770,6 +770,10 @@
     "trialLabel": "Prueba",
     "trialEndsLabel": "La prueba termina",
     "saveButton": "Guardar cambios",
+    "uploadIcon": "Subir logotipo",
+    "changeIcon": "Cambiar logotipo",
+    "removeIcon": "Eliminar logotipo",
+    "iconHint": "PNG o JPG, máx. 2 MB. Visible en la barra lateral.",
     "sectors": {
       "farmacia": "Farmacia",
       "clinica": "Clínica",
