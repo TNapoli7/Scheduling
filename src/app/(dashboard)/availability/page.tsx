@@ -68,11 +68,12 @@ export default function AvailabilityPage() {
     if (!membership) return;
     setLoading(true);
 
-    // Fetch employees (for manager view)
+    // Fetch employees (for manager view) — scoped to current org
     if (membership.role === "admin" || membership.role === "manager") {
       const { data: emps } = await supabase
         .from("profiles")
         .select("*")
+        .eq("org_id", membership.orgId)
         .eq("is_active", true)
         .order("full_name");
       setEmployees(emps || []);

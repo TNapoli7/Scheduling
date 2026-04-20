@@ -90,10 +90,11 @@ export default function FairnessPage() {
       .select("*, shift_template:shift_templates(*)")
       .eq("schedule_id", schedule.id);
 
-    // Get employees
+    // Get employees — scoped to current org
     const { data: employees } = await supabase
       .from("profiles")
       .select("*")
+      .eq("org_id", membership.orgId)
       .eq("is_active", true)
       .order("full_name");
 

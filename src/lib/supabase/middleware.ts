@@ -54,6 +54,13 @@ export async function updateSession(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
   // Public paths that don't need auth
+  const publicApiRoutes = [
+    "/api/set-language",
+    "/api/chat/search",
+    "/api/chat/submit",
+    "/api/auth/clear",
+  ];
+
   const isPublicPath =
     pathname === "/" ||
     pathname.startsWith("/login") ||
@@ -62,7 +69,7 @@ export async function updateSession(request: NextRequest) {
     pathname.startsWith("/reset-password") ||
     pathname.startsWith("/callback") ||
     pathname.startsWith("/auth/confirm") ||
-    pathname.startsWith("/api/") ||
+    publicApiRoutes.includes(pathname) ||
     pathname.startsWith("/industrias") ||
     pathname.startsWith("/terms") ||
     pathname.startsWith("/privacy") ||

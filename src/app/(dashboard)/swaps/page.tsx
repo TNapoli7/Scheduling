@@ -72,7 +72,8 @@ export default function SwapsPage() {
       setCurrentUser({ ...profile, role: membership.role, org_id: membership.orgId });
     }
 
-    // Fetch swap requests for this org
+    // Fetch swap requests — RLS scopes visibility but we also filter
+    // client-side by org to prevent cross-org leaks for multi-org admins.
     const { data: swapData } = await supabase
       .from("swap_requests")
       .select(
@@ -85,23 +86,31 @@ export default function SwapsPage() {
       )
       .order("created_at", { ascending: false });
 
-    // For target entries, fetch separately if they exist
-    const swapsWithTargetEntries: SwapWithDetails[] = [];
-    for (const swap of swapData || []) {
-      let targetEntry = null;
-      if (swap.target_entry_id) {
-        const { data } = await supabase
-          .from("schedule_entries")
-          .select("*, shift_template:shift_templates(*)")
-          .eq("id", swap.target_entry_id)
-          .single();
-        targetEntry = data;
+    // Filter to current org (requester must belong to this org)
+    const orgSwaps = (swapData || []).filter(
+      (s: { requester?: { org_id?: string } }) => s.requester?.org_id === membership.orgId
+    );
+
+    // Batch-fetch target entries instead of N+1
+    const targetEntryIds = orgSwaps
+      .map((s: { target_entry_id?: string }) => s.target_entry_id)
+      .filter(Boolean) as string[];
+
+    let targetEntriesMap: Record<string, unknown> = {};
+    if (targetEntryIds.length > 0) {
+      const { data: targetEntries } = await supabase
+        .from("schedule_entries")
+        .select("*, shift_template:shift_templates(*)")
+        .in("id", targetEntryIds);
+      for (const te of targetEntries || []) {
+        targetEntriesMap[(te as { id: string }).id] = te;
       }
-      swapsWithTargetEntries.push({
-        ...swap,
-        target_entry: targetEntry,
-      } as SwapWithDetails);
     }
+
+    const swapsWithTargetEntries: SwapWithDetails[] = orgSwaps.map((swap: { target_entry_id?: string }) => ({
+      ...swap,
+      target_entry: swap.target_entry_id ? targetEntriesMap[swap.target_entry_id] || null : null,
+    })) as SwapWithDetails[];
 
     setSwaps(swapsWithTargetEntries);
     setLoading(false);
@@ -131,10 +140,11 @@ export default function SwapsPage() {
       (entries || []) as (ScheduleEntry & { shift_template: ShiftTemplate })[]
     );
 
-    // Fetch colleagues
+    // Fetch colleagues — scoped to current org
     const { data: cols } = await supabase
       .from("profiles")
       .select("*")
+      .eq("org_id", membership.orgId)
       .eq("is_active", true)
       .neq("id", user.id)
       .order("full_name");

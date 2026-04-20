@@ -71,20 +71,22 @@ export default function TimeOffPage() {
     if (!membership) return;
     setDataLoading(true);
 
-    // Fetch employees for manager view
+    // Fetch employees for manager view — scoped to current org
     if (membership.role === "admin" || membership.role === "manager") {
       const { data: emps } = await supabase
         .from("profiles")
         .select("*")
+        .eq("org_id", membership.orgId)
         .eq("is_active", true)
         .order("full_name");
       setEmployees(emps || []);
     }
 
-    // Fetch requests
+    // Fetch requests — scoped to current org
     let query = supabase
       .from("time_off_requests")
       .select("*, profile:profiles!time_off_requests_user_id_fkey(*)")
+      .eq("org_id", membership.orgId)
       .order("created_at", { ascending: false });
 
     if (membership.role === "employee") {

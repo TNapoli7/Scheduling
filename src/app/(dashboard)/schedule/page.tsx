@@ -209,7 +209,7 @@ export default function SchedulePage() {
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth() + 1);
-  const [viewMode, setViewMode] = useState<"week" | "month" | "day">("month");
+  const [viewMode, setViewMode] = useState<"week" | "month" | "day">("week");
   const [layoutMode, setLayoutMode] = useState<"grid" | "byDay">("byDay");
   const [weekStart, setWeekStart] = useState(0);
   /** For daily view — YYYY-MM-DD of the selected day */
@@ -327,6 +327,7 @@ export default function SchedulePage() {
     const { data: emps } = await supabase
       .from("profiles")
       .select("*")
+      .eq("org_id", membership.orgId)
       .eq("is_active", true)
       .order("full_name");
 
