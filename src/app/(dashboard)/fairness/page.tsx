@@ -3,10 +3,13 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
+import { useCurrentMembership } from "@/hooks/use-membership";
 import { Card, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SkeletonCard, SkeletonList } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
+import { BarChart3 } from "lucide-react";
 import { exportHoursReportExcel } from "@/lib/export";
 import type { Profile, ShiftTemplate, ScheduleEntry } from "@/types/database";
 
@@ -61,6 +64,7 @@ export default function FairnessPage() {
   const [orgName, setOrgName] = useState("");
   const [loading, setLoading] = useState(true);
 
+  const { membership, loading: memLoading } = useCurrentMembership();
   const supabase = createClient();
 
   const fetchMetrics = useCallback(async () => {
@@ -99,13 +103,9 @@ export default function FairnessPage() {
     setRawEmployees(empList);
 
     // Fetch org name
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      const { data: prof } = await supabase.from("profiles").select("org_id").eq("id", user.id).single();
-      if (prof?.org_id) {
-        const { data: org } = await supabase.from("organizations").select("name").eq("id", prof.org_id).single();
-        if (org) setOrgName(org.name);
-      }
+    if (membership?.orgId) {
+      const { data: org } = await supabase.from("organizations").select("name").eq("id", membership.orgId).single();
+      if (org) setOrgName(org.name);
     }
 
     // Compute metrics per employee
@@ -171,11 +171,11 @@ export default function FairnessPage() {
 
     setMetrics(empMetrics);
     setLoading(false);
-  }, [supabase, year, month]);
+  }, [supabase, year, month, membership]);
 
   useEffect(() => {
-    fetchMetrics();
-  }, [fetchMetrics]);
+    if (!memLoading && membership) fetchMetrics();
+  }, [fetchMetrics, memLoading, membership]);
 
   // Averages
   const activeMetrics = useMemo(
@@ -228,7 +228,7 @@ export default function FairnessPage() {
     return "bg-red-50";
   }
 
-  if (loading) {
+  if (loading || memLoading) {
     return (
       <div className="space-y-4">
         <div className="h-8 w-32 bg-stone-200 rounded animate-pulse" />
@@ -312,11 +312,13 @@ export default function FairnessPage() {
 
       {/* Per-employee table */}
       {metrics.length === 0 ? (
-        <Card>
-          <div className="text-center py-8 text-stone-500">
-            Nenhum dado para este mês.
-          </div>
-        </Card>
+        <EmptyState
+          icon={BarChart3}
+          title="Sem dados de equidade"
+          description="Cria e publica uma escala para ver as métricas de distribuição de turnos."
+          actionLabel="Criar escala"
+          actionHref="/schedule"
+        />
       ) : (
         <div className="border border-stone-200 rounded-lg overflow-hidden bg-white">
           <table className="w-full text-sm">

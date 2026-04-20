@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
+import { useCurrentMembership } from "@/hooks/use-membership";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -276,6 +277,7 @@ export default function SchedulePage() {
     Record<string, Set<string>>
   >({});
 
+  const { membership, loading: memLoading } = useCurrentMembership();
   const supabase = createClient();
   const days = useMemo(() => getDaysInMonth(year, month), [year, month]);
   const nationalHolidays = useMemo(
@@ -318,6 +320,9 @@ export default function SchedulePage() {
   const canGenerate = generateIssues.length === 0;
 
   const fetchData = useCallback(async () => {
+    if (!membership) return;
+    const orgId = membership.orgId;
+
     setLoading(true);
     const { data: emps } = await supabase
       .from("profiles")
@@ -331,6 +336,18 @@ export default function SchedulePage() {
       .eq("is_active", true)
       .order("start_time");
 
+    // Fetch org details
+    const { data: org } = await supabase
+      .from("organizations")
+      .select("name, operating_hours, municipal_holiday")
+      .eq("id", orgId)
+      .single();
+    if (org) {
+      setOrgName(org.name);
+      setOperatingHours((org.operating_hours as OperatingHours) || null);
+      setMunicipalHoliday(org.municipal_holiday || null);
+    }
+
     let { data: sched } = await supabase
       .from("schedules")
       .select("*")
@@ -339,67 +356,20 @@ export default function SchedulePage() {
       .single();
 
     if (!sched) {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (user) {
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("org_id")
-          .eq("id", user.id)
-          .single();
-
-        if (profile?.org_id) {
-          const { data: org } = await supabase
-            .from("organizations")
-            .select("name, operating_hours, municipal_holiday")
-            .eq("id", profile.org_id)
-            .single();
-          if (org) {
-            setOrgName(org.name);
-            setOperatingHours((org.operating_hours as OperatingHours) || null);
-            setMunicipalHoliday(org.municipal_holiday || null);
-          }
-
-          const { data: newSched } = await supabase
-            .from("schedules")
-            .insert({
-              org_id: profile.org_id,
-              year,
-              month,
-              status: "draft",
-              created_by: user.id,
-            })
-            .select()
-            .single();
-          sched = newSched;
-          if (newSched) {
-            logActivity("schedule_created", "schedule", newSched.id, { month, year });
-          }
-        }
-      }
-    } else {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (user) {
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("org_id")
-          .eq("id", user.id)
-          .single();
-        if (profile?.org_id) {
-          const { data: org } = await supabase
-            .from("organizations")
-            .select("name, operating_hours, municipal_holiday")
-            .eq("id", profile.org_id)
-            .single();
-          if (org) {
-            setOrgName(org.name);
-            setOperatingHours((org.operating_hours as OperatingHours) || null);
-            setMunicipalHoliday(org.municipal_holiday || null);
-          }
-        }
+      const { data: newSched } = await supabase
+        .from("schedules")
+        .insert({
+          org_id: orgId,
+          year,
+          month,
+          status: "draft",
+          created_by: membership.userId,
+        })
+        .select()
+        .single();
+      sched = newSched;
+      if (newSched) {
+        logActivity("schedule_created", "schedule", newSched.id, { month, year });
       }
     }
 
@@ -467,11 +437,11 @@ export default function SchedulePage() {
     setViolations(v);
 
     setLoading(false);
-  }, [supabase, year, month]);
+  }, [supabase, year, month, membership]);
 
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    if (!memLoading && membership) fetchData();
+  }, [fetchData, memLoading, membership]);
 
   // Persist layoutMode preference across sessions
   useEffect(() => {
@@ -916,7 +886,7 @@ export default function SchedulePage() {
     (v) => v.severity === "warning"
   ).length;
 
-  if (loading) {
+  if (loading || memLoading) {
     return (
       <div className="space-y-4">
         <div>

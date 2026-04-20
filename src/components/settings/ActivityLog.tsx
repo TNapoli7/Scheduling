@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
+import { useCurrentMembership } from "@/hooks/use-membership";
 import type { ActivityLog } from "@/types/database";
 import {
   Search,
@@ -70,13 +71,13 @@ function formatDate(dateStr: string): string {
 
 export function ActivityLogPanel() {
   const t = useTranslations("activityLog");
+  const { membership, loading: memLoading, isManager } = useCurrentMembership();
   const [logs, setLogs] = useState<(ActivityLog & { profile?: { full_name: string } })[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);
   const [total, setTotal] = useState(0);
   const [search, setSearch] = useState("");
   const [entityFilter, setEntityFilter] = useState<string>("all");
-  const [userRole, setUserRole] = useState<string | null>(null);
 
   const getActionLabel = (action: string) => {
     try {
@@ -95,28 +96,15 @@ export function ActivityLogPanel() {
   };
 
   const fetchLogs = useCallback(async () => {
-    setLoading(true);
-    const supabase = createClient();
+    if (!membership) return;
 
-    // Check user role
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) return;
-
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role, org_id")
-      .eq("id", user.id)
-      .single();
-
-    if (!profile || !["admin", "manager"].includes(profile.role)) {
-      setUserRole(profile?.role || null);
+    if (!isManager) {
       setLoading(false);
       return;
     }
 
-    setUserRole(profile.role);
+    setLoading(true);
+    const supabase = createClient();
 
     // Build query
     let query = supabase
@@ -124,7 +112,7 @@ export function ActivityLogPanel() {
       .select("*, profile:profiles!activity_logs_user_id_profile_fkey(full_name)", {
         count: "exact",
       })
-      .eq("org_id", profile.org_id!)
+      .eq("org_id", membership.orgId)
       .order("created_at", { ascending: false })
       .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
 
@@ -150,16 +138,16 @@ export function ActivityLogPanel() {
     setLogs((data || []) as (ActivityLog & { profile?: { full_name: string } })[]);
     setTotal(count || 0);
     setLoading(false);
-  }, [page, entityFilter, search]);
+  }, [page, entityFilter, search, membership, isManager]);
 
   useEffect(() => {
-    fetchLogs();
-  }, [fetchLogs]);
+    if (!memLoading && membership) fetchLogs();
+  }, [fetchLogs, memLoading, membership]);
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
   // Access denied for non-managers
-  if (userRole && !["admin", "manager"].includes(userRole)) {
+  if (membership && !isManager) {
     return (
       <div className="text-center py-12">
         <Shield className="w-10 h-10 text-stone-300 mx-auto mb-3" />

@@ -27,15 +27,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { createClient } from "@/lib/supabase/client";
 import { logActivity } from "@/lib/activity-log";
-
-const sectors = [
-  { value: "pharmacy", label: "Farmácia" },
-  { value: "clinic", label: "Clínica" },
-  { value: "dental", label: "Clínica Dentária" },
-  { value: "lab", label: "Laboratório" },
-  { value: "physio", label: "Fisioterapia" },
-  { value: "other", label: "Outro" },
-];
+import { useTranslations } from "next-intl";
 
 const defaultHours = {
   monday:    { open: "09:00", close: "19:00", closed: false },
@@ -47,9 +39,9 @@ const defaultHours = {
   sunday:    { open: "00:00", close: "00:00", closed: true },
 };
 
-const dayLabels: Record<string, string> = {
-  monday: "Segunda", tuesday: "Terça", wednesday: "Quarta",
-  thursday: "Quinta", friday: "Sexta", saturday: "Sábado", sunday: "Domingo",
+const dayKeys: Record<string, string> = {
+  monday: "monday", tuesday: "tuesday", wednesday: "wednesday",
+  thursday: "thursday", friday: "friday", saturday: "saturday", sunday: "sunday",
 };
 
 interface CreateOrgModalProps {
@@ -58,6 +50,17 @@ interface CreateOrgModalProps {
 }
 
 export function CreateOrgModal({ open, onClose }: CreateOrgModalProps) {
+  const t = useTranslations("createOrg");
+
+  const sectors = [
+    { value: "pharmacy", label: t("pharmacy") },
+    { value: "clinic", label: t("clinic") },
+    { value: "dental", label: t("dentalClinic") },
+    { value: "lab", label: t("lab") },
+    { value: "physio", label: t("physio") },
+    { value: "other", label: t("other") },
+  ];
+
   const [mounted, setMounted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -115,7 +118,7 @@ export function CreateOrgModal({ open, onClose }: CreateOrgModalProps) {
 
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { setError("Sessão expirada"); setLoading(false); return; }
+    if (!user) { setError(t("sessionExpired")); setLoading(false); return; }
 
     // Fetch current profile to seed the membership full_name. User can edit
     // the per-org display name later in Definições.
@@ -139,7 +142,7 @@ export function CreateOrgModal({ open, onClose }: CreateOrgModalProps) {
       .single();
 
     if (orgError || !org) {
-      setError(orgError?.message || "Erro ao criar organização");
+      setError(orgError?.message || t("errorCreatingOrg"));
       setLoading(false);
       return;
     }
@@ -186,7 +189,7 @@ export function CreateOrgModal({ open, onClose }: CreateOrgModalProps) {
       className="fixed inset-0 z-[100]"
       aria-modal="true"
       role="dialog"
-      aria-label="Nova organização"
+      aria-label={t("title")}
     >
       {/* Backdrop */}
       <div
@@ -210,11 +213,11 @@ export function CreateOrgModal({ open, onClose }: CreateOrgModalProps) {
 
         {/* Header */}
         <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-stone-100 shrink-0">
-          <h2 className="text-base font-semibold text-stone-900">Nova organização</h2>
+          <h2 className="text-base font-semibold text-stone-900">{t("title")}</h2>
           <button
             type="button"
             onClick={handleClose}
-            aria-label="Fechar"
+            aria-label={t("close")}
             className="text-stone-400 hover:text-stone-700 rounded-lg hover:bg-stone-100 p-2 -m-2 transition-colors"
             disabled={loading}
           >
@@ -232,8 +235,8 @@ export function CreateOrgModal({ open, onClose }: CreateOrgModalProps) {
             )}
 
             <Input
-              label="Nome da empresa"
-              placeholder="Farmácia Central"
+              label={t("companyName")}
+              placeholder={t("companyNamePlaceholder")}
               value={orgName}
               onChange={(e) => setOrgName(e.target.value)}
               required
@@ -242,7 +245,7 @@ export function CreateOrgModal({ open, onClose }: CreateOrgModalProps) {
 
             <div className="space-y-1">
               <label className="block text-xs font-medium text-[color:var(--text-secondary)] mb-1.5 uppercase tracking-wider">
-                Setor
+                {t("sector")}
               </label>
               <select
                 value={sector}
@@ -256,8 +259,8 @@ export function CreateOrgModal({ open, onClose }: CreateOrgModalProps) {
             </div>
 
             <Input
-              label="Morada (opcional)"
-              placeholder="Rua da Farmácia, 123"
+              label={t("address")}
+              placeholder={t("addressPlaceholder")}
               value={address}
               onChange={(e) => setAddress(e.target.value)}
             />
@@ -273,18 +276,18 @@ export function CreateOrgModal({ open, onClose }: CreateOrgModalProps) {
                   {hoursExpanded
                     ? <ChevronDown className="w-4 h-4 text-stone-500 shrink-0" />
                     : <ChevronRight className="w-4 h-4 text-stone-500 shrink-0" />}
-                  <span className="font-medium text-stone-800">Horário de funcionamento</span>
+                  <span className="font-medium text-stone-800">{t("operatingHours")}</span>
                 </div>
                 {!hoursExpanded && (
                   <span className="text-xs text-stone-500 text-right shrink-0">
-                    Seg–Sex 9–19 · Sáb 9–13
+                    {t("defaultHoursSummary")}
                   </span>
                 )}
               </button>
 
               {hoursExpanded && (
                 <div className="px-3.5 pb-3.5 pt-1 space-y-2">
-                  {Object.entries(dayLabels).map(([day, label]) => {
+                  {Object.entries(dayKeys).map(([day, key]) => {
                     const d = hours[day as keyof typeof hours];
                     return (
                       <div key={day} className="flex items-center gap-3 flex-wrap">
@@ -296,7 +299,7 @@ export function CreateOrgModal({ open, onClose }: CreateOrgModalProps) {
                             className="rounded border-stone-300 text-[color:var(--accent)] focus:ring-[color:var(--accent-soft)]"
                           />
                           <span className={`text-sm ${d.closed ? "text-stone-400" : "text-stone-700"}`}>
-                            {label}
+                            {t(key)}
                           </span>
                         </label>
                         {!d.closed ? (
@@ -307,7 +310,7 @@ export function CreateOrgModal({ open, onClose }: CreateOrgModalProps) {
                               onChange={(e) => updateDay(day, "open", e.target.value)}
                               className="rounded border-stone-300 px-2 py-1 text-sm focus:outline-none focus-visible:outline-none focus:ring-2 focus:ring-[color:var(--accent-soft)] focus:border-[color:var(--accent)]"
                             />
-                            <span className="text-stone-400">às</span>
+                            <span className="text-stone-400">{t("to")}</span>
                             <input
                               type="time"
                               value={d.close}
@@ -316,7 +319,7 @@ export function CreateOrgModal({ open, onClose }: CreateOrgModalProps) {
                             />
                           </div>
                         ) : (
-                          <span className="text-sm text-stone-400">Fechado</span>
+                          <span className="text-sm text-stone-400">{t("closed")}</span>
                         )}
                       </div>
                     );
@@ -335,7 +338,7 @@ export function CreateOrgModal({ open, onClose }: CreateOrgModalProps) {
               className="flex-1"
               disabled={loading}
             >
-              Cancelar
+              {t("cancel")}
             </Button>
             <Button
               type="submit"
@@ -343,7 +346,7 @@ export function CreateOrgModal({ open, onClose }: CreateOrgModalProps) {
               disabled={!orgName.trim()}
               className="flex-1"
             >
-              Criar organização
+              {t("createOrg")}
             </Button>
           </div>
         </form>

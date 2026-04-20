@@ -298,7 +298,7 @@ export default function LoginPage() {
           {/* Copy */}
           <div className="mt-12 max-w-md">
             <p className="text-xs font-semibold uppercase tracking-widest text-[color:var(--accent)] mb-3">
-              Junta-te a +200 equipas
+              Escalas sem stress
             </p>
             <h2 className="font-display text-3xl xl:text-4xl font-semibold text-white leading-tight">
               Publica uma escala de<br />

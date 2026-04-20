@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
+import { useCurrentMembership } from "@/hooks/use-membership";
 import { logActivity } from "@/lib/activity-log";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -60,6 +61,7 @@ export default function ShiftsPage() {
   const [error, setError] = useState("");
   const [confirmDeactivate, setConfirmDeactivate] = useState<ShiftTemplate | null>(null);
 
+  const { membership } = useCurrentMembership();
   const supabase = createClient();
 
   const fetchShifts = useCallback(async () => {
@@ -127,17 +129,7 @@ export default function ShiftsPage() {
 
       logActivity("shift_updated", "shift", editingId);
     } else {
-      // Need to get the user's org_id for new templates
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { setError(t("errorRequired")); setSaving(false); return; }
-
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("org_id")
-        .eq("id", user.id)
-        .single();
-
-      if (!profile?.org_id) {
+      if (!membership?.orgId) {
         setError(t("errorRequired"));
         setSaving(false);
         return;
@@ -145,7 +137,7 @@ export default function ShiftsPage() {
 
       const { error: err } = await supabase
         .from("shift_templates")
-        .insert({ ...payload, org_id: profile.org_id });
+        .insert({ ...payload, org_id: membership.orgId });
 
       if (err) {
         setError(err.message);
@@ -171,22 +163,13 @@ export default function ShiftsPage() {
   }
 
   async function loadPresets() {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("org_id")
-      .eq("id", user.id)
-      .single();
-
-    if (!profile?.org_id) return;
+    if (!membership?.orgId) return;
 
     const presets = [
-      { name: t("presets.morning"), start_time: "08:00", end_time: "16:00", min_staff: 2, color: "#F59E0B", org_id: profile.org_id },
-      { name: t("presets.afternoon"), start_time: "14:00", end_time: "22:00", min_staff: 2, color: "#3B82F6", org_id: profile.org_id },
-      { name: t("presets.night"), start_time: "22:00", end_time: "08:00", min_staff: 1, color: "#8B5CF6", org_id: profile.org_id },
-      { name: t("presets.split"), start_time: "09:00", end_time: "13:00", min_staff: 1, color: "#10B981", org_id: profile.org_id },
+      { name: t("presets.morning"), start_time: "08:00", end_time: "16:00", min_staff: 2, color: "#F59E0B", org_id: membership.orgId },
+      { name: t("presets.afternoon"), start_time: "14:00", end_time: "22:00", min_staff: 2, color: "#3B82F6", org_id: membership.orgId },
+      { name: t("presets.night"), start_time: "22:00", end_time: "08:00", min_staff: 1, color: "#8B5CF6", org_id: membership.orgId },
+      { name: t("presets.split"), start_time: "09:00", end_time: "13:00", min_staff: 1, color: "#10B981", org_id: membership.orgId },
     ];
 
     await supabase.from("shift_templates").insert(presets);

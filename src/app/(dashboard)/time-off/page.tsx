@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
+import { useCurrentMembership } from "@/hooks/use-membership";
 import { logActivity } from "@/lib/activity-log";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -12,6 +13,7 @@ import { formatDate } from "@/lib/dates";
 import { Modal } from "@/components/ui/modal";
 import { Palmtree } from "lucide-react";
 import { SkeletonCard, SkeletonList } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
 import type { Profile, TimeOffRequest } from "@/types/database";
 
 const STATUS_VARIANT: Record<string, "warning" | "success" | "danger"> = {
@@ -41,13 +43,14 @@ export default function TimeOffPage() {
     approved: t("statuses.approved"),
     rejected: t("statuses.rejected"),
   };
-  const [myRole, setMyRole] = useState<string>("employee");
-  const [myId, setMyId] = useState<string>("");
-  const [orgId, setOrgId] = useState<string>("");
+  const { membership, loading: memLoading, isManager } = useCurrentMembership();
+  const myRole = membership?.role ?? "employee";
+  const myId = membership?.userId ?? "";
+  const orgId = membership?.orgId ?? "";
+  const vacationQuota = membership?.vacationQuota ?? 22;
   const [requests, setRequests] = useState<(TimeOffRequest & { profile?: Profile })[]>([]);
   const [employees, setEmployees] = useState<Profile[]>([]);
-  const [vacationQuota, setVacationQuota] = useState<number>(22);
-  const [loading, setLoading] = useState(true);
+  const [dataLoading, setDataLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [showNew, setShowNew] = useState(false);
   const [tab, setTab] = useState<"pending" | "approved" | "rejected" | "all">("pending");
@@ -63,27 +66,13 @@ export default function TimeOffPage() {
   const [newOnBehalf, setNewOnBehalf] = useState<string>("self");
 
   const supabase = createClient();
-  const isManager = myRole === "admin" || myRole === "manager";
 
   const fetchData = useCallback(async () => {
-    setLoading(true);
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", user.id)
-      .single();
-
-    if (!profile) return;
-    setMyRole(profile.role);
-    setMyId(user.id);
-    setOrgId(profile.org_id || "");
-    setVacationQuota(profile.vacation_quota ?? 22);
+    if (!membership) return;
+    setDataLoading(true);
 
     // Fetch employees for manager view
-    if (profile.role === "admin" || profile.role === "manager") {
+    if (membership.role === "admin" || membership.role === "manager") {
       const { data: emps } = await supabase
         .from("profiles")
         .select("*")
@@ -98,16 +87,16 @@ export default function TimeOffPage() {
       .select("*, profile:profiles!time_off_requests_user_id_fkey(*)")
       .order("created_at", { ascending: false });
 
-    if (profile.role === "employee") {
-      query = query.eq("user_id", user.id);
+    if (membership.role === "employee") {
+      query = query.eq("user_id", membership.userId);
     }
 
     const { data: reqs } = await query;
     setRequests((reqs || []) as (TimeOffRequest & { profile?: Profile })[]);
-    setLoading(false);
-  }, [supabase]);
+    setDataLoading(false);
+  }, [supabase, membership]);
 
-  useEffect(() => { fetchData(); }, [fetchData]);
+  useEffect(() => { if (!memLoading && membership) fetchData(); }, [fetchData, memLoading, membership]);
 
   // Create new request
   async function createRequest() {
@@ -282,6 +271,8 @@ export default function TimeOffPage() {
   const pendingDays = pendingFerias.reduce((sum, r) => sum + countDays(r), 0);
   const remainingDays = vacationQuota - usedDays;
 
+  const loading = memLoading || dataLoading;
+
   if (loading) {
     return (
       <div className="space-y-4">
@@ -389,17 +380,23 @@ export default function TimeOffPage() {
 
       {/* Request list */}
       {filtered.length === 0 ? (
-        <Card>
-          <div className="text-center py-10">
-            <Palmtree className="w-10 h-10 text-stone-300 mx-auto mb-3" />
-            <p className="text-sm text-stone-500 mb-3">
-              {tab === "pending" ? t("noPendingRequests") : tab === "approved" ? t("noApprovedRequests") : tab === "rejected" ? t("noRejectedRequests") : t("noRequestsFound")}
-            </p>
-            {!isManager && (
-              <Button size="sm" onClick={() => { setShowNew(true); setFormError(null); }}>{t("newRequest")}</Button>
-            )}
-          </div>
-        </Card>
+        requests.length === 0 ? (
+          <EmptyState
+            icon={Palmtree}
+            title="Sem pedidos de férias"
+            description="Os pedidos de férias e ausências da equipa aparecem aqui."
+            {...(!isManager ? { actionLabel: "Pedir férias", onAction: () => { setShowNew(true); setFormError(null); } } : {})}
+          />
+        ) : (
+          <Card>
+            <div className="text-center py-10">
+              <Palmtree className="w-10 h-10 text-stone-300 mx-auto mb-3" />
+              <p className="text-sm text-stone-500 mb-3">
+                {tab === "pending" ? t("noPendingRequests") : tab === "approved" ? t("noApprovedRequests") : tab === "rejected" ? t("noRejectedRequests") : t("noRequestsFound")}
+              </p>
+            </div>
+          </Card>
+        )
       ) : (
         <div className="space-y-2">
           {filtered.map((req) => {

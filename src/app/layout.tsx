@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { getLocale, getMessages } from 'next-intl/server';
 import { NextIntlClientProvider } from 'next-intl';
 import { CookieBanner } from "@/components/CookieBanner";
+import { PostHogProvider } from "@/components/providers/posthog-provider";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -33,7 +35,11 @@ export default async function RootLayout({
     <html lang={locale}>
       <body className="antialiased">
         <NextIntlClientProvider locale={locale} messages={messages}>
-          {children}
+          <Suspense fallback={null}>
+            <PostHogProvider>
+              {children}
+            </PostHogProvider>
+          </Suspense>
           <CookieBanner />
         </NextIntlClientProvider>
       </body>

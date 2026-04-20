@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
+import { useCurrentMembership } from "@/hooks/use-membership";
 import { Card, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -25,8 +26,8 @@ export default function DashboardPage() {
   const m = useTranslations("months");
   const d = useTranslations("daysShort");
   const supabase = createClient();
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { membership, loading: memLoading, isManager } = useCurrentMembership();
+  const [dataLoading, setDataLoading] = useState(true);
 
   // Manager stats
   const [employeeCount, setEmployeeCount] = useState(0);
@@ -34,7 +35,6 @@ export default function DashboardPage() {
   const [pendingSwaps, setPendingSwaps] = useState(0);
 
   // Shared
-  const [vacationQuota, setVacationQuota] = useState(22);
   const [usedDays, setUsedDays] = useState(0);
   const [remainingDays, setRemainingDays] = useState(22);
 
@@ -50,23 +50,7 @@ export default function DashboardPage() {
   const currentMonth = now.getMonth() + 1;
   const currentYear = now.getFullYear();
 
-  const isManager = profile?.role === "admin" || profile?.role === "manager";
-
-  const fetchProfile = useCallback(async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { window.location.href = "/login"; return; }
-
-    const { data: p } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", user.id)
-      .single();
-
-    if (!p?.org_id) { window.location.href = "/onboarding"; return; }
-    setProfile(p as Profile);
-    setVacationQuota((p as Record<string, unknown>).vacation_quota as number ?? 22);
-    return { user, profile: p };
-  }, [supabase]);
+  const vacationQuota = membership?.vacationQuota ?? 22;
 
   // Fetch manager stats
   const fetchManagerStats = useCallback(async (orgId: string) => {
@@ -186,34 +170,36 @@ export default function DashboardPage() {
     setPendingAvailability(availRes.count || 0);
   }, [supabase]);
 
-  // Initial load
+  // Initial load — waits for membership to resolve
   useEffect(() => {
+    if (memLoading) return;
+    if (!membership) {
+      // No membership means no org — redirect to onboarding
+      window.location.href = "/onboarding";
+      return;
+    }
+
+    const userId = membership.userId;
+    const orgId = membership.orgId;
+
     (async () => {
-      setLoading(true);
-      const result = await fetchProfile();
-      if (!result) return;
-
-      const { user, profile: p } = result;
-      const role = p.role as string;
-      const orgId = p.org_id as string;
-
+      setDataLoading(true);
       await Promise.all([
-        fetchVacationBalance(user.id),
-        ...(role === "admin" || role === "manager" ? [fetchManagerStats(orgId)] : []),
-        fetchMyEntries(user.id, orgId, calMonth, calYear),
-        fetchUpcoming(user.id, orgId),
-        fetchPendingRequests(user.id),
+        fetchVacationBalance(userId),
+        ...(isManager ? [fetchManagerStats(orgId)] : []),
+        fetchMyEntries(userId, orgId, calMonth, calYear),
+        fetchUpcoming(userId, orgId),
+        fetchPendingRequests(userId),
       ]);
-
-      setLoading(false);
+      setDataLoading(false);
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [memLoading, membership]);
 
   // Refetch calendar when month changes
   useEffect(() => {
-    if (!profile) return;
-    fetchMyEntries(profile.id, profile.org_id || "", calMonth, calYear);
+    if (!membership) return;
+    fetchMyEntries(membership.userId, membership.orgId, calMonth, calYear);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [calMonth, calYear]);
 
@@ -255,6 +241,8 @@ export default function DashboardPage() {
     return myEntries.filter((e) => e.date === dateStr);
   }
 
+  const loading = memLoading || dataLoading;
+
   if (loading) {
     return (
       <div className="space-y-6">
@@ -273,9 +261,9 @@ export default function DashboardPage() {
     );
   }
 
-  if (!profile) return null;
+  if (!membership) return null;
 
-  const firstName = profile.full_name.split(" ")[0];
+  const firstName = membership.fullName.split(" ")[0];
   const calDays = buildCalendarDays(calMonth, calYear);
   const todayStr = now.toISOString().split("T")[0];
 

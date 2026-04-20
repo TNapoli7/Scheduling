@@ -12,6 +12,7 @@ import {
 import { useTranslations } from "next-intl";
 import { FakeBrandLogo, type BrandKey } from "@/components/lp/FakeBrandLogo";
 import { ShifteraLockup } from "@/components/lp/ShifteraLogo";
+import { PasswordStrength } from "@/components/ui/password-strength";
 
 type FakeLogo = { name: string; brand: BrandKey };
 
@@ -29,6 +30,7 @@ const fakeLogos: FakeLogo[] = [
 export default function RegisterPage() {
   const router = useRouter();
   const tPwd = useTranslations("passwordPolicy");
+  const t = useTranslations("auth.register");
   const [fullName, setFullName] = useState("");
   const [orgName, setOrgName] = useState("");
   const [email, setEmail] = useState("");
@@ -101,7 +103,7 @@ export default function RegisterPage() {
             >
               <path d="M15 18l-6-6 6-6" />
             </svg>
-            Voltar ao site
+            {t('backToSite')}
           </Link>
 
           <Link href="/" className="flex w-fit mb-10" aria-label="Shiftera home">
@@ -116,19 +118,19 @@ export default function RegisterPage() {
                 </svg>
               </div>
               <h1 className="font-display text-4xl font-semibold text-[color:var(--primary)] leading-tight">
-                Verifica o teu email.
+                {t('verifyEmail')}
               </h1>
               <p className="mt-4 text-[color:var(--text-secondary)]">
-                Enviámos um link de confirmação para <strong className="text-[color:var(--primary)]">{email}</strong>. Abre-o para começar a configurar a tua empresa.
+                {t('emailSent')} <strong className="text-[color:var(--primary)]">{email}</strong>. {t('openLink')}
               </p>
               <p className="mt-6 text-sm text-[color:var(--text-muted)]">
-                Não recebeste nada? Verifica a pasta de spam ou{" "}
+                {t('noEmail')}{" "}
                 <button
                   type="button"
                   onClick={() => setSentToEmail(false)}
                   className="text-[color:var(--accent)] hover:underline"
                 >
-                  tenta outro email
+                  {t('tryAnotherEmail')}
                 </button>
                 .
               </p>
@@ -136,11 +138,11 @@ export default function RegisterPage() {
           ) : (
             <>
               <h1 className="font-display text-4xl md:text-5xl font-semibold text-[color:var(--primary)] leading-[1.1]">
-                Começa o teu<br />
-                <span className="italic text-[color:var(--accent)]">trial de 14 dias.</span>
+                {t('startTrialLine1')}<br />
+                <span className="italic text-[color:var(--accent)]">{t('startTrialLine2')}</span>
               </h1>
               <p className="mt-4 text-[color:var(--text-secondary)]">
-                Sem cartão de crédito. Cancela quando quiseres.
+                {t('noCard')}
               </p>
 
               <form onSubmit={handleRegister} className="mt-8 space-y-4">
@@ -152,49 +154,49 @@ export default function RegisterPage() {
 
                 <div>
                   <label className="block text-xs font-semibold uppercase tracking-wider text-[color:var(--text-secondary)] mb-1.5">
-                    O teu nome
+                    {t('fullName')}
                   </label>
                   <input
                     type="text"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     required
-                    placeholder="Ana Rodrigues"
+                    placeholder={t('fullNamePlaceholder')}
                     className="w-full h-12 px-4 rounded-xl border border-[color:var(--border)] bg-white text-[color:var(--primary)] placeholder:text-[color:var(--text-muted)] focus:outline-none focus:border-[color:var(--primary)] focus:ring-4 focus:ring-[color:var(--primary-soft)] transition-all"
                   />
                 </div>
 
                 <div>
                   <label className="block text-xs font-semibold uppercase tracking-wider text-[color:var(--text-secondary)] mb-1.5">
-                    Nome da empresa
+                    {t('companyName')}
                   </label>
                   <input
                     type="text"
                     value={orgName}
                     onChange={(e) => setOrgName(e.target.value)}
                     required
-                    placeholder="Farmácia Central"
+                    placeholder={t('companyNamePlaceholder')}
                     className="w-full h-12 px-4 rounded-xl border border-[color:var(--border)] bg-white text-[color:var(--primary)] placeholder:text-[color:var(--text-muted)] focus:outline-none focus:border-[color:var(--primary)] focus:ring-4 focus:ring-[color:var(--primary-soft)] transition-all"
                   />
                 </div>
 
                 <div>
                   <label className="block text-xs font-semibold uppercase tracking-wider text-[color:var(--text-secondary)] mb-1.5">
-                    Email de trabalho
+                    {t('workEmail')}
                   </label>
                   <input
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
-                    placeholder="ana@farmacia.pt"
+                    placeholder={t('workEmailPlaceholder')}
                     className="w-full h-12 px-4 rounded-xl border border-[color:var(--border)] bg-white text-[color:var(--primary)] placeholder:text-[color:var(--text-muted)] focus:outline-none focus:border-[color:var(--primary)] focus:ring-4 focus:ring-[color:var(--primary-soft)] transition-all"
                   />
                 </div>
 
                 <div>
                   <label className="block text-xs font-semibold uppercase tracking-wider text-[color:var(--text-secondary)] mb-1.5">
-                    Password
+                    {t('password')}
                   </label>
                   <input
                     type="password"
@@ -205,6 +207,14 @@ export default function RegisterPage() {
                     placeholder={tPwd("placeholder", { min: MIN_PASSWORD_LENGTH })}
                     className="w-full h-12 px-4 rounded-xl border border-[color:var(--border)] bg-white text-[color:var(--primary)] placeholder:text-[color:var(--text-muted)] focus:outline-none focus:border-[color:var(--primary)] focus:ring-4 focus:ring-[color:var(--primary-soft)] transition-all"
                   />
+                  <PasswordStrength
+                    password={password}
+                    labels={{
+                      weak: t("strengthWeak"),
+                      fair: t("strengthFair"),
+                      strong: t("strengthStrong"),
+                    }}
+                  />
                 </div>
 
                 <button
@@ -212,29 +222,29 @@ export default function RegisterPage() {
                   disabled={loading}
                   className="w-full h-12 rounded-xl bg-[color:var(--accent)] text-white font-semibold hover:bg-[color:var(--accent-hover)] active:scale-[0.99] transition-all shadow-sm hover:shadow-md disabled:opacity-60 disabled:cursor-not-allowed"
                 >
-                  {loading ? "A criar conta..." : "Iniciar trial de 14 dias"}
+                  {loading ? t('creatingAccount') : t('createAccount')}
                 </button>
 
                 <p className="text-center text-xs text-[color:var(--text-muted)]">
-                  Ao criar a conta aceitas os nossos{" "}
-                  <a href="#" className="underline hover:text-[color:var(--primary)]">
-                    Termos
+                  {t('agreeTerms')}{" "}
+                  <a href="/terms" className="underline hover:text-[color:var(--primary)]">
+                    {t('terms')}
                   </a>{" "}
                   e{" "}
-                  <a href="#" className="underline hover:text-[color:var(--primary)]">
-                    Privacidade
+                  <a href="/privacy" className="underline hover:text-[color:var(--primary)]">
+                    {t('privacy')}
                   </a>
                   .
                 </p>
               </form>
 
               <p className="mt-8 text-sm text-center text-[color:var(--text-secondary)]">
-                Já tens conta?{" "}
+                {t('haveAccount')}{" "}
                 <Link
                   href="/login"
                   className="font-semibold text-[color:var(--primary)] hover:text-[color:var(--accent)] transition-colors"
                 >
-                  Entrar
+                  {t('signIn')}
                 </Link>
               </p>
             </>
@@ -244,11 +254,11 @@ export default function RegisterPage() {
         {/* MOBILE — social proof (visible only below lg) */}
         <div className="lg:hidden mt-10 rounded-2xl bg-[color:var(--surface-sunken)] border border-[color:var(--border)] px-6 py-8 mx-auto max-w-md">
           <p className="text-xs font-semibold uppercase tracking-widest text-[color:var(--accent)] mb-2 text-center">
-            +200 equipas em Portugal
+            {t('socialProof')}
           </p>
           <h3 className="font-display text-xl font-semibold text-[color:var(--primary)] leading-tight text-center mb-6">
-            Clínicas e farmácias que{" "}
-            <span className="italic text-[color:var(--accent)]">fecharam o Excel.</span>
+            {t('socialProofTitle')}{" "}
+            <span className="italic text-[color:var(--accent)]">{t('closedExcel')}</span>
           </h3>
 
           {/* Logos compact row */}
@@ -280,21 +290,21 @@ export default function RegisterPage() {
               ))}
             </div>
             <p className="text-sm text-[color:var(--primary)] leading-snug">
-              &ldquo;Fiz o setup em 12 minutos. Na mesma semana tinha a escala do mês seguinte publicada.&rdquo;
+              &ldquo;{t('testimonial')}&rdquo;
             </p>
             <div className="mt-3 flex items-center gap-2.5">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="https://randomuser.me/api/portraits/women/28.jpg"
-                alt="Joana Ferreira"
+                alt={t('testimonialAuthor')}
                 className="w-9 h-9 rounded-full object-cover"
               />
               <div>
                 <p className="font-semibold text-xs text-[color:var(--primary)]">
-                  Joana Ferreira
+                  {t('testimonialAuthor')}
                 </p>
                 <p className="text-[10px] text-[color:var(--text-muted)]">
-                  Diretora Geral · LusoMed
+                  {t('testimonialPosition')}
                 </p>
               </div>
             </div>
@@ -315,11 +325,11 @@ export default function RegisterPage() {
 
         <div className="relative z-10 flex flex-col justify-center px-12 xl:px-20 py-12 w-full">
           <p className="text-xs font-semibold uppercase tracking-widest text-[color:var(--accent)] mb-3">
-            +200 equipas em Portugal
+            {t('socialProof')}
           </p>
           <h2 className="font-display text-3xl xl:text-4xl font-semibold text-[color:var(--primary)] leading-tight max-w-md">
-            Clínicas e farmácias que<br />
-            <span className="italic text-[color:var(--accent)]">fecharam o Excel.</span>
+            {t('socialProofTitle')}<br />
+            <span className="italic text-[color:var(--accent)]">{t('closedExcel')}</span>
           </h2>
 
           <div className="mt-10 grid grid-cols-3 gap-x-4 gap-y-6 max-w-lg">
@@ -349,21 +359,21 @@ export default function RegisterPage() {
               ))}
             </div>
             <p className="font-display text-[color:var(--primary)] text-base leading-snug">
-              &ldquo;Fiz o setup em 12 minutos. Na mesma semana tinha a escala do mês seguinte publicada e a equipa a consultar no telemóvel. Não volto atrás.&rdquo;
+              &ldquo;{t('testimonial')}&rdquo;
             </p>
             <div className="mt-5 flex items-center gap-3">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="https://randomuser.me/api/portraits/women/28.jpg"
-                alt="Joana Ferreira"
+                alt={t('testimonialAuthor')}
                 className="w-11 h-11 rounded-full object-cover"
               />
               <div>
                 <p className="font-semibold text-sm text-[color:var(--primary)]">
-                  Joana Ferreira
+                  {t('testimonialAuthor')}
                 </p>
                 <p className="text-xs text-[color:var(--text-muted)]">
-                  Diretora Geral · LusoMed, Coimbra
+                  {t('testimonialPosition')}
                 </p>
               </div>
             </div>

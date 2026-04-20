@@ -3,12 +3,15 @@
 import { useState, useEffect, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
+import { useCurrentMembership } from "@/hooks/use-membership";
 import { logActivity } from "@/lib/activity-log";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Modal } from "@/components/ui/modal";
 import { SkeletonList } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ArrowLeftRight } from "lucide-react";
 import type { Profile, ScheduleEntry, ShiftTemplate } from "@/types/database";
 import { formatDate } from "@/lib/dates";
 
@@ -33,6 +36,7 @@ type TabFilter = "pending" | "approved" | "rejected" | "all";
 
 export default function SwapsPage() {
   const t = useTranslations("swaps");
+  const { membership, loading: memLoading, isManager } = useCurrentMembership();
   const [swaps, setSwaps] = useState<SwapWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<TabFilter>("pending");
@@ -53,22 +57,20 @@ export default function SwapsPage() {
   const supabase = createClient();
 
   const fetchData = useCallback(async () => {
+    if (!membership) return;
     setLoading(true);
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) return;
 
-    // Get current user profile
+    // Get current user profile (needed for display and passing as currentUser)
     const { data: profile } = await supabase
       .from("profiles")
       .select("*")
-      .eq("id", user.id)
+      .eq("id", membership.userId)
       .single();
 
-    setCurrentUser(profile);
-
-    if (!profile?.org_id) return;
+    if (profile) {
+      // Override role from membership (single source of truth)
+      setCurrentUser({ ...profile, role: membership.role, org_id: membership.orgId });
+    }
 
     // Fetch swap requests for this org
     const { data: swapData } = await supabase
@@ -103,11 +105,11 @@ export default function SwapsPage() {
 
     setSwaps(swapsWithTargetEntries);
     setLoading(false);
-  }, [supabase]);
+  }, [supabase, membership]);
 
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    if (!memLoading && membership) fetchData();
+  }, [fetchData, memLoading, membership]);
 
   // Open new swap modal
   async function openNewSwap() {
@@ -213,9 +215,6 @@ export default function SwapsPage() {
   const filtered =
     tab === "all" ? swaps : swaps.filter((s) => s.status === tab);
 
-  const isManager =
-    currentUser?.role === "admin" || currentUser?.role === "manager";
-
   const tabs: { key: TabFilter; label: string; count: number }[] = [
     {
       key: "pending",
@@ -235,7 +234,7 @@ export default function SwapsPage() {
     { key: "all", label: t("tabAll"), count: swaps.length },
   ];
 
-  if (loading) {
+  if (loading || memLoading) {
     return (
       <div className="space-y-6">
         <h1 className="text-2xl font-bold text-stone-900">{t("title")}</h1>
@@ -282,13 +281,21 @@ export default function SwapsPage() {
 
       {/* Swap list */}
       {filtered.length === 0 ? (
-        <Card>
-          <div className="text-center py-8 text-stone-500">
-            {tab === "pending"
-              ? t("noPendingSwaps")
-              : t("noSwapsFound")}
-          </div>
-        </Card>
+        swaps.length === 0 ? (
+          <EmptyState
+            icon={ArrowLeftRight}
+            title="Sem pedidos de troca"
+            description="Quando alguém da equipa pedir uma troca de turno, aparece aqui."
+          />
+        ) : (
+          <Card>
+            <div className="text-center py-8 text-stone-500">
+              {tab === "pending"
+                ? t("noPendingSwaps")
+                : t("noSwapsFound")}
+            </div>
+          </Card>
+        )
       ) : (
         <div className="space-y-3">
           {filtered.map((swap) => (

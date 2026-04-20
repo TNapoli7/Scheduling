@@ -12,6 +12,7 @@
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/modifiers": "^9.0.0",
+    "@sentry/nextjs": "^10.49.0",
     "@supabase/ssr": "^0.10.2",
     "@supabase/supabase-js": "^2.103.0",
     "file-saver": "^2.0.5",
@@ -21,6 +22,7 @@
     "lucide-react": "^1.8.0",
     "next": "16.2.3",
     "next-intl": "^4.9.1",
+    "posthog-js": "^1.369.3",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "resend": "^4.0.0",

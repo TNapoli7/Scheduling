@@ -8,15 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { ShifteraLockup } from "@/components/lp/ShifteraLogo";
-
-const sectors = [
-  { value: "pharmacy", label: "Farmácia" },
-  { value: "clinic", label: "Clínica" },
-  { value: "dental", label: "Clínica Dentária" },
-  { value: "lab", label: "Laboratório" },
-  { value: "physio", label: "Fisioterapia" },
-  { value: "other", label: "Outro" },
-];
+import { useTranslations } from "next-intl";
 
 const defaultHours = {
   monday:    { open: "09:00", close: "19:00", closed: false },
@@ -28,13 +20,24 @@ const defaultHours = {
   sunday:    { open: "00:00", close: "00:00", closed: true },
 };
 
-const dayLabels: Record<string, string> = {
-  monday: "Segunda", tuesday: "Terça", wednesday: "Quarta",
-  thursday: "Quinta", friday: "Sexta", saturday: "Sábado", sunday: "Domingo",
+const dayKeys: Record<string, string> = {
+  monday: "monday", tuesday: "tuesday", wednesday: "wednesday",
+  thursday: "thursday", friday: "friday", saturday: "saturday", sunday: "sunday",
 };
 
 export default function OnboardingPage() {
   const router = useRouter();
+  const t = useTranslations("auth.onboarding");
+
+  const sectors = [
+    { value: "pharmacy", label: t("pharmacy") },
+    { value: "clinic", label: t("clinic") },
+    { value: "dental", label: t("dentalClinic") },
+    { value: "lab", label: t("lab") },
+    { value: "physio", label: t("physio") },
+    { value: "other", label: t("other") },
+  ];
+
   // First-run only: authenticated user with no organisation yet. The
   // "add another organisation" flow for existing admins lives in
   // CreateOrgModal (opened from the sidebar org switcher).
@@ -84,7 +87,7 @@ export default function OnboardingPage() {
 
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { setError("Sessão expirada"); setLoading(false); return; }
+    if (!user) { setError(t("sessionExpired")); setLoading(false); return; }
 
     // Create organization
     const { data: org, error: orgError } = await supabase
@@ -99,7 +102,7 @@ export default function OnboardingPage() {
       .single();
 
     if (orgError || !org) {
-      setError(orgError?.message || "Erro ao criar organização");
+      setError(orgError?.message || t("errorCreatingOrg"));
       setLoading(false);
       return;
     }
@@ -149,7 +152,7 @@ export default function OnboardingPage() {
       <div className="w-full max-w-lg">
         <div className="flex flex-col items-center mb-8">
           <ShifteraLockup size={36} />
-          <p className="text-stone-500 mt-3">Configura a tua empresa em 2 passos</p>
+          <p className="text-stone-500 mt-3">{t('setupCompany')}</p>
         </div>
 
         {/* Progress — two steps, branded orange */}
@@ -186,18 +189,18 @@ export default function OnboardingPage() {
           {/* Step 1: Org info */}
           {step === 1 && (
             <div className="space-y-4">
-              <h2 className="text-xl font-semibold text-stone-900">A tua empresa</h2>
+              <h2 className="text-xl font-semibold text-stone-900">{t('step1')}</h2>
 
               <Input
-                label="Nome da empresa"
-                placeholder="Farmácia Central"
+                label={t('companyName')}
+                placeholder={t('companyNamePlaceholder')}
                 value={orgName}
                 onChange={(e) => setOrgName(e.target.value)}
                 required
               />
 
               <div className="space-y-1">
-                <label className="block text-sm font-medium text-stone-700">Setor</label>
+                <label className="block text-sm font-medium text-stone-700">{t('sector')}</label>
                 <select
                   value={sector}
                   onChange={(e) => setSector(e.target.value)}
@@ -210,14 +213,14 @@ export default function OnboardingPage() {
               </div>
 
               <Input
-                label="Morada (opcional)"
-                placeholder="Rua da Farmácia, 123"
+                label={t('address')}
+                placeholder={t('addressPlaceholder')}
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
               />
 
               <Button onClick={() => setStep(2)} disabled={!orgName} className="w-full">
-                Continuar
+                {t('continue')}
               </Button>
             </div>
           )}
@@ -225,11 +228,11 @@ export default function OnboardingPage() {
           {/* Step 2: Operating hours */}
           {step === 2 && (
             <div className="space-y-4">
-              <h2 className="text-xl font-semibold text-stone-900">Horário de funcionamento</h2>
-              <p className="text-sm text-stone-600">Quando e que a empresa esta aberta?</p>
+              <h2 className="text-xl font-semibold text-stone-900">{t('step2')}</h2>
+              <p className="text-sm text-stone-600">{t('operatingHours')}</p>
 
               <div className="space-y-3">
-                {Object.entries(dayLabels).map(([day, label]) => {
+                {Object.entries(dayKeys).map(([day, key]) => {
                   const d = hours[day as keyof typeof hours];
                   return (
                     <div key={day} className="flex items-center gap-3">
@@ -241,7 +244,7 @@ export default function OnboardingPage() {
                           className="rounded border-stone-300 text-[color:var(--accent)] focus:ring-[color:var(--accent-soft)]"
                         />
                         <span className={`text-sm ${d.closed ? "text-stone-400" : "text-stone-700"}`}>
-                          {label}
+                          {t(key)}
                         </span>
                       </label>
                       {!d.closed && (
@@ -252,7 +255,7 @@ export default function OnboardingPage() {
                             onChange={(e) => updateDay(day, "open", e.target.value)}
                             className="rounded border-stone-300 px-2 py-1 text-sm focus:outline-none focus-visible:outline-none focus:ring-2 focus:ring-[color:var(--accent-soft)] focus:border-[color:var(--accent)]"
                           />
-                          <span className="text-stone-400">é</span>
+                          <span className="text-stone-400">{t("to")}</span>
                           <input
                             type="time"
                             value={d.close}
@@ -262,7 +265,7 @@ export default function OnboardingPage() {
                         </div>
                       )}
                       {d.closed && (
-                        <span className="text-sm text-stone-400">Fechado</span>
+                        <span className="text-sm text-stone-400">{t('closed')}</span>
                       )}
                     </div>
                   );
@@ -273,15 +276,15 @@ export default function OnboardingPage() {
                   we re-use their existing profile.full_name (seeded in state
                   on mount). No separate "profile" step needed. */}
               <p className="text-sm text-stone-500">
-                Vais ser o administrador desta organização. Podes adicionar a equipa depois em Equipa.
+                {t('adminNote')}
               </p>
 
               <div className="flex gap-3">
                 <Button variant="secondary" onClick={() => setStep(1)} className="flex-1">
-                  Voltar
+                  {t('back')}
                 </Button>
                 <Button onClick={handleSubmit} loading={loading} disabled={!fullName} className="flex-1">
-                  Começar
+                  {t('finish')}
                 </Button>
               </div>
             </div>

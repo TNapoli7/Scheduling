@@ -21,16 +21,19 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Card } from "@/components/ui/card";
 import { SkeletonCard } from "@/components/ui/skeleton";
-
-const genderOptions = [
-  { value: "", label: "Não especificar" },
-  { value: "female", label: "Feminino" },
-  { value: "male", label: "Masculino" },
-  { value: "non_binary", label: "Não-binário" },
-  { value: "other", label: "Outro" },
-];
+import { useTranslations } from "next-intl";
 
 export default function ProfilePage() {
+  const t = useTranslations("profile");
+
+  const genderOptions = [
+    { value: "", label: t("genderNotSpecified") },
+    { value: "female", label: t("genderFemale") },
+    { value: "male", label: t("genderMale") },
+    { value: "non_binary", label: t("genderNonBinary") },
+    { value: "other", label: t("genderOther") },
+  ];
+
   const supabase = createClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -83,7 +86,7 @@ export default function ProfilePage() {
     setProfileMsg(null);
 
     if (!fullName.trim()) {
-      setProfileMsg({ type: "error", text: "Nome não pode ficar vazio." });
+      setProfileMsg({ type: "error", text: t("nameRequired") });
       setSaving(false);
       return;
     }
@@ -104,7 +107,7 @@ export default function ProfilePage() {
     }
 
     logActivity("profile_updated", "profile");
-    setProfileMsg({ type: "success", text: "Informação pessoal atualizada." });
+    setProfileMsg({ type: "success", text: t("profileUpdated") });
     setTimeout(() => setProfileMsg(null), 3500);
   }
 
@@ -115,11 +118,11 @@ export default function ProfilePage() {
     // Size + type guard — storage is public-read, a bad upload is visible
     // to everyone in the team, so reject obviously-wrong files up front.
     if (!file.type.startsWith("image/")) {
-      setProfileMsg({ type: "error", text: "Ficheiro tem de ser uma imagem." });
+      setProfileMsg({ type: "error", text: t("fileNotImage") });
       return;
     }
     if (file.size > 3 * 1024 * 1024) {
-      setProfileMsg({ type: "error", text: "Imagem máx. 3 MB." });
+      setProfileMsg({ type: "error", text: t("imageMaxSize") });
       return;
     }
 
@@ -157,7 +160,7 @@ export default function ProfilePage() {
 
     setAvatarUrl(url);
     logActivity("profile_avatar_updated", "profile");
-    setProfileMsg({ type: "success", text: "Foto de perfil atualizada." });
+    setProfileMsg({ type: "success", text: t("avatarUpdated") });
     setTimeout(() => setProfileMsg(null), 3500);
   }
 
@@ -168,18 +171,18 @@ export default function ProfilePage() {
     await supabase.from("profiles").update({ avatar_url: null }).eq("id", userId);
     setAvatarUrl(null);
     setUploading(false);
-    setProfileMsg({ type: "success", text: "Foto removida." });
+    setProfileMsg({ type: "success", text: t("avatarRemoved") });
     setTimeout(() => setProfileMsg(null), 3500);
   }
 
   async function changePassword() {
     setPwdMsg(null);
     if (newPassword.length < 8) {
-      setPwdMsg({ type: "error", text: "Password tem de ter pelo menos 8 caracteres." });
+      setPwdMsg({ type: "error", text: t("passwordMinLength") });
       return;
     }
     if (newPassword !== confirmPassword) {
-      setPwdMsg({ type: "error", text: "As passwords não coincidem." });
+      setPwdMsg({ type: "error", text: t("passwordMismatch") });
       return;
     }
     setChangingPwd(true);
@@ -192,7 +195,7 @@ export default function ProfilePage() {
     logActivity("password_changed", "auth");
     setNewPassword("");
     setConfirmPassword("");
-    setPwdMsg({ type: "success", text: "Password alterada com sucesso." });
+    setPwdMsg({ type: "success", text: t("passwordChanged") });
     setTimeout(() => setPwdMsg(null), 3500);
   }
 
@@ -211,10 +214,10 @@ export default function ProfilePage() {
     <div className="max-w-2xl space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-[color:var(--text-primary)] font-display tracking-tight">
-          Perfil
+          {t('title')}
         </h1>
         <p className="text-sm text-[color:var(--text-muted)] mt-1">
-          Gere a tua informação pessoal, foto e palavra-passe.
+          {t('subtitle')}
         </p>
       </div>
 
@@ -246,7 +249,7 @@ export default function ProfilePage() {
                   disabled={uploading}
                 >
                   <Camera className="w-4 h-4 mr-1.5" />
-                  {avatarUrl ? "Alterar foto" : "Carregar foto"}
+                  {avatarUrl ? t("changePhoto") : t("uploadPhoto")}
                 </Button>
                 {avatarUrl && (
                   <Button
@@ -257,12 +260,12 @@ export default function ProfilePage() {
                     disabled={uploading}
                   >
                     <Trash2 className="w-4 h-4 mr-1.5" />
-                    Remover
+                    {t("removePhoto")}
                   </Button>
                 )}
               </div>
               <p className="text-xs text-[color:var(--text-muted)]">
-                JPG ou PNG · máx. 3 MB. Sem foto usamos a inicial do teu nome.
+                {t("photoHint")}
               </p>
               <input
                 ref={fileInputRef}
@@ -278,25 +281,25 @@ export default function ProfilePage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input
-              label="Nome completo"
+              label={t("fullName")}
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               required
             />
             <Input
-              label="Email"
+              label={t("email")}
               value={email}
               disabled
-              hint="Para alterar o email contacta-nos."
+              hint={t("emailChangeHint")}
             />
             <Input
-              label="Data de nascimento"
+              label={t("dateOfBirth")}
               type="date"
               value={dateOfBirth}
               onChange={(e) => setDateOfBirth(e.target.value)}
             />
             <Select
-              label="Género"
+              label={t("gender")}
               value={gender}
               onChange={(e) => setGender(e.target.value)}
               options={genderOptions}
@@ -318,7 +321,7 @@ export default function ProfilePage() {
 
           <div className="flex justify-end">
             <Button onClick={saveProfile} loading={saving}>
-              Guardar alterações
+              {t("saveChanges")}
             </Button>
           </div>
         </div>
@@ -329,23 +332,23 @@ export default function ProfilePage() {
         <div className="space-y-4">
           <div>
             <h2 className="text-lg font-semibold text-[color:var(--text-primary)]">
-              Alterar palavra-passe
+              {t("changePasswordTitle")}
             </h2>
             <p className="text-sm text-[color:var(--text-muted)] mt-1">
-              Mínimo 8 caracteres. Vais manter a sessão iniciada.
+              {t("changePasswordHint")}
             </p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input
-              label="Nova palavra-passe"
+              label={t("newPassword")}
               type="password"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
               autoComplete="new-password"
             />
             <Input
-              label="Confirmar"
+              label={t("confirmPassword")}
               type="password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
@@ -372,7 +375,7 @@ export default function ProfilePage() {
               loading={changingPwd}
               disabled={!newPassword || !confirmPassword}
             >
-              Alterar palavra-passe
+              {t("changePasswordButton")}
             </Button>
           </div>
         </div>

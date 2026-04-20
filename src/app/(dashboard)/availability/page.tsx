@@ -3,11 +3,14 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
+import { useCurrentMembership } from "@/hooks/use-membership";
 import { logActivity } from "@/lib/activity-log";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { SkeletonTable } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
+import { CalendarOff } from "lucide-react";
 import type { Profile, Availability, TimeOffRequest } from "@/types/database";
 
 function getDaysInMonth(year: number, month: number): string[] {
@@ -43,8 +46,9 @@ export default function AvailabilityPage() {
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth() + 1);
-  const [myRole, setMyRole] = useState<string>("employee");
-  const [myId, setMyId] = useState<string>("");
+  const { membership, loading: memLoading, isManager } = useCurrentMembership();
+  const myRole = membership?.role ?? "employee";
+  const myId = membership?.userId ?? "";
   const [employees, setEmployees] = useState<Profile[]>([]);
   const [availabilities, setAvailabilities] = useState<(Availability & { profile?: Profile })[]>([]);
   // Per-user set of dates covered by an approved time-off (férias/baixa/etc.).
@@ -59,25 +63,13 @@ export default function AvailabilityPage() {
 
   const supabase = createClient();
   const days = useMemo(() => getDaysInMonth(year, month), [year, month]);
-  const isManager = myRole === "admin" || myRole === "manager";
 
   const fetchData = useCallback(async () => {
+    if (!membership) return;
     setLoading(true);
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", user.id)
-      .single();
-
-    if (!profile) return;
-    setMyRole(profile.role);
-    setMyId(user.id);
 
     // Fetch employees (for manager view)
-    if (profile.role === "admin" || profile.role === "manager") {
+    if (membership.role === "admin" || membership.role === "manager") {
       const { data: emps } = await supabase
         .from("profiles")
         .select("*")
@@ -85,7 +77,13 @@ export default function AvailabilityPage() {
         .order("full_name");
       setEmployees(emps || []);
     } else {
-      setEmployees([profile]);
+      // For employees, fetch own profile row for grid display
+      const { data: selfProfile } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", membership.userId)
+        .single();
+      setEmployees(selfProfile ? [selfProfile] : []);
     }
 
     // Fetch availabilities for the month
@@ -100,8 +98,8 @@ export default function AvailabilityPage() {
       .lte("date", endDate)
       .eq("available", false); // Only indisponibilidades
 
-    if (profile.role === "employee") {
-      query = query.eq("user_id", user.id);
+    if (membership.role === "employee") {
+      query = query.eq("user_id", membership.userId);
     }
 
     const { data: avail } = await query;
@@ -115,8 +113,8 @@ export default function AvailabilityPage() {
       .eq("status", "approved")
       .lte("start_date", endDate)
       .gte("end_date", startDate);
-    if (profile.role === "employee") {
-      timeOffQuery = timeOffQuery.eq("user_id", user.id);
+    if (membership.role === "employee") {
+      timeOffQuery = timeOffQuery.eq("user_id", membership.userId);
     }
     const { data: offs } = await timeOffQuery;
 
@@ -139,9 +137,9 @@ export default function AvailabilityPage() {
     setTimeOffByUser(map);
 
     setLoading(false);
-  }, [supabase, year, month]);
+  }, [supabase, year, month, membership]);
 
-  useEffect(() => { fetchData(); }, [fetchData]);
+  useEffect(() => { if (!memLoading && membership) fetchData(); }, [fetchData, memLoading, membership]);
 
   function prevMonth() {
     if (month === 1) { setMonth(12); setYear(year - 1); }
@@ -263,7 +261,7 @@ export default function AvailabilityPage() {
   // Pending count
   const pendingCount = availabilities.filter((a) => a.approval_status === "pending").length;
 
-  if (loading) {
+  if (loading || memLoading) {
     return (
       <div className="space-y-4">
         <div>
@@ -368,6 +366,13 @@ export default function AvailabilityPage() {
       </div>
 
       {/* Grid */}
+      {employees.length === 0 ? (
+        <EmptyState
+          icon={CalendarOff}
+          title="Sem disponibilidades"
+          description="Marca os dias em que não estás disponível para que o gestor possa planear a escala."
+        />
+      ) : (
       <div className="border border-stone-200 rounded-lg overflow-x-auto bg-white">
         <table className="text-xs w-full border-collapse">
           <thead>
@@ -474,6 +479,7 @@ export default function AvailabilityPage() {
           </tbody>
         </table>
       </div>
+      )}
 
       {/* Manager approval panel */}
       {isManager && pendingCount > 0 && (
