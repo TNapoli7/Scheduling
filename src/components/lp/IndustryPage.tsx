@@ -44,7 +44,15 @@ export function IndustryPage({ data }: { data: IndustryData }) {
           </Link>
           <div className="nav-links">
             <Link href="/#features">Funcionalidades</Link>
-            <Link href="/#industries">Indústrias</Link>
+            <div className="nav-dropdown">
+              <Link href="/#industries">Indústrias</Link>
+              <div className="nav-dropdown-menu">
+                <Link href="/industrias/farmacias">💊 Farmácias</Link>
+                <Link href="/industrias/clinicas">🏥 Clínicas</Link>
+                <Link href="/industrias/restauracao">🍽️ Restauração</Link>
+                <Link href="/industrias/hoteis">🏨 Hotelaria</Link>
+              </div>
+            </div>
             <Link href="/#pricing">Preços</Link>
             <Link href="/#faq">FAQ</Link>
           </div>

@@ -146,7 +146,15 @@ function Nav() {
         </Link>
         <div className="nav-links">
           <a href="#features">Funcionalidades</a>
-          <a href="#industries">Indústrias</a>
+          <div className="nav-dropdown">
+            <a href="#industries">Indústrias</a>
+            <div className="nav-dropdown-menu">
+              <Link href="/industrias/farmacias">💊 Farmácias</Link>
+              <Link href="/industrias/clinicas">🏥 Clínicas</Link>
+              <Link href="/industrias/restauracao">🍽️ Restauração</Link>
+              <Link href="/industrias/hoteis">🏨 Hotelaria</Link>
+            </div>
+          </div>
           <a href="#pricing">Preços</a>
           <a href="#faq">FAQ</a>
         </div>
