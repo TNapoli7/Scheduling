@@ -122,6 +122,7 @@ export default function SwapsPage() {
 
   // Open new swap modal
   async function openNewSwap() {
+    if (!membership) return;
     const {
       data: { user },
     } = await supabase.auth.getUser();

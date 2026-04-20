@@ -313,7 +313,7 @@ export default function SettingsPage() {
               />
               <Button
                 type="button"
-                variant="outline"
+                variant="secondary"
                 size="sm"
                 onClick={() => iconInputRef.current?.click()}
                 disabled={uploadingIcon}

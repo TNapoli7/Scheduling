@@ -68,6 +68,7 @@ export default function FairnessPage() {
   const supabase = createClient();
 
   const fetchMetrics = useCallback(async () => {
+    if (!membership) return;
     setLoading(true);
 
     // Get schedule for this month
