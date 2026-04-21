@@ -75,8 +75,10 @@ export default function DashboardPage() {
     setEmployeeCount(empRes.count || 0);
     setCurrentScheduleStatus(schedRes.data?.status || null);
     // Filter pending swaps to current org (swap_requests has no org_id column)
-    const orgPendingSwaps = (swapRes.data || []).filter(
-      (s: { requester?: { org_id?: string } | null }) => s.requester?.org_id === orgId
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const swapRows = (swapRes.data || []) as any[];
+    const orgPendingSwaps = swapRows.filter(
+      (s) => s.requester?.org_id === orgId
     );
     setPendingSwaps(orgPendingSwaps.length);
   }, [supabase, currentMonth, currentYear]);
