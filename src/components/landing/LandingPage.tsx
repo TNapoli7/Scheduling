@@ -139,6 +139,7 @@ function Nav() {
   }, []);
 
   return (
+    <>
     <nav className={`top ${scrolled ? "scrolled" : ""}`}>
       <div className="wrap row">
         <Link href="/" className="brand">
@@ -197,6 +198,7 @@ function Nav() {
         <Link href="/register" className="btn btn-primary" style={{textAlign:'center'}}>Começar grátis →</Link>
       </div>
     </div>
+    </>
   );
 }
 
