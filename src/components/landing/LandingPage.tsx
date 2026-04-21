@@ -131,6 +131,7 @@ const FAQS = [
 
 function Nav() {
   const [scrolled, setScrolled] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener("scroll", onScroll);
@@ -165,8 +166,37 @@ function Nav() {
             Começar grátis <span style={{ opacity: 0.7, marginLeft: 4 }}>→</span>
           </Link>
         </div>
+        <button className="mobile-menu-btn" onClick={() => setMobileOpen(true)} aria-label="Abrir menu">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+        </button>
       </div>
     </nav>
+    {/* Mobile nav */}
+    <div className={`mobile-nav ${mobileOpen ? "open" : ""}`}>
+      <div className="mobile-nav-header">
+        <Link href="/" className="brand">
+          <span className="brand-mark"><i /></span>
+          Shiftera
+        </Link>
+        <button className="mobile-menu-btn" onClick={() => setMobileOpen(false)} aria-label="Fechar menu">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div className="mobile-nav-body">
+        <a href="#features" onClick={() => setMobileOpen(false)}>Funcionalidades</a>
+        <a href="#industries" onClick={() => setMobileOpen(false)}>Indústrias</a>
+        <Link href="/industrias/farmacias" className="sub-link" onClick={() => setMobileOpen(false)}>💊 Farmácias</Link>
+        <Link href="/industrias/clinicas" className="sub-link" onClick={() => setMobileOpen(false)}>🏥 Clínicas</Link>
+        <Link href="/industrias/restauracao" className="sub-link" onClick={() => setMobileOpen(false)}>🍽️ Restauração</Link>
+        <Link href="/industrias/hoteis" className="sub-link" onClick={() => setMobileOpen(false)}>🏨 Hotelaria</Link>
+        <a href="#pricing" onClick={() => setMobileOpen(false)}>Preços</a>
+        <a href="#faq" onClick={() => setMobileOpen(false)}>FAQ</a>
+      </div>
+      <div className="mobile-nav-footer">
+        <Link href="/login" className="btn btn-ghost" style={{textAlign:'center'}}>Entrar</Link>
+        <Link href="/register" className="btn btn-primary" style={{textAlign:'center'}}>Começar grátis →</Link>
+      </div>
+    </div>
   );
 }
 
@@ -433,7 +463,7 @@ export default function LandingPage() {
               </div>
             </div>
 
-            <div style={{ position: "relative" }}>
+            <div style={{ position: "relative" }} aria-hidden="true">
               <ScheduleGrid />
               <div className="float f1">
                 <div className="ico" style={{ background: "var(--lp-accent-soft)", color: "var(--lp-accent-ink)", fontWeight: 700 }}>
@@ -772,8 +802,8 @@ export default function LandingPage() {
             <div>
               <h5>Legal</h5>
               <ul>
-                <li><Link href="/terms">Termos</Link></li>
-                <li><Link href="/privacy">Privacidade</Link></li>
+                <li><Link href="/termos">Termos</Link></li>
+                <li><Link href="/privacidade">Privacidade</Link></li>
                 <li><Link href="/dpa">DPA</Link></li>
                 <li><Link href="/cookies">Cookies</Link></li>
               </ul>

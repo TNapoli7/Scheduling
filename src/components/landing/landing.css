@@ -699,6 +699,13 @@
   max-height: 300px;
 }
 .lp .faq-a .inner { padding: 0 0 24px; max-width: 720px; }
+.lp .faq-item.open .faq-a .inner {
+  animation: faqOpen .2s ease-out;
+}
+@keyframes faqOpen {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 
 /* ------------ CTA banner ------------ */
 .lp .final-cta {
@@ -762,6 +769,72 @@
   font-family: var(--font-mono); font-size: 11px;
 }
 
+/* Mobile menu */
+.lp .mobile-menu-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: var(--ink);
+  border-radius: 8px;
+}
+.lp .mobile-menu-btn:hover { background: var(--paper-2); }
+
+.lp .mobile-nav {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  background: var(--white);
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity .2s, visibility .2s;
+}
+.lp .mobile-nav.open {
+  opacity: 1;
+  visibility: visible;
+}
+.lp .mobile-nav-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--line);
+}
+.lp .mobile-nav-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+}
+.lp .mobile-nav-body a {
+  display: block;
+  padding: 14px 0;
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--ink);
+  text-decoration: none;
+  border-bottom: 1px solid var(--line-soft);
+}
+.lp .mobile-nav-body a:last-child { border-bottom: none; }
+.lp .mobile-nav-body .sub-link {
+  padding-left: 16px;
+  font-size: 14px;
+  color: var(--ink-soft);
+}
+.lp .mobile-nav-footer {
+  padding: 20px;
+  border-top: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
 /* ------------ Responsive ------------ */
 @media (max-width: 1100px) {
   .lp .hero-grid { grid-template-columns: 1fr; }
@@ -793,6 +866,8 @@
   .lp .feature.span-8, .lp .feature.span-6, .lp .feature.span-4 { grid-column: span 1; }
   .lp .logos-row { grid-template-columns: repeat(3, 1fr); gap: 16px; }
   .lp .nav-links { display: none; }
+  .lp .nav-cta { display: none; }
+  .lp .mobile-menu-btn { display: flex; }
   .lp .final-cta { padding: 48px 20px; }
   .lp .final-cta h2 { font-size: 36px; }
   .lp .quote q { font-size: 28px; }

@@ -204,7 +204,7 @@ export default function AdminDashboard() {
               placeholder="Procurar..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-9 pr-3 py-2 text-sm border border-[color:var(--border-light)] rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 w-full sm:w-64 bg-[color:var(--surface)]"
+              className="pl-9 pr-3 py-2 text-sm border border-[color:var(--border-light)] rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 w-full sm:w-64 bg-[color:var(--surface)]"
             />
           </div>
         </div>

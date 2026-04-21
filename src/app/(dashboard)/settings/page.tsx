@@ -31,6 +31,7 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [error, setError] = useState(false);
 
   // Form state
   const [name, setName] = useState("");
@@ -183,8 +184,9 @@ export default function SettingsPage() {
     if (!org) return;
     setSaving(true);
     setSuccess(false);
+    setError(false);
 
-    await supabase
+    const { error: saveError } = await supabase
       .from("organizations")
       .update({
         name,
@@ -195,6 +197,13 @@ export default function SettingsPage() {
         updated_at: new Date().toISOString(),
       })
       .eq("id", org.id);
+
+    if (saveError) {
+      setSaving(false);
+      setError(true);
+      setTimeout(() => setError(false), 5000);
+      return;
+    }
 
     logActivity("settings_updated", "settings", org?.id);
 
@@ -244,6 +253,9 @@ export default function SettingsPage() {
         <h1 className="text-2xl font-bold text-stone-900">{t("title")}</h1>
         {success && (
           <Badge variant="success">{t("savedSuccess")}</Badge>
+        )}
+        {error && (
+          <Badge variant="danger">{t("savedError")}</Badge>
         )}
       </div>
 
@@ -337,7 +349,7 @@ export default function SettingsPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-4">
             <Input
               label={t("nameLabel")}
               value={name}
@@ -401,7 +413,7 @@ export default function SettingsPage() {
                     onChange={(e) =>
                       updateHours(dayKey, "closed", e.target.checked)
                     }
-                    className="rounded border-stone-300 text-indigo-600 focus:ring-indigo-500"
+                    className="rounded border-stone-300 text-teal-600 focus:ring-teal-500"
                   />
                   {t("closedLabel")}
                 </label>
@@ -413,7 +425,7 @@ export default function SettingsPage() {
                       onChange={(e) =>
                         updateHours(dayKey, "open", e.target.value)
                       }
-                      className="rounded-lg border border-stone-300 px-3 py-1.5 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="rounded-lg border border-stone-300 px-3 py-1.5 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
                     />
                     <span className="text-stone-400">—</span>
                     <input
@@ -422,7 +434,7 @@ export default function SettingsPage() {
                       onChange={(e) =>
                         updateHours(dayKey, "close", e.target.value)
                       }
-                      className="rounded-lg border border-stone-300 px-3 py-1.5 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="rounded-lg border border-stone-300 px-3 py-1.5 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
                     />
                   </div>
                 )}

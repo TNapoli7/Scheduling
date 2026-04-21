@@ -54,7 +54,7 @@ export function DashboardShell({
             the sole purpose of opening the sidebar drawer on small screens. */}
         <button
           onClick={() => setSidebarOpen(true)}
-          className="lg:hidden fixed top-3 left-3 z-30 p-2 rounded-lg bg-white/90 backdrop-blur-sm shadow-md border border-stone-200 text-stone-700 hover:text-stone-900"
+          className="lg:hidden fixed top-3 left-3 z-30 w-11 h-11 flex items-center justify-center rounded-lg bg-white/90 backdrop-blur-sm shadow-md border border-stone-200 text-stone-700 hover:text-stone-900"
           aria-label="Abrir menu"
         >
           <Menu className="w-5 h-5" />

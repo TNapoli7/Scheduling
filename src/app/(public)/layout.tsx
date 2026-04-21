@@ -16,7 +16,7 @@ export default function PublicLayout({ children }: { children: ReactNode }) {
       <nav className="bg-white border-b border-stone-200">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-indigo-600">
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-teal-600">
               <Calendar className="w-4 h-4 text-white" />
             </div>
             <span className="text-lg font-bold text-stone-900">Shiftera</span>
@@ -42,7 +42,7 @@ export default function PublicLayout({ children }: { children: ReactNode }) {
             {/* Brand */}
             <div>
               <div className="flex items-center gap-2 mb-4">
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-indigo-600">
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-teal-600">
                   <Calendar className="w-4 h-4 text-white" />
                 </div>
                 <span className="font-semibold text-stone-900">Shiftera</span>

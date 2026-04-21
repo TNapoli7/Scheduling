@@ -738,11 +738,14 @@
     "scoreHeader": "Score",
     "legend1": "80-100: Fair distribution",
     "legend2": "60-79: Needs attention",
-    "legend3": "0-59: Imbalanced"
+    "legend3": "0-59: Imbalanced",
+    "noDataDescription": "Create and publish a schedule to see shift distribution metrics.",
+    "noDataAction": "Create schedule"
   },
   "settingsPage": {
     "title": "Settings",
     "savedSuccess": "Saved successfully",
+    "savedError": "Error saving. Please try again.",
     "tabGeneral": "General",
     "tabPlan": "Plan",
     "tabNotifications": "Notifications",

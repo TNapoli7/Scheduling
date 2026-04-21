@@ -317,7 +317,7 @@ export default function TimeOffPage() {
               <p className="text-xs text-stone-500">{t("disponiveis")}</p>
             </div>
             <div>
-              <p className="text-2xl font-bold text-indigo-600">{usedDays % 1 === 0 ? usedDays : usedDays.toFixed(1).replace(".", ",")}</p>
+              <p className="text-2xl font-bold text-teal-600">{usedDays % 1 === 0 ? usedDays : usedDays.toFixed(1).replace(".", ",")}</p>
               <p className="text-xs text-stone-500">{t("utilizados")}</p>
             </div>
             <div>
@@ -346,7 +346,7 @@ export default function TimeOffPage() {
           { key: "all" as const, label: t("tabAll"), count: allCount, variant: "neutral" as const },
         ];
         return (
-          <div className="flex gap-1 bg-stone-100 rounded-lg p-1 w-fit">
+          <div className="flex gap-1 bg-stone-100 rounded-lg p-1 w-fit overflow-x-auto flex-nowrap" style={{WebkitOverflowScrolling: 'touch'}}>
             {tabs.map((item) => {
               const isActive = tab === item.key;
               return (
@@ -421,7 +421,7 @@ export default function TimeOffPage() {
                         {TYPE_LABELS[req.type] || req.type}
                       </span>
                       {req.period && req.period !== "full_day" && (
-                        <span className="text-xs text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">
+                        <span className="text-xs text-teal-600 bg-teal-50 px-2 py-0.5 rounded">
                           {PERIOD_LABELS[req.period] || req.period}
                         </span>
                       )}

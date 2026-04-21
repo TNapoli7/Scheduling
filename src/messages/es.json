@@ -738,11 +738,14 @@
     "scoreHeader": "Puntuación",
     "legend1": "80-100: Distribución justa",
     "legend2": "60-79: Requiere atención",
-    "legend3": "0-59: Desequilibrado"
+    "legend3": "0-59: Desequilibrado",
+    "noDataDescription": "Crea y publica un horario para ver las métricas de distribución de turnos.",
+    "noDataAction": "Crear horario"
   },
   "settingsPage": {
     "title": "Configuración",
     "savedSuccess": "Guardado correctamente",
+    "savedError": "Error al guardar. Inténtalo de nuevo.",
     "tabGeneral": "General",
     "tabPlan": "Plan",
     "tabNotifications": "Notificaciones",

@@ -400,18 +400,13 @@ export default function RegisterPage() {
                 Não voltamos ao Excel.&rdquo;
               </p>
               <div className="flex items-center gap-3 mt-5">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src="https://randomuser.me/api/portraits/women/28.jpg"
-                  alt="Ana Rodrigues"
-                  style={{
-                    width: 40,
-                    height: 40,
-                    borderRadius: "50%",
-                    objectFit: "cover",
-                    border: "2px solid rgba(255,255,255,0.15)",
-                  }}
-                />
+                <div style={{
+                  width: 40, height: 40, borderRadius: '50%',
+                  background: 'var(--auth-accent)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: '14px', fontWeight: 700, color: 'white',
+                  border: '2px solid rgba(255,255,255,0.15)',
+                }}>JF</div>
                 <div>
                   <p
                     style={{
@@ -543,18 +538,13 @@ function SocialProofCompact({ brands }: { brands: string[] }) {
           &ldquo;Passámos de 4 horas a montar escalas para 15 minutos.&rdquo;
         </p>
         <div className="flex items-center gap-2 mt-3">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="https://randomuser.me/api/portraits/women/28.jpg"
-            alt="Ana Rodrigues"
-            style={{
-              width: 32,
-              height: 32,
-              borderRadius: "50%",
-              objectFit: "cover",
-              border: "1.5px solid rgba(255,255,255,0.15)",
-            }}
-          />
+          <div style={{
+            width: 32, height: 32, borderRadius: '50%',
+            background: 'var(--auth-accent)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: '11px', fontWeight: 700, color: 'white',
+            border: '1.5px solid rgba(255,255,255,0.15)',
+          }}>JF</div>
           <div>
             <p
               style={{

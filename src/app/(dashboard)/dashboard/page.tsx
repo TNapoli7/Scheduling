@@ -69,12 +69,16 @@ export default function DashboardPage() {
         .single(),
       supabase
         .from("swap_requests")
-        .select("*", { count: "exact", head: true })
+        .select("requester_id, requester:profiles!swap_requests_requester_id_fkey(org_id)")
         .eq("status", "pending"),
     ]);
     setEmployeeCount(empRes.count || 0);
     setCurrentScheduleStatus(schedRes.data?.status || null);
-    setPendingSwaps(swapRes.count || 0);
+    // Filter pending swaps to current org (swap_requests has no org_id column)
+    const orgPendingSwaps = (swapRes.data || []).filter(
+      (s: { requester?: { org_id?: string } | null }) => s.requester?.org_id === orgId
+    );
+    setPendingSwaps(orgPendingSwaps.length);
   }, [supabase, currentMonth, currentYear]);
 
   // Fetch vacation balance
@@ -440,7 +444,7 @@ export default function DashboardPage() {
                   return (
                     <div
                       key={`day-${day}`}
-                      className={`bg-[color:var(--surface)] min-h-[60px] p-1 ${isToday ? "ring-2 ring-indigo-500 ring-inset" : ""} ${isWeekend ? "bg-[color:var(--surface-sunken)]" : ""}`}
+                      className={`bg-[color:var(--surface)] min-h-[60px] p-1 ${isToday ? "ring-2 ring-teal-500 ring-inset" : ""} ${isWeekend ? "bg-[color:var(--surface-sunken)]" : ""}`}
                     >
                       <span className={`text-xs font-medium ${isToday ? "text-[color:var(--accent)]" : "text-[color:var(--text-secondary)]"}`}>
                         {day}

@@ -460,7 +460,7 @@ export default function AvailabilityPage() {
                     <td
                       key={day}
                       className={`border-b border-stone-100 text-center p-0.5 transition-colors ${bgClass} ${
-                        canClick ? "cursor-pointer hover:bg-indigo-50" : ""
+                        canClick ? "cursor-pointer hover:bg-teal-50" : ""
                       } ${isPast ? "opacity-50" : ""} ${
                         timeOff ? "cursor-not-allowed" : ""
                       }`}

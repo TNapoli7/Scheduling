@@ -173,7 +173,7 @@ export function ActivityLogPanel() {
               setSearch(e.target.value);
               setPage(0);
             }}
-            className="w-full pl-9 pr-4 py-2 text-sm border border-stone-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 bg-white"
+            className="w-full pl-9 pr-4 py-2 text-sm border border-stone-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-400 bg-white"
           />
         </div>
 
@@ -186,7 +186,7 @@ export function ActivityLogPanel() {
               setEntityFilter(e.target.value);
               setPage(0);
             }}
-            className="pl-9 pr-8 py-2 text-sm border border-stone-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 bg-white appearance-none cursor-pointer"
+            className="pl-9 pr-8 py-2 text-sm border border-stone-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-400 bg-white appearance-none cursor-pointer"
           >
             <option value="all">{t("allCategories")}</option>
             {Object.entries(ENTITY_ICONS).map(([key]) => (
@@ -234,7 +234,7 @@ export function ActivityLogPanel() {
               >
                 {/* Action */}
                 <div className="flex items-center gap-2.5 min-w-0">
-                  <div className="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-500 flex items-center justify-center flex-shrink-0">
+                  <div className="w-7 h-7 rounded-lg bg-teal-50 text-teal-500 flex items-center justify-center flex-shrink-0">
                     <Icon className="w-3.5 h-3.5" />
                   </div>
                   <div className="min-w-0">

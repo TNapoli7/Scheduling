@@ -1617,7 +1617,7 @@ export default function SchedulePage() {
         </Card>
       ) : (
         <div className="border border-[color:var(--border-light)] rounded-lg overflow-x-auto bg-[color:var(--surface)]">
-          <table className="text-xs w-full border-collapse">
+          <table className="text-xs w-full border-collapse" style={{minWidth: 700}}>
             <thead>
               <tr className="bg-[color:var(--surface-sunken)]">
                 <th className="sticky left-0 z-10 bg-[color:var(--surface-sunken)] px-3 py-2 text-left font-medium text-[color:var(--text-secondary)] border-b border-r border-[color:var(--border-light)] min-w-[140px]">
@@ -2097,11 +2097,11 @@ export default function SchedulePage() {
 
           {previewResult && !generateDone && (
             <>
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                <p className="text-sm font-medium text-blue-900">
+              <div className="bg-teal-50 border border-teal-200 rounded-lg p-3">
+                <p className="text-sm font-medium text-teal-900">
                   {t("preview")}
                 </p>
-                <p className="text-xs text-blue-700 mt-1">
+                <p className="text-xs text-teal-700 mt-1">
                   {t("notSavedYet")}
                 </p>
               </div>

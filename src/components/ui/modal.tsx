@@ -43,7 +43,7 @@ export function Modal({ open, onClose, title, children, size = "md" }: ModalProp
     >
       <div className="fixed inset-0 bg-stone-900/40 backdrop-blur-sm" />
       <div
-        className={`relative bg-white shadow-2xl w-full ${sizeStyles[size]} max-h-[92vh] overflow-y-auto border-t border-stone-200/70 sm:border sm:border-stone-200/50 rounded-t-2xl sm:rounded-2xl`}
+        className={`relative bg-white shadow-2xl w-full ${sizeStyles[size]} max-h-[92vh] overflow-hidden flex flex-col border-t border-stone-200/70 sm:border sm:border-stone-200/50 rounded-t-2xl sm:rounded-2xl`}
         style={{ animation: "modalIn 0.15s ease-out" }}
       >
         <style>{`
@@ -64,7 +64,7 @@ export function Modal({ open, onClose, title, children, size = "md" }: ModalProp
             </svg>
           </button>
         </div>
-        <div className="p-4 sm:p-6">
+        <div className="p-4 sm:p-6 overflow-y-auto" style={{maxHeight: 'calc(100vh - 200px)'}}>
           {children}
         </div>
       </div>

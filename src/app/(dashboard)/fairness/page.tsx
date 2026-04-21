@@ -263,7 +263,7 @@ export default function FairnessPage() {
             <svg className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
-            {t("exportExcel")}
+            {t("exportButton")}
           </Button>
         )}
       </div>
@@ -302,7 +302,7 @@ export default function FairnessPage() {
           </p>
         </Card>
         <Card>
-          <p className="text-sm text-stone-500">Funcionários escalados</p>
+          <p className="text-sm text-stone-500">{t("staffScheduled")}</p>
           <p className="text-3xl font-bold mt-1 text-stone-900">
             {activeMetrics.length}
             <span className="text-lg text-stone-400 font-normal">
@@ -316,36 +316,37 @@ export default function FairnessPage() {
       {metrics.length === 0 ? (
         <EmptyState
           icon={BarChart3}
-          title="Sem dados de equidade"
-          description="Cria e publica uma escala para ver as métricas de distribuição de turnos."
-          actionLabel="Criar escala"
+          title={t("noData")}
+          description={t("noDataDescription")}
+          actionLabel={t("noDataAction")}
           actionHref="/schedule"
         />
       ) : (
         <div className="border border-stone-200 rounded-lg overflow-hidden bg-white">
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+          <table className="w-full text-sm" style={{minWidth: 700}}>
             <thead>
               <tr className="bg-stone-50 text-left">
                 <th className="px-4 py-3 font-medium text-stone-600">
-                  Funcionário
+                  {t("employeeHeader")}
                 </th>
                 <th className="px-4 py-3 font-medium text-stone-600 text-center">
-                  Turnos
+                  {t("shiftsHeader")}
                 </th>
                 <th className="px-4 py-3 font-medium text-stone-600 text-center">
-                  Horas
+                  {t("hoursHeader")}
                 </th>
                 <th className="px-4 py-3 font-medium text-stone-600 text-center">
-                  Noites
+                  {t("nightsHeader")}
                 </th>
                 <th className="px-4 py-3 font-medium text-stone-600 text-center">
-                  Fins-de-semana
+                  {t("weekendHeader")}
                 </th>
                 <th className="px-4 py-3 font-medium text-stone-600 text-center">
-                  Feriados
+                  {t("holidaysHeader")}
                 </th>
                 <th className="px-4 py-3 font-medium text-stone-600 text-center">
-                  Score
+                  {t("scoreHeader")}
                 </th>
               </tr>
             </thead>
@@ -353,7 +354,7 @@ export default function FairnessPage() {
               {metrics.map((m) => (
                 <tr
                   key={m.employee.id}
-                  className={`${m.totalShifts === 0 ? "opacity-40" : ""}`}
+                  className={`hover:bg-stone-50 transition-colors ${m.totalShifts === 0 ? "opacity-40" : ""}`}
                 >
                   <td className="px-4 py-3">
                     <div className="font-medium text-stone-900">
@@ -397,6 +398,7 @@ export default function FairnessPage() {
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       )}
 
@@ -404,15 +406,15 @@ export default function FairnessPage() {
       <div className="flex flex-wrap gap-4 text-xs text-stone-500 px-1">
         <div className="flex items-center gap-1.5">
           <div className="w-3 h-3 rounded-full bg-teal-100 border border-teal-300" />
-          80-100: Distribuição justa
+          {t("legend1")}
         </div>
         <div className="flex items-center gap-1.5">
           <div className="w-3 h-3 rounded-full bg-amber-100 border border-amber-300" />
-          60-79: Atenção necessária
+          {t("legend2")}
         </div>
         <div className="flex items-center gap-1.5">
           <div className="w-3 h-3 rounded-full bg-red-100 border border-red-300" />
-          0-59: Desequilíbrio
+          {t("legend3")}
         </div>
       </div>
     </div>

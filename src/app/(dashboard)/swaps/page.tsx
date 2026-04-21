@@ -263,14 +263,14 @@ export default function SwapsPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 border-b border-stone-200">
+      <div className="flex gap-1 border-b border-stone-200 overflow-x-auto flex-nowrap" style={{WebkitOverflowScrolling: 'touch'}}>
         {tabs.map((t) => (
           <button
             key={t.key}
             onClick={() => setTab(t.key)}
             className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
               tab === t.key
-                ? "border-indigo-600 text-indigo-600"
+                ? "border-teal-600 text-teal-600"
                 : "border-transparent text-stone-500 hover:text-stone-700"
             }`}
           >
@@ -279,7 +279,7 @@ export default function SwapsPage() {
               <span
                 className={`ml-1.5 px-1.5 py-0.5 rounded-full text-xs ${
                   tab === t.key
-                    ? "bg-indigo-100 text-indigo-700"
+                    ? "bg-teal-100 text-teal-700"
                     : "bg-stone-100 text-stone-600"
                 }`}
               >
@@ -460,7 +460,7 @@ export default function SwapsPage() {
                     onClick={() => setSelectedEntry(entry.id)}
                     className={`w-full flex items-center gap-3 p-3 rounded-lg border text-left text-sm transition-colors ${
                       selectedEntry === entry.id
-                        ? "border-indigo-400 bg-indigo-50"
+                        ? "border-teal-400 bg-teal-50"
                         : "border-stone-200 hover:border-stone-300"
                     }`}
                   >
@@ -494,7 +494,7 @@ export default function SwapsPage() {
             <select
               value={selectedTarget}
               onChange={(e) => setSelectedTarget(e.target.value)}
-              className="block w-full rounded-lg border border-stone-300 px-3 py-2 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="block w-full rounded-lg border border-stone-300 px-3 py-2 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
             >
               <option value="">{t("selectColleagueOption")}</option>
               {colleagues.map((c) => (
@@ -515,7 +515,7 @@ export default function SwapsPage() {
               onChange={(e) => setSwapReason(e.target.value)}
               placeholder={t("reasonPlaceholder")}
               rows={2}
-              className="block w-full rounded-lg border border-stone-300 px-3 py-2 text-sm text-stone-900 placeholder:text-stone-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="block w-full rounded-lg border border-stone-300 px-3 py-2 text-sm text-stone-900 placeholder:text-stone-500 focus:outline-none focus:ring-2 focus:ring-teal-500"
             />
           </div>
 

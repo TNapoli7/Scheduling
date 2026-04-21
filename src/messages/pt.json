@@ -738,11 +738,14 @@
     "scoreHeader": "Score",
     "legend1": "80-100: Distribuição justa",
     "legend2": "60-79: Atenção necessária",
-    "legend3": "0-59: Desequilíbrio"
+    "legend3": "0-59: Desequilíbrio",
+    "noDataDescription": "Cria e publica uma escala para ver as métricas de distribuição de turnos.",
+    "noDataAction": "Criar escala"
   },
   "settingsPage": {
     "title": "Definições",
     "savedSuccess": "Guardado com sucesso",
+    "savedError": "Erro ao guardar. Tenta novamente.",
     "tabGeneral": "Geral",
     "tabPlan": "Plano",
     "tabNotifications": "Notificações",

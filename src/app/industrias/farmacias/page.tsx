@@ -2,9 +2,14 @@ import type { Metadata } from "next";
 import { IndustryPage } from "@/components/lp/IndustryPage";
 
 export const metadata: Metadata = {
-  title: "Shiftera para Farmácias · Escalas, turnos e disponibilidades",
+  title: "Shiftera para Farmácias — Software de Escalas",
   description:
-    "Software de gestão de escalas pensado para farmácias portuguesas. Cumpre o Código do Trabalho, gere folgas, trocas e horário de funcionamento.",
+    "Gestão de escalas para farmácias em Portugal. Serviços permanentes, turnos noturnos, rotação de piquete — tudo conforme a legislação.",
+  openGraph: {
+    title: "Shiftera para Farmácias",
+    description: "Software de escalas para farmácias portuguesas. Conforme Portaria n.º 14/2016.",
+    url: "https://shiftera.app/industrias/farmacias",
+  },
 };
 
 export default function FarmaciasPage() {

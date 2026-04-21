@@ -285,8 +285,8 @@ export default function OrgDetailPage() {
         <Card>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div className="flex items-center gap-3">
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${trialDaysLeft !== null && trialDaysLeft <= 3 ? "bg-red-50" : trialDaysLeft !== null && trialDaysLeft <= 7 ? "bg-amber-50" : "bg-indigo-50"}`}>
-                <Clock className={`w-5 h-5 ${trialDaysLeft !== null && trialDaysLeft <= 3 ? "text-red-600" : trialDaysLeft !== null && trialDaysLeft <= 7 ? "text-amber-600" : "text-indigo-600"}`} />
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${trialDaysLeft !== null && trialDaysLeft <= 3 ? "bg-red-50" : trialDaysLeft !== null && trialDaysLeft <= 7 ? "bg-amber-50" : "bg-teal-50"}`}>
+                <Clock className={`w-5 h-5 ${trialDaysLeft !== null && trialDaysLeft <= 3 ? "text-red-600" : trialDaysLeft !== null && trialDaysLeft <= 7 ? "text-amber-600" : "text-teal-600"}`} />
               </div>
               <div>
                 <p className="text-sm font-medium text-stone-900">
@@ -392,7 +392,7 @@ export default function OrgDetailPage() {
             <select
               value={editPlan}
               onChange={(e) => setEditPlan(e.target.value)}
-              className="w-full rounded-lg border border-[color:var(--border)] px-3 py-2 text-sm text-[color:var(--text-primary)] focus:ring-2 focus:ring-indigo-500 focus:border-transparent focus:outline-none"
+              className="w-full rounded-lg border border-[color:var(--border)] px-3 py-2 text-sm text-[color:var(--text-primary)] focus:ring-2 focus:ring-teal-500 focus:border-transparent focus:outline-none"
             >
               {PLAN_OPTIONS.map((p) => (
                 <option key={p.value} value={p.value}>{p.label}</option>
@@ -408,7 +408,7 @@ export default function OrgDetailPage() {
                 step="0.01"
                 value={editBase}
                 onChange={(e) => setEditBase(e.target.value)}
-                className="w-full rounded-lg border border-[color:var(--border)] px-3 py-2 text-sm text-[color:var(--text-primary)] focus:ring-2 focus:ring-indigo-500 focus:border-transparent focus:outline-none"
+                className="w-full rounded-lg border border-[color:var(--border)] px-3 py-2 text-sm text-[color:var(--text-primary)] focus:ring-2 focus:ring-teal-500 focus:border-transparent focus:outline-none"
               />
             </div>
             <div>
@@ -418,7 +418,7 @@ export default function OrgDetailPage() {
                 step="0.01"
                 value={editPerUser}
                 onChange={(e) => setEditPerUser(e.target.value)}
-                className="w-full rounded-lg border border-[color:var(--border)] px-3 py-2 text-sm text-[color:var(--text-primary)] focus:ring-2 focus:ring-indigo-500 focus:border-transparent focus:outline-none"
+                className="w-full rounded-lg border border-[color:var(--border)] px-3 py-2 text-sm text-[color:var(--text-primary)] focus:ring-2 focus:ring-teal-500 focus:border-transparent focus:outline-none"
               />
             </div>
           </div>
@@ -429,7 +429,7 @@ export default function OrgDetailPage() {
               <select
                 value={editCycle}
                 onChange={(e) => setEditCycle(e.target.value)}
-                className="w-full rounded-lg border border-[color:var(--border)] px-3 py-2 text-sm text-[color:var(--text-primary)] focus:ring-2 focus:ring-indigo-500 focus:border-transparent focus:outline-none"
+                className="w-full rounded-lg border border-[color:var(--border)] px-3 py-2 text-sm text-[color:var(--text-primary)] focus:ring-2 focus:ring-teal-500 focus:border-transparent focus:outline-none"
               >
                 <option value="monthly">Mensal</option>
                 <option value="annual">Anual</option>
@@ -442,7 +442,7 @@ export default function OrgDetailPage() {
                 value={editMaxUsers}
                 onChange={(e) => setEditMaxUsers(e.target.value)}
                 placeholder="Ilimitado"
-                className="w-full rounded-lg border border-[color:var(--border)] px-3 py-2 text-sm text-[color:var(--text-primary)] focus:ring-2 focus:ring-indigo-500 focus:border-transparent focus:outline-none"
+                className="w-full rounded-lg border border-[color:var(--border)] px-3 py-2 text-sm text-[color:var(--text-primary)] focus:ring-2 focus:ring-teal-500 focus:border-transparent focus:outline-none"
               />
             </div>
           </div>
@@ -454,7 +454,7 @@ export default function OrgDetailPage() {
               onChange={(e) => setEditNotes(e.target.value)}
               rows={2}
               placeholder="Ex: Promocode aplicado, desconto 20%..."
-              className="w-full rounded-lg border border-[color:var(--border)] px-3 py-2 text-sm text-[color:var(--text-primary)] focus:ring-2 focus:ring-indigo-500 focus:border-transparent focus:outline-none"
+              className="w-full rounded-lg border border-[color:var(--border)] px-3 py-2 text-sm text-[color:var(--text-primary)] focus:ring-2 focus:ring-teal-500 focus:border-transparent focus:outline-none"
             />
           </div>
 
@@ -464,7 +464,7 @@ export default function OrgDetailPage() {
               id="edit-active"
               checked={editActive}
               onChange={(e) => setEditActive(e.target.checked)}
-              className="rounded border-[color:var(--border)] text-[color:var(--accent)] focus:ring-indigo-500"
+              className="rounded border-[color:var(--border)] text-[color:var(--accent)] focus:ring-teal-500"
             />
             <label htmlFor="edit-active" className="text-sm text-[color:var(--text-secondary)]">
               Organização ativa

@@ -7,6 +7,7 @@
  * component with its own data props. Copy comes from i18n messages.
  */
 
+import { useState } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { LpLanguageSelector } from "./LpLanguageSelector";
@@ -28,6 +29,8 @@ export interface IndustryData {
 export function IndustryPage({ data }: { data: IndustryData }) {
   const t = useTranslations(`industries.${data.key}`);
   const tCommon = useTranslations("industries.common");
+  const tFooter = useTranslations("landing.footer");
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const features = Array.from({ length: data.featureCount }, (_, i) => i + 1);
   const useCases = Array.from({ length: data.useCaseCount }, (_, i) => i + 1);
@@ -63,8 +66,37 @@ export function IndustryPage({ data }: { data: IndustryData }) {
               Começar grátis <span style={{ opacity: 0.7, marginLeft: 4 }}>→</span>
             </Link>
           </div>
+          <button className="mobile-menu-btn" onClick={() => setMobileOpen(true)} aria-label="Abrir menu">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+          </button>
         </div>
       </nav>
+      {/* Mobile nav */}
+      <div className={`mobile-nav ${mobileOpen ? "open" : ""}`}>
+        <div className="mobile-nav-header">
+          <Link href="/" className="brand">
+            <span className="brand-mark"><i /></span>
+            Shiftera
+          </Link>
+          <button className="mobile-menu-btn" onClick={() => setMobileOpen(false)} aria-label="Fechar menu">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+          </button>
+        </div>
+        <div className="mobile-nav-body">
+          <a href="#features" onClick={() => setMobileOpen(false)}>Funcionalidades</a>
+          <a href="#industries" onClick={() => setMobileOpen(false)}>Indústrias</a>
+          <Link href="/industrias/farmacias" className="sub-link" onClick={() => setMobileOpen(false)}>💊 Farmácias</Link>
+          <Link href="/industrias/clinicas" className="sub-link" onClick={() => setMobileOpen(false)}>🏥 Clínicas</Link>
+          <Link href="/industrias/restauracao" className="sub-link" onClick={() => setMobileOpen(false)}>🍽️ Restauração</Link>
+          <Link href="/industrias/hoteis" className="sub-link" onClick={() => setMobileOpen(false)}>🏨 Hotelaria</Link>
+          <a href="#pricing" onClick={() => setMobileOpen(false)}>Preços</a>
+          <a href="#faq" onClick={() => setMobileOpen(false)}>FAQ</a>
+        </div>
+        <div className="mobile-nav-footer">
+          <Link href="/login" className="btn btn-ghost" style={{textAlign:'center'}}>Entrar</Link>
+          <Link href="/register" className="btn btn-primary" style={{textAlign:'center'}}>Começar grátis →</Link>
+        </div>
+      </div>
 
       {/* Hero */}
       <header style={{ padding: "140px 0 80px", background: "var(--paper-2)" }}>
@@ -324,7 +356,7 @@ export function IndustryPage({ data }: { data: IndustryData }) {
             Shiftera
           </Link>
           <p style={{ fontSize: 13, color: "var(--mute)" }}>
-            © {new Date().getFullYear()} Shiftera · Feito em Portugal 🇵🇹
+            © {new Date().getFullYear()} Shiftera · {tFooter("madeIn")}
           </p>
         </div>
       </footer>
