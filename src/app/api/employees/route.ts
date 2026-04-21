@@ -93,13 +93,13 @@ export async function POST(request: NextRequest) {
       // ── Flow A: Employee WITH email ─────────────────────────────────
       // Look up or create an auth user. If the email already exists in
       // the auth directory, re-use their user_id and add a membership.
-      // Look up by email directly instead of listing all users
-      const { data: existingList } = await admin.auth.admin.listUsers({
-        page: 1,
-        perPage: 1,
-        filter: email.toLowerCase(),
-      });
-      existing = existingList?.users?.[0];
+      // Look up by email via profiles table (indexed, no full scan)
+      const { data: profileMatch } = await admin
+        .from("profiles")
+        .select("id, email")
+        .eq("email", email.toLowerCase())
+        .maybeSingle();
+      existing = profileMatch ?? undefined;
 
       if (existing) {
         targetUserId = existing.id;
