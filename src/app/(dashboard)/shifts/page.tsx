@@ -15,6 +15,7 @@ import type { ShiftTemplate } from "@/types/database";
 
 type ShiftForm = {
   name: string;
+  short_code: string;
   start_time: string;
   end_time: string;
   min_staff: number;
@@ -23,6 +24,7 @@ type ShiftForm = {
 
 const emptyForm: ShiftForm = {
   name: "",
+  short_code: "",
   start_time: "09:00",
   end_time: "17:00",
   min_staff: 1,
@@ -88,6 +90,7 @@ export default function ShiftsPage() {
     setEditingId(shift.id);
     setForm({
       name: shift.name,
+      short_code: shift.short_code || "",
       start_time: shift.start_time,
       end_time: shift.end_time,
       min_staff: shift.min_staff,
@@ -109,6 +112,7 @@ export default function ShiftsPage() {
 
     const payload = {
       name: form.name,
+      short_code: form.short_code.trim() || form.name.slice(0, 3).toUpperCase(),
       start_time: form.start_time,
       end_time: form.end_time,
       min_staff: form.min_staff,
@@ -240,7 +244,12 @@ export default function ShiftsPage() {
                     style={{ backgroundColor: shift.color }}
                   />
                   <div>
-                    <h3 className="font-semibold text-stone-900">{shift.name}</h3>
+                    <h3 className="font-semibold text-stone-900">
+                      {shift.name}
+                      {shift.short_code && (
+                        <span className="ml-2 text-xs font-normal text-stone-400">({shift.short_code})</span>
+                      )}
+                    </h3>
                     <p className="text-sm text-stone-500">
                       {shift.start_time.slice(0, 5)} - {shift.end_time.slice(0, 5)}
                       <span className="ml-2 text-stone-400">
@@ -297,6 +306,15 @@ export default function ShiftsPage() {
             value={form.name}
             onChange={(e) => setForm({ ...form, name: e.target.value })}
             required
+          />
+
+          <Input
+            label={t("shortCodeLabel")}
+            placeholder={t("shortCodePlaceholder")}
+            value={form.short_code}
+            onChange={(e) => setForm({ ...form, short_code: e.target.value.toUpperCase().slice(0, 4) })}
+            hint={t("shortCodeHint")}
+            maxLength={4}
           />
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

@@ -64,6 +64,7 @@ export interface Profile {
   gender: string | null;
   /** @deprecated moved to Membership.vacation_quota. */
   vacation_quota: number;
+  hourly_cost: number | null;
   is_super_admin: boolean;
   last_login_at: string | null;
   /** Which organisation the user is currently viewing (set by the switcher). */
@@ -97,6 +98,7 @@ export interface ShiftTemplate {
   id: string;
   org_id: string;
   name: string;
+  short_code: string | null;
   start_time: string;
   end_time: string;
   min_staff: number;
@@ -117,6 +119,35 @@ export interface Schedule {
   published_at: string | null;
   created_at: string;
   updated_at: string;
+}
+
+/**
+ * Rotation template: defines a repeating multi-week shift pattern.
+ * `pattern` is an array of weeks, each week an array of 7 day patterns
+ * (Mon→Sun), each day pattern an array of shift_template_ids.
+ * Example for 2-week rotation: [[["shift1"],["shift2"],...7 days],[...7 days]]
+ */
+export interface RotationTemplate {
+  id: string;
+  org_id: string;
+  name: string;
+  weeks: number;
+  pattern: string[][][]; // weeks × 7 days × shift IDs per day
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ScheduleSnapshot {
+  id: string;
+  schedule_id: string;
+  org_id: string;
+  snapshot_data: {
+    entries: { user_id: string; date: string; shift_template_id: string; is_holiday: boolean }[];
+  };
+  reason: string;
+  created_by: string | null;
+  created_at: string;
 }
 
 export interface ScheduleEntry {

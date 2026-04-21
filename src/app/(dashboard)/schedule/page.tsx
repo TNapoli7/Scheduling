@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { useCurrentMembership } from "@/hooks/use-membership";
@@ -35,6 +35,8 @@ import type {
   ShiftTemplate,
   Schedule,
   ScheduleEntry,
+  ScheduleSnapshot,
+  RotationTemplate,
   Availability,
   TimeOffRequest,
 } from "@/types/database";
@@ -258,6 +260,7 @@ export default function SchedulePage() {
   const [violationModal, setViolationModal] =
     useState<ComplianceViolation[] | null>(null);
   const [violationFilter, setViolationFilter] = useState<"all" | "block" | "warning">("all");
+  const [violationUserFilter, setViolationUserFilter] = useState<string>("all");
 
   const [showGenerateModal, setShowGenerateModal] = useState(false);
   const [staffOverrides, setStaffOverrides] = useState<Record<string, number>>(
@@ -272,6 +275,31 @@ export default function SchedulePage() {
   const [generateError, setGenerateError] = useState<string | null>(null);
 
   const [orgName, setOrgName] = useState("");
+
+  // Undo stack
+  type UndoAction = {
+    label: string;
+    undo: () => Promise<void>;
+  };
+  const [undoStack, setUndoStack] = useState<UndoAction[]>([]);
+  const [undoToast, setUndoToast] = useState<string | null>(null);
+  const undoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  function pushUndo(action: UndoAction) {
+    setUndoStack((prev) => [...prev.slice(-4), action]);
+    setUndoToast(action.label);
+    if (undoTimerRef.current) clearTimeout(undoTimerRef.current);
+    undoTimerRef.current = setTimeout(() => setUndoToast(null), 5000);
+  }
+
+  async function handleUndo() {
+    const action = undoStack[undoStack.length - 1];
+    if (!action) return;
+    setUndoStack((prev) => prev.slice(0, -1));
+    setUndoToast(null);
+    await action.undo();
+    fetchData();
+  }
 
   const [unavailableDays, setUnavailableDays] = useState<
     Record<string, Set<string>>
@@ -545,6 +573,43 @@ export default function SchedulePage() {
         added: toInsert,
         removed: toDelete.map((e) => e.shift_template_id),
       });
+
+      // Push undo
+      const prevShiftIds = new Set(existingIds);
+      const capturedUserId = assignModal.userId;
+      const capturedDate = assignModal.date;
+      const capturedScheduleId = schedule.id;
+      const capturedUserName = assignModal.userName;
+      pushUndo({
+        label: `${capturedUserName} — ${parseInt(capturedDate.slice(8))} ${m(MONTH_KEYS[parseInt(capturedDate.slice(5, 7)) - 1])}`,
+        undo: async () => {
+          // Remove everything for this cell
+          const { data: currentEntries } = await supabase
+            .from("schedule_entries")
+            .select("id")
+            .eq("schedule_id", capturedScheduleId)
+            .eq("user_id", capturedUserId)
+            .eq("date", capturedDate);
+          if (currentEntries && currentEntries.length > 0) {
+            await supabase
+              .from("schedule_entries")
+              .delete()
+              .in("id", currentEntries.map((e: { id: string }) => e.id));
+          }
+          // Re-insert previous state
+          if (prevShiftIds.size > 0) {
+            await supabase.from("schedule_entries").insert(
+              Array.from(prevShiftIds).map((shiftId) => ({
+                schedule_id: capturedScheduleId,
+                user_id: capturedUserId,
+                date: capturedDate,
+                shift_template_id: shiftId,
+                is_holiday: !!nationalHolidays[capturedDate],
+              })),
+            );
+          }
+        },
+      });
     }
 
     setAssignModal(null);
@@ -817,6 +882,215 @@ export default function SchedulePage() {
     fetchData();
   }
 
+  const [showCopyModal, setShowCopyModal] = useState(false);
+  const [showHeatmap, setShowHeatmap] = useState(false);
+  const [showVersionHistory, setShowVersionHistory] = useState(false);
+  const [showRotationModal, setShowRotationModal] = useState(false);
+  const [rotationTemplates, setRotationTemplates] = useState<RotationTemplate[]>([]);
+  const [selectedRotation, setSelectedRotation] = useState<string | null>(null);
+  const [rotationEmployees, setRotationEmployees] = useState<Set<string>>(new Set());
+  const [applyingRotation, setApplyingRotation] = useState(false);
+  const [snapshots, setSnapshots] = useState<ScheduleSnapshot[]>([]);
+  const [loadingSnapshots, setLoadingSnapshots] = useState(false);
+  const [restoringSnapshot, setRestoringSnapshot] = useState(false);
+  const [copying, setCopying] = useState(false);
+
+  async function copyFromPreviousMonth() {
+    if (!schedule || !membership) return;
+    setCopying(true);
+
+    // Get previous month/year
+    const prevMonth = month === 1 ? 12 : month - 1;
+    const prevYear = month === 1 ? year - 1 : year;
+
+    // Fetch previous month's schedule
+    const { data: prevSched } = await supabase
+      .from("schedules")
+      .select("id")
+      .eq("org_id", membership.orgId)
+      .eq("year", prevYear)
+      .eq("month", prevMonth)
+      .single();
+
+    if (!prevSched) {
+      setCopying(false);
+      setShowCopyModal(false);
+      return;
+    }
+
+    // Fetch entries from previous month
+    const { data: prevEntries } = await supabase
+      .from("schedule_entries")
+      .select("user_id, date, shift_template_id, is_holiday")
+      .eq("schedule_id", prevSched.id);
+
+    if (!prevEntries || prevEntries.length === 0) {
+      setCopying(false);
+      setShowCopyModal(false);
+      return;
+    }
+
+    // Map dates from previous month to current month
+    const newEntries = prevEntries
+      .map((e) => {
+        const day = parseInt(e.date.slice(8));
+        const maxDay = new Date(year, month, 0).getDate();
+        if (day > maxDay) return null; // Skip days that don't exist in current month
+        const newDate = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+        return {
+          schedule_id: schedule.id,
+          user_id: e.user_id,
+          date: newDate,
+          shift_template_id: e.shift_template_id,
+          is_holiday: !!nationalHolidays[newDate],
+        };
+      })
+      .filter(Boolean);
+
+    if (newEntries.length > 0) {
+      // Insert in chunks of 50
+      for (let i = 0; i < newEntries.length; i += 50) {
+        await supabase.from("schedule_entries").insert(newEntries.slice(i, i + 50));
+      }
+      logActivity("schedule_copied", "schedule", schedule.id, {
+        from_month: prevMonth,
+        from_year: prevYear,
+        entries_copied: newEntries.length,
+      });
+    }
+
+    setCopying(false);
+    setShowCopyModal(false);
+    fetchData();
+  }
+
+  async function createSnapshot(reason: string) {
+    if (!schedule || !membership) return;
+    const snapshotData = {
+      entries: entries.map((e) => ({
+        user_id: e.user_id,
+        date: e.date,
+        shift_template_id: e.shift_template_id,
+        is_holiday: e.is_holiday,
+      })),
+    };
+    await supabase.from("schedule_snapshots").insert({
+      schedule_id: schedule.id,
+      org_id: membership.orgId,
+      snapshot_data: snapshotData,
+      reason,
+    });
+  }
+
+  async function fetchSnapshots() {
+    if (!schedule) return;
+    setLoadingSnapshots(true);
+    const { data } = await supabase
+      .from("schedule_snapshots")
+      .select("*")
+      .eq("schedule_id", schedule.id)
+      .order("created_at", { ascending: false });
+    setSnapshots((data as ScheduleSnapshot[]) || []);
+    setLoadingSnapshots(false);
+  }
+
+  async function restoreSnapshot(snapshot: ScheduleSnapshot) {
+    if (!schedule) return;
+    setRestoringSnapshot(true);
+
+    // First, snapshot current state
+    await createSnapshot("pre_restore");
+
+    // Delete all current entries
+    await supabase.from("schedule_entries").delete().eq("schedule_id", schedule.id);
+
+    // Insert snapshot entries
+    const newEntries = snapshot.snapshot_data.entries.map((e) => ({
+      schedule_id: schedule.id,
+      user_id: e.user_id,
+      date: e.date,
+      shift_template_id: e.shift_template_id,
+      is_holiday: e.is_holiday,
+    }));
+
+    for (let i = 0; i < newEntries.length; i += 50) {
+      await supabase.from("schedule_entries").insert(newEntries.slice(i, i + 50));
+    }
+
+    logActivity("schedule_restored", "schedule", schedule.id, { snapshot_id: snapshot.id });
+    setRestoringSnapshot(false);
+    setShowVersionHistory(false);
+    fetchData();
+  }
+
+  async function fetchRotationTemplates() {
+    const { data } = await supabase
+      .from("rotation_templates")
+      .select("*")
+      .eq("is_active", true)
+      .order("name");
+    setRotationTemplates((data as RotationTemplate[]) || []);
+  }
+
+  async function applyRotation() {
+    if (!schedule || !membership || !selectedRotation) return;
+    const rotation = rotationTemplates.find((r) => r.id === selectedRotation);
+    if (!rotation || rotationEmployees.size === 0) return;
+
+    setApplyingRotation(true);
+
+    const empArray = Array.from(rotationEmployees);
+    const newEntries: { schedule_id: string; user_id: string; date: string; shift_template_id: string; is_holiday: boolean }[] = [];
+
+    // Get first Monday of the month to align weeks
+    const firstDay = new Date(year, month - 1, 1);
+    const firstDow = firstDay.getDay(); // 0=Sun, 1=Mon
+    const daysInMonth = new Date(year, month, 0).getDate();
+
+    for (let day = 1; day <= daysInMonth; day++) {
+      const date = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+      const dow = new Date(year, month - 1, day).getDay();
+      // Convert to Mon=0..Sun=6
+      const dayIdx = dow === 0 ? 6 : dow - 1;
+
+      // Determine which week of the rotation we're in
+      const weekOfMonth = Math.floor((day - 1 + (firstDow === 0 ? 6 : firstDow - 1)) / 7);
+
+      for (let empIdx = 0; empIdx < empArray.length; empIdx++) {
+        const userId = empArray[empIdx];
+        // Each employee is offset by their index to create staggered rotation
+        const rotWeek = (weekOfMonth + empIdx) % rotation.weeks;
+        const dayShifts = rotation.pattern[rotWeek]?.[dayIdx] || [];
+
+        for (const shiftId of dayShifts) {
+          newEntries.push({
+            schedule_id: schedule.id,
+            user_id: userId,
+            date,
+            shift_template_id: shiftId,
+            is_holiday: !!nationalHolidays[date],
+          });
+        }
+      }
+    }
+
+    if (newEntries.length > 0) {
+      for (let i = 0; i < newEntries.length; i += 50) {
+        await supabase.from("schedule_entries").insert(newEntries.slice(i, i + 50));
+      }
+      logActivity("rotation_applied", "schedule", schedule.id, {
+        rotation_name: rotation.name,
+        employees: empArray.length,
+      });
+    }
+
+    setApplyingRotation(false);
+    setShowRotationModal(false);
+    setSelectedRotation(null);
+    setRotationEmployees(new Set());
+    fetchData();
+  }
+
   async function publishSchedule(skipEmptyCheck = false) {
     if (!schedule) return;
 
@@ -832,6 +1106,8 @@ export default function SchedulePage() {
     }
 
     setSaving(true);
+    // Auto-snapshot before publishing
+    await createSnapshot("pre_publish");
     await supabase
       .from("schedules")
       .update({
@@ -948,6 +1224,18 @@ export default function SchedulePage() {
               {t("complianceIssuesTitle")}
             </Button>
           )}
+          {schedule && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => { fetchSnapshots(); setShowVersionHistory(true); }}
+            >
+              <svg className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              {t("versionHistory")}
+            </Button>
+          )}
           {schedule?.status === "draft" && entries.length > 0 && (
             <Button
               variant="ghost"
@@ -957,6 +1245,30 @@ export default function SchedulePage() {
               className="text-[color:var(--danger)] hover:bg-[color:var(--danger-soft)]"
             >
               {t("clearButton")}
+            </Button>
+          )}
+          {schedule?.status === "draft" && entries.length === 0 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowCopyModal(true)}
+            >
+              <svg className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
+              </svg>
+              {t("copyPrevMonth")}
+            </Button>
+          )}
+          {schedule?.status === "draft" && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => { fetchRotationTemplates(); setShowRotationModal(true); }}
+            >
+              <svg className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              {t("applyRotation")}
             </Button>
           )}
           {schedule?.status === "draft" && (
@@ -1081,6 +1393,18 @@ export default function SchedulePage() {
             {t("viewDay")}
           </Button>
         </div>
+        {viewMode === "month" && (
+          <Button
+            variant={showHeatmap ? "primary" : "ghost"}
+            size="sm"
+            onClick={() => setShowHeatmap(!showHeatmap)}
+            title={t("heatmapToggle")}
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+          </Button>
+        )}
         {viewMode === "week" && (
           <div className="flex items-center gap-1">
             <Button
@@ -1148,7 +1472,7 @@ export default function SchedulePage() {
               style={{ backgroundColor: s.color }}
             />
             <span>
-              {s.name} ({s.start_time.slice(0, 5)}-{s.end_time.slice(0, 5)})
+              {s.short_code && <strong className="text-[color:var(--text-primary)]">{s.short_code}</strong>}{s.short_code ? " " : ""}{s.name} ({s.start_time.slice(0, 5)}-{s.end_time.slice(0, 5)})
             </span>
           </div>
         ))}
@@ -1314,7 +1638,9 @@ export default function SchedulePage() {
                                 }
                                 title={`${entry.shift_template.name} · ${entry.shift_template.start_time.slice(0, 5)}–${entry.shift_template.end_time.slice(0, 5)}`}
                               >
-                                <div className="leading-tight truncate">{entry.shift_template.name}</div>
+                                <div className="leading-tight truncate font-semibold">
+                                  {entry.shift_template.short_code || entry.shift_template.name}
+                                </div>
                                 <div className="leading-tight opacity-80">
                                   {entry.shift_template.start_time.slice(0, 5)}–{entry.shift_template.end_time.slice(0, 5)}
                                 </div>
@@ -1325,6 +1651,24 @@ export default function SchedulePage() {
                       </div>
                     );
                   })}
+                </div>
+
+                {/* Day summary: staffing per shift */}
+                <div className="mt-3 pt-3 border-t border-[color:var(--border-light)]">
+                  <div className="flex flex-wrap gap-3">
+                    {shifts.map((shift) => {
+                      const count = dayEntries.filter((e) => e.shift_template_id === shift.id).length;
+                      const ratio = shift.min_staff > 0 ? count / shift.min_staff : 1;
+                      const color = ratio >= 1 ? "var(--success)" : ratio >= 0.5 ? "var(--warning)" : "var(--danger)";
+                      return (
+                        <div key={shift.id} className="flex items-center gap-1.5 text-xs">
+                          <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: shift.color }} />
+                          <span className="text-[color:var(--text-secondary)]">{shift.short_code || shift.name}</span>
+                          <span className="font-semibold" style={{ color }}>{count}/{shift.min_staff}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
             </Card>
@@ -1462,14 +1806,15 @@ export default function SchedulePage() {
                             const top = ((startM - rangeStart) / 30) * slotHeight;
                             const height = ((endM - startM) / 30) * slotHeight;
                             const emp = employees.find((e) => e.id === entry.user_id);
+                            const blockIsLarge = height >= slotHeight * 1.5;
 
                             return (
                               <div
                                 key={entry.id}
-                                className="absolute left-1 right-1 rounded-md text-white text-[9px] font-medium px-1.5 py-0.5 overflow-hidden shadow-sm cursor-pointer hover:opacity-90 transition-opacity"
+                                className="absolute left-1 right-1 rounded-md text-white text-[10px] font-medium px-1.5 py-0.5 overflow-hidden shadow-sm cursor-pointer hover:opacity-90 transition-opacity z-10"
                                 style={{
                                   top,
-                                  height: Math.max(height, slotHeight * 0.7),
+                                  height: Math.max(height, slotHeight * 0.8),
                                   backgroundColor: entry.shift_template.color || "#6B7280",
                                 }}
                                 onClick={() =>
@@ -1478,14 +1823,44 @@ export default function SchedulePage() {
                                 }
                                 title={`${emp?.full_name || ""} · ${entry.shift_template.name} · ${entry.shift_template.start_time.slice(0, 5)}–${entry.shift_template.end_time.slice(0, 5)}`}
                               >
-                                <div className="leading-tight truncate">{emp?.full_name?.split(" ")[0]}</div>
-                                <div className="leading-tight opacity-80 truncate">
-                                  {entry.shift_template.start_time.slice(0, 5)}–{entry.shift_template.end_time.slice(0, 5)}
+                                <div className="leading-tight truncate font-semibold">
+                                  {entry.shift_template.short_code || entry.shift_template.name.slice(0, 4)}
                                 </div>
+                                <div className="leading-tight truncate">
+                                  {emp?.full_name || "—"}
+                                </div>
+                                {blockIsLarge && (
+                                  <div className="leading-tight opacity-75 truncate">
+                                    {entry.shift_template.start_time.slice(0, 5)}–{entry.shift_template.end_time.slice(0, 5)}
+                                  </div>
+                                )}
                               </div>
                             );
                           })}
                         </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                {/* Staffing summary footer */}
+                <div className="flex border-t border-[color:var(--border)]" style={{ minWidth: 700 }}>
+                  <div className="shrink-0 border-r border-[color:var(--border-light)] pr-2 flex items-center justify-end" style={{ width: 56 }}>
+                    <span className="text-[9px] text-[color:var(--text-muted)] font-medium">{t("staffingLabel")}</span>
+                  </div>
+                  {visibleDays.map((day) => {
+                    const dayCount = weekEntries.filter((e) => e.date === day).length;
+                    const totalNeeded = shifts.reduce((s, sh) => s + sh.min_staff, 0);
+                    const ratio = totalNeeded > 0 ? dayCount / totalNeeded : 1;
+                    const color = ratio >= 1 ? "var(--success)" : ratio >= 0.5 ? "var(--warning)" : "var(--danger)";
+                    return (
+                      <div
+                        key={day}
+                        className="flex-1 border-r border-[color:var(--border-light)] last:border-r-0 flex items-center justify-center py-1.5"
+                        style={{ minWidth: 90 }}
+                      >
+                        <span className="text-[10px] font-semibold" style={{ color }}>
+                          {dayCount}/{totalNeeded}
+                        </span>
                       </div>
                     );
                   })}
@@ -1543,13 +1918,24 @@ export default function SchedulePage() {
                       className={rowClass}
                       style={rowStyle}
                     >
-                      <div className="sm:min-w-[160px] flex items-baseline gap-2 flex-wrap">
+                      <div className="sm:min-w-[180px] flex items-baseline gap-2 flex-wrap">
                         <span className="text-xs text-[color:var(--text-muted)] uppercase tracking-wide">
                           {dow}
                         </span>
                         <span className="text-lg font-semibold text-[color:var(--text-primary)]">
                           {dayNum}
                         </span>
+                        {(() => {
+                          const totalNeeded = shifts.reduce((s, sh) => s + sh.min_staff, 0);
+                          const assigned = dayEntries.length;
+                          const ratio = totalNeeded > 0 ? assigned / totalNeeded : 1;
+                          const color = ratio >= 1 ? "var(--success)" : ratio >= 0.5 ? "var(--warning)" : "var(--danger)";
+                          return (
+                            <span className="text-[10px] font-semibold" style={{ color }}>
+                              {assigned}/{totalNeeded}
+                            </span>
+                          );
+                        })()}
                         {nationalHol && (
                           <Badge variant="danger" className="ml-1">
                             {nationalHol}
@@ -1705,7 +2091,7 @@ export default function SchedulePage() {
                     const hasEntry = cellEntries.length > 0;
 
                     const tdClass =
-                      "border-b border-[color:var(--border-light)] text-center cursor-pointer transition-colors p-0.5 " +
+                      "group/cell border-b border-[color:var(--border-light)] text-center cursor-pointer transition-colors p-0.5 " +
                       (unavailable && !hasEntry
                         ? "bg-[color:var(--border-light)] "
                         : isHoliday
@@ -1770,7 +2156,7 @@ export default function SchedulePage() {
                                     entry.shift_template?.color || "#6B7280",
                                 }}
                               >
-                                {entry.shift_template?.name?.slice(0, 3) || "?"}
+                                {entry.shift_template?.short_code || entry.shift_template?.name?.slice(0, 3) || "?"}
                               </DraggableChip>
                             ))}
                             {cellEntries.length > 2 && (
@@ -1780,11 +2166,19 @@ export default function SchedulePage() {
                             )}
                           </div>
                         ) : unavailable ? (
-                          <div className="py-1 text-[color:var(--text-muted)] text-[10px] font-medium">
+                          <div className="py-1 text-[color:var(--text-muted)] text-[10px] font-medium" title={(() => {
+                            const reasons: string[] = [];
+                            const avail = unavailableDays[emp.id];
+                            if (avail?.has(day)) reasons.push(t("unavailableReason"));
+                            return reasons.length > 0 ? reasons.join(", ") : t("unavailable");
+                          })()}>
                             IND
                           </div>
                         ) : (
-                          <div className="py-1 text-stone-300">—</div>
+                          <div className="py-1 text-stone-300 group-hover/cell:text-[color:var(--accent)] group-hover/cell:font-bold transition-colors">
+                            <span className="group-hover/cell:hidden">—</span>
+                            <span className="hidden group-hover/cell:inline text-sm">+</span>
+                          </div>
                         )}
                       </DroppableArea>
                     );
@@ -1792,6 +2186,49 @@ export default function SchedulePage() {
                 </tr>
               ))}
             </tbody>
+            <tfoot>
+              <tr className="bg-[color:var(--surface-sunken)]">
+                <td className="sticky left-0 z-10 bg-[color:var(--surface-sunken)] px-3 py-1.5 font-medium text-[10px] text-[color:var(--text-muted)] border-t border-r border-[color:var(--border-light)] uppercase tracking-wider">
+                  {t("staffingLabel")}
+                </td>
+                {visibleDays.map((day) => {
+                  const dayEntries = entries.filter((e) => e.date === day);
+                  // Count per shift how many assigned vs min_staff
+                  const shiftCounts = shifts.map((s) => {
+                    const assigned = dayEntries.filter((e) => e.shift_template_id === s.id).length;
+                    return { shift: s, assigned, needed: s.min_staff };
+                  }).filter((sc) => sc.needed > 0 || sc.assigned > 0);
+                  const allMet = shiftCounts.every((sc) => sc.assigned >= sc.needed);
+                  const anyUnder = shiftCounts.some((sc) => sc.assigned < sc.needed);
+                  return (
+                    <td
+                      key={day}
+                      className={`border-t border-[color:var(--border-light)] text-center p-0.5 ${
+                        anyUnder ? "bg-red-50" : allMet && shiftCounts.length > 0 ? "bg-green-50" : ""
+                      }`}
+                      title={shiftCounts.map((sc) => `${sc.shift.short_code || sc.shift.name.slice(0, 3)}: ${sc.assigned}/${sc.needed}`).join("\n")}
+                    >
+                      <div className="flex flex-col gap-[1px]">
+                        {shiftCounts.slice(0, 3).map((sc) => (
+                          <div
+                            key={sc.shift.id}
+                            className={`text-[9px] font-medium leading-tight ${
+                              sc.assigned < sc.needed
+                                ? "text-red-600"
+                                : sc.assigned === sc.needed
+                                ? "text-amber-600"
+                                : "text-green-600"
+                            }`}
+                          >
+                            {sc.assigned}/{sc.needed}
+                          </div>
+                        ))}
+                      </div>
+                    </td>
+                  );
+                })}
+              </tr>
+            </tfoot>
           </table>
         </div>
       )}
@@ -1807,6 +2244,132 @@ export default function SchedulePage() {
         ) : null}
       </DragOverlay>
       </DndContext>
+
+      {/* Staffing heatmap overlay */}
+      {showHeatmap && viewMode === "month" && (
+        <Card className="mt-4">
+          <div className="p-3 sm:p-4">
+            <h3 className="text-sm font-semibold text-[color:var(--text-primary)] mb-3">{t("heatmapTitle")}</h3>
+            <div className="overflow-x-auto">
+              <table className="text-[10px] w-full border-collapse" style={{ minWidth: 600 }}>
+                <thead>
+                  <tr>
+                    <th className="text-left py-1 px-1.5 text-[color:var(--text-muted)] font-medium">{t("shiftLabel")}</th>
+                    {days.map((day) => {
+                      const dayNum = parseInt(day.slice(8));
+                      return (
+                        <th key={day} className="text-center py-1 px-0.5 text-[color:var(--text-muted)] font-medium" style={{ minWidth: 22 }}>
+                          {dayNum}
+                        </th>
+                      );
+                    })}
+                  </tr>
+                </thead>
+                <tbody>
+                  {shifts.map((shift) => (
+                    <tr key={shift.id}>
+                      <td className="py-1 px-1.5 font-medium text-[color:var(--text-primary)] whitespace-nowrap">
+                        <span className="inline-block w-2 h-2 rounded-full mr-1" style={{ backgroundColor: shift.color }} />
+                        {shift.short_code || shift.name.slice(0, 4)}
+                      </td>
+                      {days.map((day) => {
+                        const count = entries.filter((e) => e.date === day && e.shift_template_id === shift.id).length;
+                        const needed = shift.min_staff;
+                        const ratio = needed > 0 ? count / needed : 1;
+                        const bg = count === 0
+                          ? "var(--danger-soft)"
+                          : ratio < 1
+                          ? "#fef3c7"
+                          : ratio === 1
+                          ? "#d1fae5"
+                          : "#bbf7d0";
+                        return (
+                          <td
+                            key={day}
+                            className="text-center py-1 px-0.5 font-semibold"
+                            style={{
+                              backgroundColor: bg,
+                              color: count === 0 ? "var(--danger)" : ratio < 1 ? "#92400e" : "#166534",
+                            }}
+                            title={`${shift.name}: ${count}/${needed}`}
+                          >
+                            {count}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </Card>
+      )}
+
+      {/* Labor cost estimate bar */}
+      {entries.length > 0 && employees.some((e) => e.hourly_cost != null && e.hourly_cost > 0) && (
+        (() => {
+          // Compute shift duration in hours helper
+          function shiftHours(st: ShiftTemplate): number {
+            const [sh, sm] = st.start_time.split(":").map(Number);
+            const [eh, em] = st.end_time.split(":").map(Number);
+            let mins = (eh * 60 + em) - (sh * 60 + sm);
+            if (mins <= 0) mins += 24 * 60;
+            return mins / 60;
+          }
+          let totalCost = 0;
+          let costableEntries = 0;
+          for (const entry of entries) {
+            const emp = employees.find((e) => e.id === entry.user_id);
+            if (!emp?.hourly_cost || !entry.shift_template) continue;
+            totalCost += emp.hourly_cost * shiftHours(entry.shift_template);
+            costableEntries++;
+          }
+          if (costableEntries === 0) return null;
+          const uncostable = entries.length - costableEntries;
+          return (
+            <div className="mt-3 flex items-center gap-4 px-4 py-2.5 rounded-lg bg-[color:var(--surface)] border border-[color:var(--border-light)]">
+              <div className="flex items-center gap-2">
+                <svg className="w-4 h-4 text-[color:var(--text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span className="text-sm font-medium text-[color:var(--text-primary)]">
+                  {t("laborCostLabel")}:
+                </span>
+                <span className="text-sm font-bold text-[color:var(--text-primary)]">
+                  €{totalCost.toFixed(2)}
+                </span>
+              </div>
+              {uncostable > 0 && (
+                <span className="text-xs text-[color:var(--text-muted)]">
+                  ({t("laborCostPartial", { count: uncostable })})
+                </span>
+              )}
+            </div>
+          );
+        })()
+      )}
+
+      {/* Undo toast */}
+      {undoToast && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom-4 fade-in duration-200">
+          <div className="flex items-center gap-3 bg-[color:var(--text-primary)] text-white px-4 py-2.5 rounded-xl shadow-lg text-sm">
+            <span>{t("undoLabel")}: {undoToast}</span>
+            <button
+              onClick={handleUndo}
+              className="font-semibold text-[color:var(--accent)] hover:underline"
+            >
+              {t("undoButton")}
+            </button>
+            <button
+              onClick={() => setUndoToast(null)}
+              className="text-white/60 hover:text-white ml-1"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
 
       <Modal
         open={!!assignModal}
@@ -1841,12 +2404,23 @@ export default function SchedulePage() {
             <div className="space-y-2">
               {shifts.map((shift) => {
                 const checked = assignSelection.has(shift.id);
+                // Count how many people are already on this shift today (excluding current user)
+                const othersOnShift = entries.filter(
+                  (e) => e.date === assignModal.date && e.shift_template_id === shift.id && e.user_id !== assignModal.userId
+                );
+                const totalOnShift = othersOnShift.length + (checked ? 1 : 0);
+                const needsMore = totalOnShift < shift.min_staff;
+                const otherNames = othersOnShift
+                  .map((e) => employees.find((emp) => emp.id === e.user_id)?.full_name?.split(" ")[0] || "?")
+                  .slice(0, 3);
                 return (
                   <label
                     key={shift.id}
                     className={`w-full flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
                       checked
                         ? "border-[color:var(--accent)] bg-[color:var(--accent-soft)]"
+                        : needsMore
+                        ? "border-amber-300 bg-amber-50/50 hover:border-[color:var(--accent)] hover:bg-[color:var(--accent-soft)]/50"
                         : "border-[color:var(--border-light)] hover:border-[color:var(--accent)] hover:bg-[color:var(--accent-soft)]/50"
                     }`}
                   >
@@ -1861,12 +2435,26 @@ export default function SchedulePage() {
                       className="w-4 h-4 rounded-full flex-shrink-0"
                       style={{ backgroundColor: shift.color }}
                     />
-                    <div className="flex-1">
-                      <p className="font-medium text-[color:var(--text-primary)] text-sm">
-                        {shift.name}
-                      </p>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium text-[color:var(--text-primary)] text-sm">
+                          {shift.name}
+                        </p>
+                        <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${
+                          totalOnShift >= shift.min_staff
+                            ? "bg-green-100 text-green-700"
+                            : "bg-amber-100 text-amber-700"
+                        }`}>
+                          {totalOnShift}/{shift.min_staff}
+                        </span>
+                      </div>
                       <p className="text-xs text-[color:var(--text-muted)]">
                         {shift.start_time.slice(0, 5)} - {shift.end_time.slice(0, 5)}
+                        {otherNames.length > 0 && (
+                          <span className="ml-1.5">
+                            · {otherNames.join(", ")}{othersOnShift.length > 3 ? ` +${othersOnShift.length - 3}` : ""}
+                          </span>
+                        )}
                       </p>
                     </div>
                   </label>
@@ -1911,6 +2499,7 @@ export default function SchedulePage() {
         onClose={() => {
           setViolationModal(null);
           setViolationFilter("all");
+          setViolationUserFilter("all");
         }}
         title={t("complianceIssuesTitle")}
         size="lg"
@@ -1920,6 +2509,7 @@ export default function SchedulePage() {
           const totalWarn = violationModal.filter((v) => v.severity === "warning").length;
           const filtered = violationModal
             .filter((v) => violationFilter === "all" || v.severity === violationFilter)
+            .filter((v) => violationUserFilter === "all" || v.userId === violationUserFilter)
             .slice()
             .sort((a, b) => {
               if (a.date !== b.date) return a.date.localeCompare(b.date);
@@ -1969,6 +2559,18 @@ export default function SchedulePage() {
                   <span className="w-2 h-2 rounded-full bg-[color:var(--warning)]" />
                   {t("complianceFilterWarnings")} · {totalWarn}
                 </button>
+                <select
+                  value={violationUserFilter}
+                  onChange={(e) => setViolationUserFilter(e.target.value)}
+                  className="ml-auto text-xs border border-[color:var(--border-light)] rounded-lg px-2 py-1.5 bg-[color:var(--surface)] text-[color:var(--text-secondary)] focus:outline-none focus:ring-2 focus:ring-[color:var(--accent)]/20"
+                >
+                  <option value="all">{t("allEmployees")}</option>
+                  {employees
+                    .filter((emp) => violationModal!.some((v) => v.userId === emp.id))
+                    .map((emp) => (
+                      <option key={emp.id} value={emp.id}>{emp.full_name}</option>
+                    ))}
+                </select>
               </div>
 
               <div className="space-y-2 max-h-[60vh] overflow-y-auto pr-1">
@@ -1979,19 +2581,44 @@ export default function SchedulePage() {
                 ) : (
                   filtered.map((v, i) => {
                     const cardClass =
-                      "p-3 rounded-lg border text-sm " +
+                      "p-3 rounded-lg border text-sm cursor-pointer hover:opacity-80 transition-opacity " +
                       (v.severity === "block"
                         ? "bg-[color:var(--danger-soft)] border-[color:var(--danger-soft)] text-[color:var(--danger)]"
                         : "bg-[color:var(--warning-soft)] border-[color:var(--warning-soft)] text-[color:var(--warning)]");
                     const dayNum = parseInt(v.date.slice(8));
                     const monthName = m(MONTH_KEYS[parseInt(v.date.slice(5, 7)) - 1]);
+                    const emp = employees.find((e) => e.id === v.userId);
                     return (
-                      <div key={i} className={cardClass}>
+                      <div
+                        key={i}
+                        className={cardClass}
+                        onClick={() => {
+                          // Navigate to grid view at the violation
+                          setViewMode("month");
+                          setLayoutMode("grid");
+                          setViolationModal(null);
+                          setViolationFilter("all");
+                          // Scroll to the cell after render
+                          setTimeout(() => {
+                            const cellId = `grid-cell:${v.userId}:${v.date}`;
+                            const el = document.getElementById(cellId) || document.querySelector(`[id="${cellId}"]`);
+                            if (el) {
+                              el.scrollIntoView({ behavior: "smooth", block: "center", inline: "center" });
+                              el.classList.add("animate-pulse");
+                              setTimeout(() => el.classList.remove("animate-pulse"), 2000);
+                            }
+                          }, 100);
+                        }}
+                        title={t("clickToNavigate")}
+                      >
                         <div className="flex items-center gap-2 mb-1 flex-wrap">
                           <Badge variant={v.severity === "block" ? "danger" : "warning"}>
                             {v.code}
                           </Badge>
                           <span className="font-medium">{v.message}</span>
+                          {emp && (
+                            <span className="text-xs opacity-70 ml-auto">{emp.full_name}</span>
+                          )}
                         </div>
                         <p className="text-xs opacity-80">
                           {dayNum} {monthName} — {v.rule}
@@ -2259,6 +2886,178 @@ export default function SchedulePage() {
               className="text-[color:var(--warning)]"
             >
               {t("unpublishButton")}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal
+        open={showRotationModal}
+        onClose={() => { setShowRotationModal(false); setSelectedRotation(null); setRotationEmployees(new Set()); }}
+        title={t("applyRotationTitle")}
+      >
+        <div className="space-y-4">
+          {rotationTemplates.length === 0 ? (
+            <p className="text-sm text-[color:var(--text-muted)] text-center py-4">{t("noRotations")}</p>
+          ) : (
+            <>
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-[color:var(--text-primary)]">{t("selectRotation")}</label>
+                <div className="space-y-1.5">
+                  {rotationTemplates.map((rot) => (
+                    <label
+                      key={rot.id}
+                      className={`flex items-center gap-3 p-2.5 rounded-lg border cursor-pointer transition-colors ${
+                        selectedRotation === rot.id
+                          ? "border-[color:var(--accent)] bg-[color:var(--accent-soft)]"
+                          : "border-[color:var(--border-light)] hover:border-[color:var(--accent)]"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="rotation"
+                        checked={selectedRotation === rot.id}
+                        onChange={() => setSelectedRotation(rot.id)}
+                        className="accent-[color:var(--accent)]"
+                      />
+                      <div>
+                        <span className="text-sm font-medium">{rot.name}</span>
+                        <span className="text-xs text-[color:var(--text-muted)] ml-2">
+                          ({rot.weeks} {t("weeksLabel")})
+                        </span>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {selectedRotation && (
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-[color:var(--text-primary)]">{t("selectEmployees")}</label>
+                  <div className="space-y-1 max-h-[200px] overflow-y-auto">
+                    {employees.map((emp) => (
+                      <label key={emp.id} className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-[color:var(--surface-sunken)] cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={rotationEmployees.has(emp.id)}
+                          onChange={() => {
+                            const next = new Set(rotationEmployees);
+                            if (next.has(emp.id)) next.delete(emp.id);
+                            else next.add(emp.id);
+                            setRotationEmployees(next);
+                          }}
+                          className="accent-[color:var(--accent)]"
+                        />
+                        <span className="text-sm">{emp.full_name}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+
+          <div className="flex justify-end gap-2 pt-2 border-t border-[color:var(--border-light)]">
+            <Button variant="secondary" onClick={() => setShowRotationModal(false)}>
+              {t("cancel")}
+            </Button>
+            {selectedRotation && rotationEmployees.size > 0 && (
+              <Button onClick={applyRotation} loading={applyingRotation}>
+                {t("applyRotationConfirm")}
+              </Button>
+            )}
+          </div>
+        </div>
+      </Modal>
+
+      <Modal
+        open={showVersionHistory}
+        onClose={() => setShowVersionHistory(false)}
+        title={t("versionHistoryTitle")}
+      >
+        <div className="space-y-3">
+          {loadingSnapshots ? (
+            <p className="text-sm text-[color:var(--text-muted)] text-center py-4">{t("loading")}</p>
+          ) : snapshots.length === 0 ? (
+            <p className="text-sm text-[color:var(--text-muted)] text-center py-4">{t("noVersions")}</p>
+          ) : (
+            <div className="space-y-2 max-h-[400px] overflow-y-auto">
+              {snapshots.map((snap) => {
+                const dateStr = new Date(snap.created_at).toLocaleString();
+                const entryCount = snap.snapshot_data?.entries?.length || 0;
+                const reasonLabel =
+                  snap.reason === "pre_publish" ? t("versionPrePublish") :
+                  snap.reason === "pre_restore" ? t("versionPreRestore") :
+                  snap.reason === "manual" ? t("versionManual") : snap.reason;
+                return (
+                  <div
+                    key={snap.id}
+                    className="flex items-center justify-between p-3 rounded-lg border border-[color:var(--border-light)] hover:bg-[color:var(--surface-sunken)] transition-colors"
+                  >
+                    <div>
+                      <p className="text-sm font-medium text-[color:var(--text-primary)]">{dateStr}</p>
+                      <p className="text-xs text-[color:var(--text-muted)]">
+                        {reasonLabel} · {entryCount} {t("entriesLabel")}
+                      </p>
+                    </div>
+                    {schedule?.status === "draft" && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => restoreSnapshot(snap)}
+                        loading={restoringSnapshot}
+                      >
+                        {t("restoreButton")}
+                      </Button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+          <div className="flex justify-between pt-2 border-t border-[color:var(--border-light)]">
+            {schedule?.status === "draft" && entries.length > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={async () => {
+                  await createSnapshot("manual");
+                  fetchSnapshots();
+                }}
+              >
+                {t("saveVersion")}
+              </Button>
+            )}
+            <Button variant="secondary" onClick={() => setShowVersionHistory(false)}>
+              {t("close")}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal
+        open={showCopyModal}
+        onClose={() => setShowCopyModal(false)}
+        title={t("copyPrevMonthTitle")}
+        size="sm"
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-[color:var(--text-secondary)]">
+            {t("copyPrevMonthBody")}
+          </p>
+          <div className="flex justify-end gap-2 pt-1">
+            <Button
+              variant="ghost"
+              onClick={() => setShowCopyModal(false)}
+              disabled={copying}
+            >
+              {t("cancel")}
+            </Button>
+            <Button
+              onClick={copyFromPreviousMonth}
+              loading={copying}
+            >
+              {t("copyPrevMonthConfirm")}
             </Button>
           </div>
         </div>
