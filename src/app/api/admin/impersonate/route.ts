@@ -21,8 +21,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // 2. Verify the caller is a super admin
-    const { data: callerProfile } = await supabase
+    // 2. Verify the caller is a super admin (use admin client to bypass RLS —
+    //    prevents a user from self-promoting via a permissive profiles UPDATE policy)
+    const admin = createAdminClient();
+    const { data: callerProfile } = await admin
       .from("profiles")
       .select("is_super_admin, full_name, email")
       .eq("id", user.id)
@@ -57,7 +59,6 @@ export async function POST(req: NextRequest) {
     }
 
     // 5. Lookup target user via admin client (bypass RLS)
-    const admin = createAdminClient();
     const { data: targetProfile } = await admin
       .from("profiles")
       .select("id, email, is_super_admin, org_id, full_name")

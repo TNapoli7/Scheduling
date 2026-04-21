@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
+function escapeHtml(str: string): string {
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+}
+
 async function sendEmail(
   name: string,
   email: string,
@@ -22,12 +26,12 @@ async function sendEmail(
       from: 'Shiftera Support <onboarding@resend.dev>',
       to: 'napoles.tomas@gmail.com',
       replyTo: email,
-      subject: `[Shiftera Support] Message from ${name}`,
+      subject: `[Shiftera Support] Message from ${escapeHtml(name)}`,
       html: `
         <h2>New Support Message</h2>
-        <p><strong>From:</strong> ${name} (${email})</p>
+        <p><strong>From:</strong> ${escapeHtml(name)} (${escapeHtml(email)})</p>
         <hr />
-        <p>${message.replace(/\n/g, '<br>')}</p>
+        <p>${escapeHtml(message).replace(/\n/g, '<br>')}</p>
       `,
     });
 
