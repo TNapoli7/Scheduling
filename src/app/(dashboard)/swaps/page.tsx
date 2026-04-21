@@ -335,7 +335,7 @@ export default function SwapsPage() {
                     </span>
                   </div>
 
-                  <p className="text-sm text-stone-900">
+                  <p className="text-sm text-stone-900 truncate">
                     <span className="font-medium">
                       {swap.requester?.full_name}
                     </span>{" "}

@@ -64,7 +64,7 @@ export function Modal({ open, onClose, title, children, size = "md" }: ModalProp
             </svg>
           </button>
         </div>
-        <div className="p-4 sm:p-6 overflow-y-auto" style={{maxHeight: 'calc(100vh - 200px)'}}>
+        <div className="p-4 sm:p-6 overflow-y-auto max-h-[calc(100vh-120px)] sm:max-h-[calc(100vh-200px)]">
           {children}
         </div>
       </div>

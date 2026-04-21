@@ -22,7 +22,54 @@ function getLocaleFromAcceptLanguage(acceptLanguage: string | null): string {
   return defaultLocale;
 }
 
+// ── Security headers applied to every response ──────────────────────
+const securityHeaders: Record<string, string> = {
+  "X-Frame-Options": "DENY",
+  "X-Content-Type-Options": "nosniff",
+  "X-XSS-Protection": "1; mode=block",
+  "Referrer-Policy": "strict-origin-when-cross-origin",
+  "Strict-Transport-Security": "max-age=63072000; includeSubDomains; preload",
+  "Permissions-Policy": "camera=(), microphone=(), geolocation=(), interest-cohort=()",
+};
+
+function applySecurityHeaders(response: NextResponse): NextResponse {
+  for (const [key, value] of Object.entries(securityHeaders)) {
+    response.headers.set(key, value);
+  }
+  return response;
+}
+
+// ── CSRF: validate Origin on state-changing requests ─────────────────
+const ALLOWED_ORIGINS = [
+  "https://www.shiftera.app",
+  "https://shiftera.app",
+  "https://scheduling-coral-five.vercel.app",
+];
+
+function isOriginAllowed(origin: string | null, host: string | null): boolean {
+  if (!origin) return true; // same-origin requests omit Origin
+  if (ALLOWED_ORIGINS.includes(origin)) return true;
+  // Allow when Origin host matches the request Host (covers preview deploys)
+  try {
+    const originHost = new URL(origin).host;
+    if (host && originHost === host) return true;
+  } catch { /* malformed origin */ }
+  return false;
+}
+
 export async function updateSession(request: NextRequest) {
+  // ── CSRF check on mutations ──────────────────────────────────────
+  const method = request.method.toUpperCase();
+  if (["POST", "PUT", "PATCH", "DELETE"].includes(method)) {
+    const origin = request.headers.get("origin");
+    const host = request.headers.get("host");
+    if (!isOriginAllowed(origin, host)) {
+      return applySecurityHeaders(
+        NextResponse.json({ error: "Forbidden — invalid origin" }, { status: 403 })
+      );
+    }
+  }
+
   let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient(
@@ -39,7 +86,11 @@ export async function updateSession(request: NextRequest) {
           );
           supabaseResponse = NextResponse.next({ request });
           cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
+            supabaseResponse.cookies.set(name, value, {
+              ...options,
+              secure: true,
+              sameSite: "lax",
+            })
           );
         },
       },
@@ -80,7 +131,7 @@ export async function updateSession(request: NextRequest) {
   if (!user && !isPublicPath) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
-    return NextResponse.redirect(url);
+    return applySecurityHeaders(NextResponse.redirect(url));
   }
 
   // Handle language detection
@@ -102,5 +153,5 @@ export async function updateSession(request: NextRequest) {
     });
   }
 
-  return supabaseResponse;
+  return applySecurityHeaders(supabaseResponse);
 }

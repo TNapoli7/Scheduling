@@ -201,7 +201,7 @@ export function ActivityLogPanel() {
       {/* Log entries table */}
       <div className="bg-white border border-stone-200 rounded-xl overflow-hidden">
         {/* Table header */}
-        <div className="grid grid-cols-[1fr_140px_120px_100px] gap-4 px-4 py-2.5 bg-stone-50 border-b border-stone-100 text-xs font-medium text-stone-500 uppercase tracking-wider">
+        <div className="hidden sm:grid grid-cols-[1fr_140px_120px_100px] gap-4 px-4 py-2.5 bg-stone-50 border-b border-stone-100 text-xs font-medium text-stone-500 uppercase tracking-wider">
           <span>{t("colAction")}</span>
           <span>{t("colUser")}</span>
           <span>{t("colCategory")}</span>
@@ -230,7 +230,7 @@ export function ActivityLogPanel() {
             return (
               <div
                 key={log.id}
-                className="grid grid-cols-[1fr_140px_120px_100px] gap-4 px-4 py-3 border-b border-stone-50 hover:bg-stone-50/50 transition-colors items-center"
+                className="flex flex-col gap-1 sm:grid sm:grid-cols-[1fr_140px_120px_100px] sm:gap-4 px-4 py-3 border-b border-stone-50 hover:bg-stone-50/50 transition-colors sm:items-center"
               >
                 {/* Action */}
                 <div className="flex items-center gap-2.5 min-w-0">
