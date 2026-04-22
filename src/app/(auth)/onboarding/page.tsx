@@ -89,60 +89,27 @@ export default function OnboardingPage() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { setError(t("sessionExpired")); setLoading(false); return; }
 
-    // Create organization
-    const { data: org, error: orgError } = await supabase
-      .from("organizations")
-      .insert({
-        name: orgName,
-        sector,
-        address: address || null,
-        operating_hours: hours,
-      })
-      .select()
-      .single();
+    // Atomic RPC: creates org + membership + updates profile in one transaction.
+    // Bypasses the SELECT RLS restriction that blocks .insert().select() for
+    // new users who have no active_org_id / membership yet.
+    const { data: orgId, error: rpcError } = await supabase.rpc(
+      "create_org_with_membership",
+      {
+        p_name: orgName,
+        p_sector: sector,
+        p_address: address || null,
+        p_operating_hours: hours,
+        p_full_name: fullName,
+      },
+    );
 
-    if (orgError || !org) {
-      setError(orgError?.message || t("errorCreatingOrg"));
+    if (rpcError || !orgId) {
+      setError(rpcError?.message || t("errorCreatingOrg"));
       setLoading(false);
       return;
     }
 
-    // Create the membership making the current user the admin of this org.
-    const { error: membershipError } = await supabase
-      .from("memberships")
-      .insert({
-        user_id: user.id,
-        org_id: org.id,
-        role: "admin",
-        full_name: fullName,
-        is_active: true,
-      });
-
-    if (membershipError) {
-      setError(membershipError.message);
-      setLoading(false);
-      return;
-    }
-
-    // First-run: write active_org_id + legacy org_id/role/full_name so the
-    // profile is fully initialised for downstream queries.
-    const { error: profileError } = await supabase
-      .from("profiles")
-      .update({
-        active_org_id: org.id,
-        org_id: org.id,
-        full_name: fullName,
-        role: "admin",
-      })
-      .eq("id", user.id);
-
-    if (profileError) {
-      setError(profileError.message);
-      setLoading(false);
-      return;
-    }
-
-    logActivity("organization_created", "organization", org.id, { name: orgName, sector });
+    logActivity("organization_created", "organization", orgId, { name: orgName, sector });
 
     router.push("/dashboard");
   }

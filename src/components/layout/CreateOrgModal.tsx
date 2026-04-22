@@ -120,8 +120,7 @@ export function CreateOrgModal({ open, onClose }: CreateOrgModalProps) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { setError(t("sessionExpired")); setLoading(false); return; }
 
-    // Fetch current profile to seed the membership full_name. User can edit
-    // the per-org display name later in Definições.
+    // Fetch current profile to seed the membership full_name.
     const { data: profile } = await supabase
       .from("profiles")
       .select("full_name, email")
@@ -129,54 +128,27 @@ export function CreateOrgModal({ open, onClose }: CreateOrgModalProps) {
       .single();
     const fullName = profile?.full_name || profile?.email || "";
 
-    // 1. Organisation
-    const { data: org, error: orgError } = await supabase
-      .from("organizations")
-      .insert({
-        name: orgName.trim(),
-        sector,
-        address: address.trim() || null,
-        operating_hours: hours,
-      })
-      .select()
-      .single();
+    // Atomic RPC: creates org + membership + switches active_org_id in one
+    // transaction. Avoids the RLS deadlock where .insert().select() needs a
+    // SELECT policy that depends on a membership that doesn't exist yet.
+    const { data: orgId, error: rpcError } = await supabase.rpc(
+      "create_org_with_membership",
+      {
+        p_name: orgName.trim(),
+        p_sector: sector,
+        p_address: address.trim() || null,
+        p_operating_hours: hours,
+        p_full_name: fullName,
+      },
+    );
 
-    if (orgError || !org) {
-      setError(orgError?.message || t("errorCreatingOrg"));
+    if (rpcError || !orgId) {
+      setError(rpcError?.message || t("errorCreatingOrg"));
       setLoading(false);
       return;
     }
 
-    // 2. Membership (admin of new org)
-    const { error: membershipError } = await supabase
-      .from("memberships")
-      .insert({
-        user_id: user.id,
-        org_id: org.id,
-        role: "admin",
-        full_name: fullName,
-        is_active: true,
-      });
-
-    if (membershipError) {
-      setError(membershipError.message);
-      setLoading(false);
-      return;
-    }
-
-    // 3. Switch active org. Legacy org_id/role intentionally left untouched.
-    const { error: profileError } = await supabase
-      .from("profiles")
-      .update({ active_org_id: org.id })
-      .eq("id", user.id);
-
-    if (profileError) {
-      setError(profileError.message);
-      setLoading(false);
-      return;
-    }
-
-    logActivity("organization_created", "organization", org.id, { name: orgName, sector });
+    logActivity("organization_created", "organization", orgId, { name: orgName, sector });
 
     // Full reload so RLS picks up the new org context everywhere.
     window.location.href = "/dashboard";
