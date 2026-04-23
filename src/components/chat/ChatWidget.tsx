@@ -146,12 +146,12 @@ export function ChatWidget() {
       {/* Chat Bubble Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="chat-widget-button"
+        className={`chat-widget-button${isOpen ? " chat-widget-button-hidden" : ""}`}
         style={{ backgroundColor: SHIFTERA_ACCENT }}
-        title={isOpen ? t("closeChat") : t("openChat")}
-        aria-label={isOpen ? t("closeChat") : t("openChat")}
+        title={t("openChat")}
+        aria-label={t("openChat")}
       >
-        {isOpen ? <X size={24} /> : <MessageCircle size={24} />}
+        <MessageCircle size={24} />
       </button>
 
       {/* Chat Panel */}
@@ -163,13 +163,23 @@ export function ChatWidget() {
               <MessageCircle size={20} />
               <span>Shiftera Support</span>
             </div>
-            <button
-              onClick={toggleLanguage}
-              className="language-toggle"
-              title="Toggle language"
-            >
-              {language.toUpperCase()}
-            </button>
+            <div className="chat-header-actions">
+              <button
+                onClick={toggleLanguage}
+                className="language-toggle"
+                title="Toggle language"
+              >
+                {language.toUpperCase()}
+              </button>
+              <button
+                onClick={() => setIsOpen(false)}
+                className="chat-close-button"
+                title={t("closeChat")}
+                aria-label={t("closeChat")}
+              >
+                <X size={18} />
+              </button>
+            </div>
           </div>
 
           {/* Messages Area */}

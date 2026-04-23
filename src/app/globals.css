@@ -101,6 +101,7 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   letter-spacing: -0.005em;
+  overflow-x: hidden;
 }
 
 /* Display font for headlines */
@@ -118,6 +119,7 @@ h1, h2, h3 {
 html {
   scroll-behavior: smooth;
   background: var(--background);
+  overflow-x: hidden;
 }
 
 /* Custom scrollbar */
